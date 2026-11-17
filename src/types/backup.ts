@@ -200,6 +200,10 @@ export function mergeBeans(
           totalGrams: item.totalGrams ?? merged[idx].totalGrams,
           remainingGrams: item.remainingGrams ?? merged[idx].remainingGrams,
           isFrozen: item.isFrozen ?? merged[idx].isFrozen,
+          frozenDate: item.frozenDate ?? merged[idx].frozenDate,
+          freezerId: item.freezerId ?? merged[idx].freezerId,
+          freezerName: item.freezerName ?? merged[idx].freezerName,
+          freezerTempC: item.freezerTempC ?? merged[idx].freezerTempC,
           tastingNotes: Array.from(new Set([...(merged[idx].tastingNotes || []), ...(item.tastingNotes || [])])),
         };
       }

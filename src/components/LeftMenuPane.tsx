@@ -25,9 +25,10 @@ import {
   Pencil,
   Check,
   Settings as SettingsIcon,
+  Zap,
 } from "lucide-react";
 import type { ActiveEquipmentSelection } from "../types/equipment.ts";
-import { formatEquipmentSummary } from "../types/equipment.ts";
+import { formatEquipmentSummary, loadEquipmentInventory } from "../types/equipment.ts";
 
 interface LeftMenuPaneProps {
   activeTab: CockpitTabId;
@@ -74,7 +75,8 @@ export const LeftMenuPane: React.FC<LeftMenuPaneProps> = ({
   onOpenEquipmentSelection,
   onOpenSettingsEquipment,
 }) => {
-  const rest = calculateRestDays(activeBean);
+  const equipmentInv = loadEquipmentInventory();
+  const rest = calculateRestDays(activeBean, new Date(), equipmentInv.freezers);
 
   // Steam Temp Presets
   const [steamTempPresets, setSteamTempPresets] = useState<number[]>(() => {
@@ -269,6 +271,25 @@ export const LeftMenuPane: React.FC<LeftMenuPaneProps> = ({
               <div className="text-xs text-decent-muted mt-1 truncate">
                 {formatVarietals(activeBean.varietal)} · {activeBean.process}
               </div>
+              {activeBean.isFrozen && (
+                <div className="flex items-center flex-wrap gap-1.5 mt-2 pt-2 border-t border-decent-border/50">
+                  {rest.freezerAgeText && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-950/40 border border-cyan-500/40 font-mono text-cyan-300 font-medium flex items-center space-x-1">
+                      <Snowflake className="w-2.5 h-2.5 text-cyan-400" />
+                      <span>{rest.freezerAgeText}</span>
+                    </span>
+                  )}
+                  {rest.actualAgeText && (
+                    <span
+                      className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950/40 border border-emerald-500/40 font-mono text-emerald-300 font-bold flex items-center space-x-1"
+                      title="Physiological aging based on storage conditions and temperature slowdown factor"
+                    >
+                      <Zap className="w-2.5 h-2.5 text-emerald-400" />
+                      <span>~{rest.actualAgeText}</span>
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Dose Stepper */}

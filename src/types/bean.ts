@@ -4,6 +4,8 @@
  * multi-varietal lots, rest calculation, and batch cloning.
  */
 
+import { getFreezerSlowdownFactor, type FreezerEquipmentItem } from "./equipment.ts";
+
 export interface PantaBean {
   // Identity & Core Taxonomy
   id: string;                         // Unique ID (UUID or slug)
@@ -30,6 +32,9 @@ export interface PantaBean {
   remainingGrams: number;             // Decremented automatically per shot dose
   isFrozen: boolean;                  // Freezer storage flag
   frozenDate?: string;                // Date moved to freezer (preserves rest calculation)
+  freezerId?: string;                 // Linked freezer equipment ID (e.g. "freezer-std", "freezer-deep")
+  freezerName?: string;               // Friendly freezer name (e.g. "Standard Freezer", "Deep Freezer")
+  freezerTempC?: number;              // Cabin temperature in Celsius (e.g. -18, -40, -25)
   thawedDate?: string;                // Date taken out of freezer
 
   // Dial-in Defaults & Equipment Pairing
@@ -61,6 +66,12 @@ export interface RestStatusResult {
   status: "resting" | "peak" | "aging" | "frozen";
   label: string;
   roastAgeText: string;
+  daysInFreezer?: number;
+  freezerAgeText?: string;
+  freezerTempC?: number;
+  freezerSlowdownFactor?: number;
+  actualAgingDays?: number;
+  actualAgeText?: string;
   storageLabel: string;
   storageMethod: "room_temperature" | "freezer";
 }
@@ -118,6 +129,10 @@ export function createNewBeanEntry(params: {
   totalGrams: number;
   remainingGrams?: number;
   isFrozen?: boolean;
+  frozenDate?: string;
+  freezerId?: string;
+  freezerName?: string;
+  freezerTempC?: number;
   targetDose?: number;
   targetYield?: number;
   targetGrind?: string;
@@ -146,6 +161,10 @@ export function createNewBeanEntry(params: {
     totalGrams: params.totalGrams || 250,
     remainingGrams: params.remainingGrams ?? (params.totalGrams || 250),
     isFrozen: Boolean(params.isFrozen),
+    frozenDate: params.isFrozen ? (params.frozenDate || todayStr) : undefined,
+    freezerId: params.isFrozen ? params.freezerId : undefined,
+    freezerName: params.isFrozen ? params.freezerName : undefined,
+    freezerTempC: params.isFrozen ? params.freezerTempC : undefined,
     targetDose: params.targetDose ?? 18.0,
     targetYield: params.targetYield ?? 36.0,
     targetGrind: params.targetGrind || "4.0",
@@ -192,6 +211,9 @@ export function cloneBeanAsNewEntry(source: PantaBean, overrides?: Partial<Panta
     remainingGrams: overrides?.remainingGrams ?? (overrides?.totalGrams ?? source.totalGrams),
     isFrozen: false,
     frozenDate: undefined,
+    freezerId: undefined,
+    freezerName: undefined,
+    freezerTempC: undefined,
     thawedDate: undefined,
     targetDose: source.targetDose,
     targetYield: source.targetYield,
@@ -209,65 +231,119 @@ export function cloneBeanAsNewEntry(source: PantaBean, overrides?: Partial<Panta
 /**
  * Computes rest days and window status dynamically against a reference date
  */
-export function calculateRestDays(bean: PantaBean, referenceDate = new Date()): RestStatusResult {
+export function calculateRestDays(
+  bean: PantaBean,
+  referenceDate = new Date(),
+  freezersList?: FreezerEquipmentItem[]
+): RestStatusResult {
   const restTarget = bean.recommendedRestDays || 14;
   const roastTime = new Date(bean.roastDate).getTime();
   const refTime = referenceDate.getTime();
   const daysSinceRoast = Math.max(0, Math.floor((refTime - roastTime) / (1000 * 60 * 60 * 24)));
   const dayUnit = daysSinceRoast === 1 ? "day" : "days";
   const roastAgeText = `${daysSinceRoast} ${dayUnit} after roast`;
-  const storageMethod: "room_temperature" | "freezer" = bean.isFrozen ? "freezer" : "room_temperature";
-  const storageLabel = bean.isFrozen ? "Freezer" : "Room Temp";
 
-  if (bean.isFrozen) {
+  if (!bean.isFrozen) {
+    const storageMethod: "room_temperature" | "freezer" = "room_temperature";
+    const storageLabel = "Room Temp";
+    const actualAgingDays = daysSinceRoast;
+    const actualAgeText = `${daysSinceRoast}d actual`;
+
+    if (daysSinceRoast < restTarget) {
+      const daysRemaining = restTarget - daysSinceRoast;
+      return {
+        daysSinceRoast,
+        recommendedRestDays: restTarget,
+        daysRemainingToPeak: daysRemaining,
+        status: "resting",
+        label: `Resting (Day ${daysSinceRoast}/${restTarget} — ${daysRemaining}d to peak)`,
+        roastAgeText,
+        actualAgingDays,
+        actualAgeText,
+        storageLabel,
+        storageMethod,
+      };
+    }
+
+    // Peak window is restTarget up to restTarget + 28 days (~4 weeks peak)
+    const peakWindowEnd = restTarget + 28;
+    if (daysSinceRoast <= peakWindowEnd) {
+      return {
+        daysSinceRoast,
+        recommendedRestDays: restTarget,
+        daysRemainingToPeak: 0,
+        status: "peak",
+        label: `Peak Window (Day ${daysSinceRoast})`,
+        roastAgeText,
+        actualAgingDays,
+        actualAgeText,
+        storageLabel,
+        storageMethod,
+      };
+    }
+
     return {
       daysSinceRoast,
       recommendedRestDays: restTarget,
       daysRemainingToPeak: 0,
-      status: "frozen",
-      label: "Frozen (Stasis)",
+      status: "aging",
+      label: `Aging (Day ${daysSinceRoast})`,
       roastAgeText,
+      actualAgingDays,
+      actualAgeText,
       storageLabel,
       storageMethod,
     };
   }
 
-  if (daysSinceRoast < restTarget) {
-    const daysRemaining = restTarget - daysSinceRoast;
-    return {
-      daysSinceRoast,
-      recommendedRestDays: restTarget,
-      daysRemainingToPeak: daysRemaining,
-      status: "resting",
-      label: `Resting (Day ${daysSinceRoast}/${restTarget} — ${daysRemaining}d to peak)`,
-      roastAgeText,
-      storageLabel,
-      storageMethod,
-    };
+  // Bean IS FROZEN:
+  // Determine cabin temperature and freezer label
+  let cabinTemp = -18;
+  let freezerDisplayName = bean.freezerName || "Freezer";
+
+  if (typeof bean.freezerTempC === "number") {
+    cabinTemp = bean.freezerTempC;
+  } else if (bean.freezerId && freezersList && freezersList.length > 0) {
+    const matched = freezersList.find((f) => f.id === bean.freezerId);
+    if (matched) {
+      cabinTemp = matched.temperatureC;
+      freezerDisplayName = matched.name;
+    }
   }
 
-  // Peak window is restTarget up to restTarget + 28 days (~4 weeks peak)
-  const peakWindowEnd = restTarget + 28;
-  if (daysSinceRoast <= peakWindowEnd) {
-    return {
-      daysSinceRoast,
-      recommendedRestDays: restTarget,
-      daysRemainingToPeak: 0,
-      status: "peak",
-      label: `Peak Window (Day ${daysSinceRoast})`,
-      roastAgeText,
-      storageLabel,
-      storageMethod,
-    };
-  }
+  const slowdownFactor = getFreezerSlowdownFactor(cabinTemp);
+  const frozenTime = bean.frozenDate ? new Date(bean.frozenDate).getTime() : refTime;
+
+  // Days rested at room temperature before being placed in freezer
+  const daysRestedBeforeFreezer = Math.max(0, Math.floor((Math.min(refTime, frozenTime) - roastTime) / (1000 * 60 * 60 * 24)));
+
+  // Days elapsed in freezer
+  const daysInFreezer = Math.max(0, Math.floor((refTime - Math.max(roastTime, frozenTime)) / (1000 * 60 * 60 * 24)));
+
+  // Actual physiological aging based on storage conditions
+  const actualAgingDays = Math.round((daysRestedBeforeFreezer + daysInFreezer / slowdownFactor) * 10) / 10;
+  const fDayUnit = daysInFreezer === 1 ? "day" : "days";
+  const freezerAgeText = `${daysInFreezer} ${fDayUnit} in freezer`;
+  const actualAgeText = `${actualAgingDays}d actual`;
+
+  const storageMethod: "room_temperature" | "freezer" = "freezer";
+  const storageLabel = bean.freezerName
+    ? `${freezerDisplayName} (${cabinTemp}°C)`
+    : (typeof bean.freezerTempC === "number" ? `Freezer (${cabinTemp}°C)` : "Freezer");
 
   return {
     daysSinceRoast,
     recommendedRestDays: restTarget,
     daysRemainingToPeak: 0,
-    status: "aging",
-    label: `Aging (Day ${daysSinceRoast})`,
+    status: "frozen",
+    label: `Frozen (${freezerAgeText} · ~${actualAgeText})`,
     roastAgeText,
+    daysInFreezer,
+    freezerAgeText,
+    freezerTempC: cabinTemp,
+    freezerSlowdownFactor: slowdownFactor,
+    actualAgingDays,
+    actualAgeText,
     storageLabel,
     storageMethod,
   };
@@ -276,17 +352,33 @@ export function calculateRestDays(bean: PantaBean, referenceDate = new Date()): 
 /**
  * Returns clean storage method and roast age strings for coffee cards
  */
-export function getStorageAndRoastAge(bean: PantaBean, referenceDate = new Date()): {
+export function getStorageAndRoastAge(
+  bean: PantaBean,
+  referenceDate = new Date(),
+  freezersList?: FreezerEquipmentItem[]
+): {
   daysSinceRoast: number;
   roastAgeText: string;
+  daysInFreezer?: number;
+  freezerAgeText?: string;
+  freezerTempC?: number;
+  freezerSlowdownFactor?: number;
+  actualAgingDays?: number;
+  actualAgeText?: string;
   storageMethod: "room_temperature" | "freezer";
   storageLabel: string;
   isFrozen: boolean;
 } {
-  const rest = calculateRestDays(bean, referenceDate);
+  const rest = calculateRestDays(bean, referenceDate, freezersList);
   return {
     daysSinceRoast: rest.daysSinceRoast,
     roastAgeText: rest.roastAgeText,
+    daysInFreezer: rest.daysInFreezer,
+    freezerAgeText: rest.freezerAgeText,
+    freezerTempC: rest.freezerTempC,
+    freezerSlowdownFactor: rest.freezerSlowdownFactor,
+    actualAgingDays: rest.actualAgingDays,
+    actualAgeText: rest.actualAgeText,
     storageMethod: rest.storageMethod,
     storageLabel: rest.storageLabel,
     isFrozen: !!bean.isFrozen,

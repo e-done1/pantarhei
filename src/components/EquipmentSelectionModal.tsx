@@ -1,6 +1,6 @@
 import React from "react";
 import type { EquipmentInventory, ActiveEquipmentSelection } from "../types/equipment.ts";
-import { formatEquipmentSummary } from "../types/equipment.ts";
+import { formatEquipmentSummary, getFreezerSlowdownFactor } from "../types/equipment.ts";
 import {
   Wrench,
   X,
@@ -11,6 +11,7 @@ import {
   Layers,
   CircleDot,
   CheckSquare,
+  Snowflake,
 } from "lucide-react";
 
 interface EquipmentSelectionModalProps {
@@ -387,6 +388,37 @@ export const EquipmentSelectionModal: React.FC<EquipmentSelectionModalProps> = (
                   </button>
                 );
               })}
+            </div>
+          </div>
+
+          {/* CATEGORY 9: COLD STORAGE & FREEZERS */}
+          <div className="p-3.5 rounded-2xl bg-cyan-950/20 border border-cyan-500/40 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-cyan-300 uppercase tracking-wider flex items-center space-x-1.5">
+                <Snowflake className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Cold Storage & Freezers</span>
+              </span>
+              <span className="text-[10px] px-2 py-0.2 rounded-full bg-cyan-500/15 text-cyan-300 font-mono">
+                {(inventory.freezers || []).length} Available
+              </span>
+            </div>
+            <div className="text-[11px] text-cyan-200/70">
+              Assigned per coffee lot in Bean Inventory. Physics: -18°C slows aging by 12×; -40°C slows aging by 50×.
+            </div>
+            <div className="flex flex-wrap gap-2 pt-1">
+              {(inventory.freezers || []).map((f) => (
+                <div
+                  key={f.id}
+                  className="px-3 py-1.5 rounded-xl border border-cyan-500/30 bg-decent-dark text-xs flex items-center space-x-2"
+                >
+                  <Snowflake className="w-3 h-3 text-cyan-400" />
+                  <span className="font-semibold text-white">{f.name}</span>
+                  <span className="font-mono text-cyan-300">{f.temperatureC}°C</span>
+                  <span className="text-[10px] text-cyan-400/80 font-mono">
+                    ({getFreezerSlowdownFactor(f.temperatureC)}× slowdown)
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </div>

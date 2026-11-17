@@ -230,4 +230,42 @@ assert(editedBean.preferredBasket === "NB", "Coffee Edit sets preferred basket")
 assert(editedBean.baristaNotes?.includes("paper filter"), "Coffee Edit sets barista puck prep notes");
 assert(editedBean.isFrozen === true, "Coffee Edit toggles freezer storage");
 
+// 7. Test Multi-Freezer Storage Physics & Actual Aging Calculation
+const frozenStdBean: PantaBean = {
+  ...sampleBeans[0],
+  id: "bean-frz-std",
+  roastDate: "2026-06-01",
+  isFrozen: true,
+  frozenDate: "2026-06-11", // 10 days at room temp
+  freezerTempC: -18,
+  freezerName: "Standard Freezer",
+};
+
+// Reference date: 2026-11-16 (168 days total after roast: 10 days room temp + 158 days frozen)
+// At -18°C, slowdown factor is 12.0
+// Actual aging = 10 + (158 / 12) = 10 + 13.166... = 23.2 days
+const restFrozenStd = calculateRestDays(frozenStdBean, new Date("2026-11-16T12:00:00Z"));
+assert(restFrozenStd.freezerSlowdownFactor === 12, "Standard freezer -18°C gives 12x slowdown factor");
+assert(restFrozenStd.daysInFreezer === 158, "Calculates correct 158 days in freezer");
+assert(restFrozenStd.actualAgingDays === 23.2, "Calculates exact physiological actual aging (23.2d) at -18°C");
+assert(restFrozenStd.freezerAgeText === "158 days in freezer", "Formats freezerAgeText cleanly");
+assert(restFrozenStd.actualAgeText === "23.2d actual", "Formats actualAgeText cleanly");
+
+// Deep freezer at -40°C
+const frozenDeepBean: PantaBean = {
+  ...sampleBeans[0],
+  id: "bean-frz-deep",
+  roastDate: "2026-06-01",
+  isFrozen: true,
+  frozenDate: "2026-06-06", // 5 days at room temp
+  freezerTempC: -40,
+  freezerName: "Deep Freezer",
+};
+// 168 days total after roast: 5 days room temp + 163 days in deep freezer
+// At -40°C, slowdown factor is 50.0
+// Actual aging = 5 + (163 / 50) = 5 + 3.26 = 8.3 days
+const restFrozenDeep = calculateRestDays(frozenDeepBean, new Date("2026-11-16T12:00:00Z"));
+assert(restFrozenDeep.freezerSlowdownFactor === 50, "Deep freezer -40°C gives 50x slowdown factor");
+assert(restFrozenDeep.actualAgingDays === 8.3, "Calculates exact physiological actual aging (8.3d) at -40°C");
+
 console.log("\n🎉 ALL TESTS PASSED SUCCESSFULLY!");

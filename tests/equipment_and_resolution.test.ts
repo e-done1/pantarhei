@@ -3,6 +3,8 @@ import assert from "node:assert";
 import {
   DEFAULT_EQUIPMENT_INVENTORY,
   DEFAULT_ACTIVE_EQUIPMENT,
+  DEFAULT_FREEZERS,
+  getFreezerSlowdownFactor,
   formatEquipmentSummary,
   type EquipmentInventory,
   type ActiveEquipmentSelection,
@@ -23,6 +25,16 @@ describe("Equipment Inventory & Shot Selection Tests", () => {
     assert.ok(Array.isArray(inv.distributors), "distributors array present");
     assert.ok(Array.isArray(inv.wdt) && inv.wdt.length > 0, "wdt array present");
     assert.ok(Array.isArray(inv.rdt) && inv.rdt.length > 0, "rdt array present");
+    assert.ok(Array.isArray(inv.freezers) && inv.freezers.length >= 2, "freezers array present with standard and deep options");
+  });
+
+  it("getFreezerSlowdownFactor computes exact physics across temperatures", () => {
+    assert.strictEqual(getFreezerSlowdownFactor(20), 1, "Room temperature (20°C) has factor 1");
+    assert.strictEqual(getFreezerSlowdownFactor(0), 1, "0°C has factor 1");
+    assert.strictEqual(getFreezerSlowdownFactor(-18), 12, "-18°C has factor 12");
+    assert.strictEqual(getFreezerSlowdownFactor(-40), 50, "-40°C has factor 50");
+    assert.strictEqual(getFreezerSlowdownFactor(-29), 31, "-29°C continuous interpolation has factor 31");
+    assert.strictEqual(getFreezerSlowdownFactor(-80), 75, "Ultra-low -80°C has factor 75");
   });
 
   it("Single-select categories enforce single item selection", () => {

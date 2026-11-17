@@ -7,6 +7,11 @@ import {
   createNewBeanEntry,
   getVarietalsList,
 } from "../types/bean.ts";
+import {
+  loadEquipmentInventory,
+  getFreezerSlowdownFactor,
+  type FreezerEquipmentItem,
+} from "../types/equipment.ts";
 import { BeanSearchIndex } from "../services/beanSearch.ts";
 import {
   Search,
@@ -24,6 +29,8 @@ import {
   Mountain,
   Calendar,
   FileText,
+  Zap,
+  Thermometer,
 } from "lucide-react";
 
 interface BeanDrawerProps {
@@ -96,6 +103,13 @@ export const BeanDrawer: React.FC<BeanDrawerProps> = ({
   const [isAddingTag, setIsAddingTag] = useState(false);
   const [formRestDays, setFormRestDays] = useState(14);
   const [formIsFrozen, setFormIsFrozen] = useState(false);
+  const [formFrozenDate, setFormFrozenDate] = useState(() => new Date().toISOString().split("T")[0]);
+  const [formFreezerId, setFormFreezerId] = useState<string>("freezer-std");
+  const [formFreezerName, setFormFreezerName] = useState<string>("Standard Freezer");
+  const [formFreezerTemp, setFormFreezerTemp] = useState<number>(-18);
+
+  const equipmentInv = useMemo(() => loadEquipmentInventory(), [isOpen]);
+  const freezersList: FreezerEquipmentItem[] = equipmentInv.freezers;
 
   const POPULAR_TASTING_TAGS = [
     "Floral",
@@ -183,6 +197,10 @@ export const BeanDrawer: React.FC<BeanDrawerProps> = ({
     setFormTags([]);
     setFormRestDays(14);
     setFormIsFrozen(false);
+    setFormFrozenDate(new Date().toISOString().split("T")[0]);
+    setFormFreezerId(freezersList[0]?.id || "freezer-std");
+    setFormFreezerName(freezersList[0]?.name || "Standard Freezer");
+    setFormFreezerTemp(freezersList[0]?.temperatureC ?? -18);
     setIsFormOpen(true);
   };
 
@@ -214,6 +232,10 @@ export const BeanDrawer: React.FC<BeanDrawerProps> = ({
     setFormTastingNotes(tags.join(", "));
     setFormRestDays(bean.recommendedRestDays ?? 14);
     setFormIsFrozen(Boolean(bean.isFrozen));
+    setFormFrozenDate(bean.frozenDate || (bean.roastDate || new Date().toISOString().split("T")[0]));
+    setFormFreezerId(bean.freezerId || freezersList[0]?.id || "freezer-std");
+    setFormFreezerName(bean.freezerName || freezersList[0]?.name || "Standard Freezer");
+    setFormFreezerTemp(typeof bean.freezerTempC === "number" ? bean.freezerTempC : (freezersList[0]?.temperatureC ?? -18));
     setIsFormOpen(true);
   };
 
@@ -281,6 +303,10 @@ export const BeanDrawer: React.FC<BeanDrawerProps> = ({
           tastingNotes: notesArray,
           recommendedRestDays: Number(formRestDays) || 14,
           isFrozen: formIsFrozen,
+          frozenDate: formIsFrozen ? (formFrozenDate || new Date().toISOString().split("T")[0]) : undefined,
+          freezerId: formIsFrozen ? formFreezerId : undefined,
+          freezerName: formIsFrozen ? formFreezerName : undefined,
+          freezerTempC: formIsFrozen ? Number(formFreezerTemp) || -18 : undefined,
           updatedAt: new Date().toISOString(),
         };
         onSaveBean(updated);
@@ -312,6 +338,10 @@ export const BeanDrawer: React.FC<BeanDrawerProps> = ({
         tastingNotes: notesArray,
         recommendedRestDays: Number(formRestDays) || 14,
         isFrozen: formIsFrozen,
+        frozenDate: formIsFrozen ? (formFrozenDate || new Date().toISOString().split("T")[0]) : undefined,
+        freezerId: formIsFrozen ? formFreezerId : undefined,
+        freezerName: formIsFrozen ? formFreezerName : undefined,
+        freezerTempC: formIsFrozen ? Number(formFreezerTemp) || -18 : undefined,
       });
 
       onSaveBean(newEntry);
@@ -878,7 +908,12 @@ export const BeanDrawer: React.FC<BeanDrawerProps> = ({
 
                 <button
                   type="button"
-                  onClick={() => setFormIsFrozen(true)}
+                  onClick={() => {
+                    setFormIsFrozen(true);
+                    if (!formFrozenDate) {
+                      setFormFrozenDate(new Date().toISOString().split("T")[0]);
+                    }
+                  }}
                   className={`p-2.5 rounded-xl border flex items-center justify-between transition-all cursor-pointer ${
                     formIsFrozen
                       ? "bg-cyan-500/20 text-cyan-300 border-cyan-400/90 shadow-sm"
@@ -895,6 +930,147 @@ export const BeanDrawer: React.FC<BeanDrawerProps> = ({
                   {formIsFrozen && <Check className="w-3.5 h-3.5 text-cyan-400 shrink-0" />}
                 </button>
               </div>
+
+              {/* Multi-Freezer & Cabin Temperature Configuration (Visible when Freezer Storage is selected) */}
+              {formIsFrozen && (
+                <div className="mt-2.5 p-3.5 rounded-xl bg-cyan-950/25 border border-cyan-500/40 space-y-3 animate-in fade-in duration-200">
+                  {/* Multi-Freezer Selection */}
+                  <div>
+                    <label className="text-[11px] font-semibold text-cyan-300 uppercase tracking-wider flex items-center justify-between mb-1.5">
+                      <span className="flex items-center space-x-1.5">
+                        <Snowflake className="w-3.5 h-3.5 text-cyan-400" />
+                        <span>Select Cold Storage Unit</span>
+                      </span>
+                      <span className="text-[10px] text-cyan-400 font-mono">
+                        {freezersList.length} {freezersList.length === 1 ? "unit" : "units"} available
+                      </span>
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {freezersList.map((f) => {
+                        const isChosen = formFreezerId === f.id;
+                        return (
+                          <button
+                            key={f.id}
+                            type="button"
+                            onClick={() => {
+                              setFormFreezerId(f.id);
+                              setFormFreezerName(f.name);
+                              setFormFreezerTemp(f.temperatureC);
+                            }}
+                            className={`p-2 rounded-lg border text-left transition-all cursor-pointer ${
+                              isChosen
+                                ? "bg-cyan-500/30 text-white border-cyan-400 shadow-sm"
+                                : "bg-decent-dark text-decent-muted border-decent-border hover:border-slate-500 hover:text-white"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-semibold">{f.name}</span>
+                              <span className="text-[10px] font-mono text-cyan-400">{f.temperatureC}°C</span>
+                            </div>
+                            <div className="text-[10px] text-cyan-300/70 mt-0.5">
+                              {getFreezerSlowdownFactor(f.temperatureC)}× slowdown
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Cabin Temperature & Slowdown Factor Readout */}
+                  <div className="p-2.5 rounded-lg bg-decent-dark border border-cyan-500/30 flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Thermometer className="w-4 h-4 text-cyan-400 shrink-0" />
+                      <div>
+                        <div className="text-xs font-medium text-white flex items-center space-x-1.5">
+                          <span>Cabin Temperature:</span>
+                          <span className="font-mono text-cyan-300 font-bold">{formFreezerTemp}°C</span>
+                        </div>
+                        <div className="text-[10px] text-cyan-200/80">
+                          {(() => {
+                            const factor = getFreezerSlowdownFactor(formFreezerTemp);
+                            return `Slows aging by ${factor}× (${factor} days frozen = 1 day room temp)`;
+                          })()}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-1.5">
+                      <input
+                        type="number"
+                        step="1"
+                        max="0"
+                        min="-100"
+                        value={formFreezerTemp}
+                        onChange={(e) => setFormFreezerTemp(Number(e.target.value) || -18)}
+                        className="w-16 px-2 py-1 rounded bg-black/60 border border-cyan-500/50 text-xs font-mono text-cyan-300 text-center focus:outline-none focus:border-cyan-400"
+                      />
+                      <span className="text-xs text-decent-muted">°C</span>
+                    </div>
+                  </div>
+
+                  {/* Date Put in Freezer */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-semibold text-cyan-300 uppercase tracking-wider flex items-center space-x-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-cyan-400" />
+                        <span>Date Put in Freezer</span>
+                      </label>
+                      {formFrozenDate && (
+                        <span className="text-[10.5px] font-mono text-cyan-400 font-semibold">
+                          {(() => {
+                            const today = new Date().getTime();
+                            const fDate = new Date(formFrozenDate).getTime();
+                            const diff = Math.max(0, Math.floor((today - fDate) / (1000 * 60 * 60 * 24)));
+                            return `${diff} ${diff === 1 ? "day" : "days"} in freezer`;
+                          })()}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="relative flex-1">
+                        <input
+                          type="date"
+                          value={formFrozenDate}
+                          max={new Date().toISOString().split("T")[0]}
+                          onChange={(e) => setFormFrozenDate(e.target.value)}
+                          className="w-full px-3 py-1.5 rounded-lg bg-decent-dark border border-cyan-500/50 text-xs font-mono text-white focus:outline-none focus:border-cyan-400 transition-colors"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setFormFrozenDate(new Date().toISOString().split("T")[0])}
+                        className="px-2.5 py-1.5 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/50 text-xs font-semibold text-cyan-300 transition-all active:scale-95 cursor-pointer shrink-0"
+                      >
+                        Today
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Live Physiological Actual Aging Preview */}
+                  {(() => {
+                    const today = new Date().getTime();
+                    const roastTime = new Date(formRoastDate || new Date()).getTime();
+                    const frozenTime = new Date(formFrozenDate || new Date()).getTime();
+                    const totalDaysSinceRoast = Math.max(0, Math.floor((today - roastTime) / (1000 * 60 * 60 * 24)));
+                    const daysRoomRest = Math.max(0, Math.floor((Math.min(today, frozenTime) - roastTime) / (1000 * 60 * 60 * 24)));
+                    const daysFrozen = Math.max(0, Math.floor((today - Math.max(roastTime, frozenTime)) / (1000 * 60 * 60 * 24)));
+                    const factor = getFreezerSlowdownFactor(formFreezerTemp);
+                    const actualAge = Math.round((daysRoomRest + daysFrozen / factor) * 10) / 10;
+
+                    return (
+                      <div className="p-2.5 rounded-lg bg-emerald-950/30 border border-emerald-500/40 text-emerald-300">
+                        <div className="flex items-center space-x-1.5 text-xs font-bold">
+                          <Zap className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Calculated Actual Aging: ~{actualAge} days</span>
+                          <span className="text-emerald-400/70 font-normal font-mono">(vs {totalDaysSinceRoast} calendar days)</span>
+                        </div>
+                        <div className="text-[10.5px] text-emerald-300/80 mt-1 font-mono">
+                          Room rest: {daysRoomRest}d · Frozen: {daysFrozen}d at {formFreezerTemp}°C ({factor}× slowdown)
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
             </div>
 
             {/* Barista Puck Prep Notes */}
@@ -986,7 +1162,7 @@ export const BeanDrawer: React.FC<BeanDrawerProps> = ({
               ) : (
                 filteredBeans.map((b) => {
                   const isSelected = b.id === activeBeanId;
-                  const rest = calculateRestDays(b);
+                  const rest = calculateRestDays(b, new Date(), freezersList);
                   const totalGrams = b.totalGrams || 250;
                   const remainingGrams = b.remainingGrams ?? totalGrams;
                   const pctRemaining = Math.round((remainingGrams / totalGrams) * 100);
@@ -1010,13 +1186,27 @@ export const BeanDrawer: React.FC<BeanDrawerProps> = ({
                       <div className="flex items-center justify-between text-xs mb-1">
                         <span className="font-semibold text-amber-400">{b.roaster}</span>
                         <div className="flex items-center space-x-2">
-                          <div className="flex items-center space-x-1.5 text-[10px] px-2 py-0.5 rounded-full bg-decent-dark border border-decent-border">
+                          <div className="flex items-center flex-wrap gap-1 text-[10px] px-2 py-0.5 rounded-full bg-decent-dark border border-decent-border">
                             <span className="font-mono text-slate-300 font-medium">{rest.roastAgeText}</span>
                             <span className="text-decent-muted">·</span>
                             <span className={`flex items-center font-semibold ${b.isFrozen ? "text-cyan-400" : "text-amber-300"}`}>
                               {b.isFrozen && <Snowflake className="w-2.5 h-2.5 mr-0.5 text-cyan-400" />}
                               <span>{rest.storageLabel}</span>
                             </span>
+                            {b.isFrozen && rest.freezerAgeText && (
+                              <>
+                                <span className="text-decent-muted">·</span>
+                                <span className="text-cyan-300 font-mono font-medium">{rest.freezerAgeText}</span>
+                              </>
+                            )}
+                            {b.isFrozen && rest.actualAgeText && (
+                              <>
+                                <span className="text-decent-muted">·</span>
+                                <span className="text-emerald-400 font-mono font-bold" title="Effective physiological aging based on storage temperature slowdown">
+                                  ~{rest.actualAgeText}
+                                </span>
+                              </>
+                            )}
                           </div>
                           {isSelected && (
                             <span className="flex items-center text-emerald-400 text-xs font-bold">

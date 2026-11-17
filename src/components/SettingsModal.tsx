@@ -110,9 +110,10 @@ import {
   Cpu,
   FolderOpen,
   History,
+  Snowflake,
 } from "lucide-react";
-import type { EquipmentInventory } from "../types/equipment.ts";
-import { loadEquipmentInventory, saveEquipmentInventory } from "../types/equipment.ts";
+import type { EquipmentInventory, FreezerEquipmentItem } from "../types/equipment.ts";
+import { loadEquipmentInventory, saveEquipmentInventory, getFreezerSlowdownFactor } from "../types/equipment.ts";
 import type { SystemVersionInfo, ReleaseChannel } from "../types/device.ts";
 import type { MachineMaintenanceConfig } from "../types/maintenance.ts";
 import {
@@ -246,7 +247,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [equipmentInv, setEquipmentInv] = useState<EquipmentInventory>(() => {
     return propsEquipmentInventory || loadEquipmentInventory();
   });
-  const [newEquipInput, setNewEquipInput] = useState<Record<keyof EquipmentInventory, string>>({
+  const [newEquipInput, setNewEquipInput] = useState<Record<string, string>>({
     grinders: "",
     burrs: "",
     baskets: "",
@@ -256,6 +257,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     wdt: "",
     rdt: "",
   });
+  const [newFreezerName, setNewFreezerName] = useState("");
+  const [newFreezerTemp, setNewFreezerTemp] = useState<number>(-18);
 
   useEffect(() => {
     if (propsEquipmentInventory) {
@@ -263,7 +266,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     }
   }, [propsEquipmentInventory]);
 
-  const handleAddEquipmentItem = (category: keyof EquipmentInventory) => {
+  const handleAddEquipmentItem = (category: "grinders" | "burrs" | "baskets" | "scales" | "tampers" | "distributors" | "wdt" | "rdt") => {
     const text = (newEquipInput[category] || "").trim();
     if (!text) return;
     if (equipmentInv[category].includes(text)) {
@@ -280,10 +283,52 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     setNewEquipInput((prev) => ({ ...prev, [category]: "" }));
   };
 
-  const handleRemoveEquipmentItem = (category: keyof EquipmentInventory, item: string) => {
+  const handleRemoveEquipmentItem = (category: "grinders" | "burrs" | "baskets" | "scales" | "tampers" | "distributors" | "wdt" | "rdt", item: string) => {
     const updated: EquipmentInventory = {
       ...equipmentInv,
       [category]: equipmentInv[category].filter((x) => x !== item),
+    };
+    setEquipmentInv(updated);
+    saveEquipmentInventory(updated);
+    onEquipmentInventoryChange?.(updated);
+  };
+
+  const handleAddFreezer = () => {
+    const name = newFreezerName.trim();
+    if (!name) return;
+    const newFreezer: FreezerEquipmentItem = {
+      id: "freezer-" + Date.now(),
+      name,
+      temperatureC: Number(newFreezerTemp) || -18,
+    };
+    const updated: EquipmentInventory = {
+      ...equipmentInv,
+      freezers: [...(equipmentInv.freezers || []), newFreezer],
+    };
+    setEquipmentInv(updated);
+    saveEquipmentInventory(updated);
+    onEquipmentInventoryChange?.(updated);
+    setNewFreezerName("");
+    setNewFreezerTemp(-18);
+  };
+
+  const handleRemoveFreezer = (id: string) => {
+    const list = equipmentInv.freezers || [];
+    if (list.length <= 1) return; // Keep at least one freezer
+    const updated: EquipmentInventory = {
+      ...equipmentInv,
+      freezers: list.filter((f) => f.id !== id),
+    };
+    setEquipmentInv(updated);
+    saveEquipmentInventory(updated);
+    onEquipmentInventoryChange?.(updated);
+  };
+
+  const handleUpdateFreezerTemp = (id: string, temp: number) => {
+    const list = equipmentInv.freezers || [];
+    const updated: EquipmentInventory = {
+      ...equipmentInv,
+      freezers: list.map((f) => (f.id === id ? { ...f, temperatureC: temp } : f)),
     };
     setEquipmentInv(updated);
     saveEquipmentInventory(updated);
@@ -2180,8 +2225,117 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </div>
               </div>
               <span className="text-[10px] px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 font-mono font-semibold border border-amber-500/30">
-                8 Categories Active
+                9 Categories Active (Gear & Cold Storage)
               </span>
+            </div>
+
+            {/* Cold Storage & Freezers Section */}
+            <div className="p-4 rounded-2xl bg-cyan-950/20 border border-cyan-500/40 space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-cyan-500/30">
+                <div className="flex items-center space-x-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center">
+                    <Snowflake className="w-4 h-4 text-cyan-400" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center space-x-2">
+                      <span>Cold Storage & Freezers</span>
+                      <span className="text-[10px] px-2 py-0.2 rounded-full bg-cyan-500/20 text-cyan-300 font-mono">
+                        {(equipmentInv.freezers || []).length} Freezers
+                      </span>
+                    </h4>
+                    <div className="text-[11px] text-cyan-200/70 mt-0.5">
+                      Physics-based aging slowdown: -18°C slows aging by 12× (12d freezer = 1d room temp); -40°C slows aging by 50× (50d freezer = 1d room temp).
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Freezers Grid */}
+              <div className="grid grid-cols-2 gap-3">
+                {(equipmentInv.freezers || []).map((f) => {
+                  const factor = getFreezerSlowdownFactor(f.temperatureC);
+                  return (
+                    <div
+                      key={f.id}
+                      className="p-3 rounded-xl bg-decent-dark/80 border border-cyan-500/30 flex items-center justify-between"
+                    >
+                      <div className="min-w-0 pr-2">
+                        <div className="flex items-center space-x-1.5 font-bold text-white text-xs">
+                          <Snowflake className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                          <span className="truncate">{f.name}</span>
+                        </div>
+                        <div className="text-[10px] text-cyan-300/80 font-mono mt-0.5">
+                          {factor}× slowdown ({factor}d = 1d room)
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-2 shrink-0">
+                        <div className="flex items-center space-x-1">
+                          <input
+                            type="number"
+                            step="1"
+                            max="0"
+                            min="-100"
+                            value={f.temperatureC}
+                            onChange={(e) => handleUpdateFreezerTemp(f.id, Number(e.target.value) || -18)}
+                            className="w-14 px-1.5 py-1 rounded bg-black/60 border border-cyan-500/50 text-xs font-mono text-cyan-300 text-center focus:outline-none focus:border-cyan-400"
+                            title="Set cabin temperature (°C)"
+                          />
+                          <span className="text-xs text-decent-muted">°C</span>
+                        </div>
+                        {(equipmentInv.freezers || []).length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveFreezer(f.id)}
+                            className="p-1 rounded text-decent-muted hover:text-rose-400 cursor-pointer transition-colors"
+                            title={`Remove ${f.name}`}
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Add New Freezer Row */}
+              <div className="flex items-center space-x-2 pt-2 border-t border-cyan-500/30">
+                <input
+                  type="text"
+                  value={newFreezerName}
+                  onChange={(e) => setNewFreezerName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddFreezer();
+                    }
+                  }}
+                  placeholder="e.g. Lab Ultra-Deep Freezer, Chest Freezer..."
+                  className="flex-1 px-3 py-1.5 rounded-xl bg-decent-dark border border-cyan-500/40 text-xs text-white placeholder:text-decent-muted/60 focus:outline-none focus:border-cyan-400"
+                />
+                <div className="flex items-center space-x-1 shrink-0">
+                  <input
+                    type="number"
+                    step="1"
+                    max="0"
+                    min="-100"
+                    value={newFreezerTemp}
+                    onChange={(e) => setNewFreezerTemp(Number(e.target.value) || -18)}
+                    placeholder="-18"
+                    className="w-16 px-2 py-1.5 rounded-xl bg-decent-dark border border-cyan-500/40 text-xs font-mono text-cyan-300 text-center focus:outline-none focus:border-cyan-400"
+                  />
+                  <span className="text-xs text-decent-muted">°C</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddFreezer}
+                  className="px-3.5 py-1.5 rounded-xl bg-cyan-500/25 hover:bg-cyan-500/35 text-cyan-300 border border-cyan-500/50 text-xs font-semibold flex items-center space-x-1 transition-all cursor-pointer active:scale-95 shrink-0"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Freezer</span>
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3.5">

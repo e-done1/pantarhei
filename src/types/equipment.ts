@@ -5,6 +5,12 @@
  * Distributors, WDT tools, RDT preparations) and active gear selections per extraction.
  */
 
+export interface FreezerEquipmentItem {
+  id: string;
+  name: string;
+  temperatureC: number;
+}
+
 export interface EquipmentInventory {
   grinders: string[];
   burrs: string[];
@@ -14,6 +20,7 @@ export interface EquipmentInventory {
   distributors: string[];
   wdt: string[];
   rdt: string[];
+  freezers: FreezerEquipmentItem[];
 }
 
 export interface ActiveEquipmentSelection {
@@ -25,7 +32,45 @@ export interface ActiveEquipmentSelection {
   distributors: string[];
   wdt: string[];
   rdt: string[];
+  freezerId?: string;
+  freezerTempC?: number;
 }
+
+/**
+ * Calculates the aging slowdown factor based on freezer cabin temperature:
+ * - At -18°C: slows aging by a factor of 12 (12 days in freezer = 1 day room temp)
+ * - Below -40°C: slows aging by a factor of ~50 (50 days in freezer = 1 day room temp)
+ * - Continuously interpolated across intermediate and ultra-low temperatures
+ */
+export function getFreezerSlowdownFactor(tempCelsius = -18): number {
+  if (tempCelsius >= 0) return 1; // Room temperature or above freezing: no slowdown
+  if (tempCelsius >= -18) {
+    // Continuous scale between 0°C (factor 1) and -18°C (factor 12)
+    const ratio = (-tempCelsius) / 18;
+    return Math.round((1 + ratio * 11) * 10) / 10;
+  }
+  if (tempCelsius >= -40) {
+    // Continuous scale between -18°C (factor 12) and -40°C (factor 50)
+    const ratio = (-tempCelsius - 18) / (40 - 18);
+    return Math.round((12 + ratio * 38) * 10) / 10;
+  }
+  // Below -40°C (e.g. -45°C, -80°C ultra-low freezer): at least 50, scaling up to 75 at -80°C
+  const extraRatio = Math.min(1, (-tempCelsius - 40) / 40);
+  return Math.round((50 + extraRatio * 25) * 10) / 10;
+}
+
+export const DEFAULT_FREEZERS: FreezerEquipmentItem[] = [
+  {
+    id: "freezer-std",
+    name: "Standard Freezer",
+    temperatureC: -18,
+  },
+  {
+    id: "freezer-deep",
+    name: "Deep Freezer",
+    temperatureC: -40,
+  },
+];
 
 export const DEFAULT_EQUIPMENT_INVENTORY: EquipmentInventory = {
   grinders: [
@@ -76,6 +121,7 @@ export const DEFAULT_EQUIPMENT_INVENTORY: EquipmentInventory = {
     "1 Spray Ionized Droplet Mist",
     "Ross Droplet Technique (Single Drop)",
   ],
+  freezers: DEFAULT_FREEZERS,
 };
 
 export const DEFAULT_ACTIVE_EQUIPMENT: ActiveEquipmentSelection = {
@@ -87,6 +133,8 @@ export const DEFAULT_ACTIVE_EQUIPMENT: ActiveEquipmentSelection = {
   distributors: [],
   wdt: ["AutoComb Spinning WDT"],
   rdt: ["2 Sprays Distilled Water"],
+  freezerId: "freezer-std",
+  freezerTempC: -18,
 };
 
 export const EQUIPMENT_INVENTORY_STORAGE_KEY = "pantarhei_equipment_inventory";
@@ -107,6 +155,23 @@ export function loadEquipmentInventory(): EquipmentInventory {
         distributors: Array.isArray(parsed.distributors) ? parsed.distributors : DEFAULT_EQUIPMENT_INVENTORY.distributors,
         wdt: Array.isArray(parsed.wdt) ? parsed.wdt : DEFAULT_EQUIPMENT_INVENTORY.wdt,
         rdt: Array.isArray(parsed.rdt) ? parsed.rdt : DEFAULT_EQUIPMENT_INVENTORY.rdt,
+        freezers: Array.isArray(parsed.freezers) && parsed.freezers.length > 0
+          ? parsed.freezers.map((f: any, idx: number) => {
+              if (typeof f === "string") {
+                const isDeep = f.toLowerCase().includes("deep") || f.includes("-40");
+                return {
+                  id: `freezer-${idx}`,
+                  name: f,
+                  temperatureC: isDeep ? -40 : -18,
+                };
+              }
+              return {
+                id: f.id || `freezer-${idx}`,
+                name: f.name || "Freezer",
+                temperatureC: typeof f.temperatureC === "number" ? f.temperatureC : -18,
+              };
+            })
+          : DEFAULT_FREEZERS,
       };
     }
   } catch {}
@@ -135,6 +200,8 @@ export function loadActiveEquipment(): ActiveEquipmentSelection {
         distributors: Array.isArray(parsed.distributors) ? parsed.distributors : [],
         wdt: Array.isArray(parsed.wdt) ? parsed.wdt : [],
         rdt: Array.isArray(parsed.rdt) ? parsed.rdt : [],
+        freezerId: parsed.freezerId || DEFAULT_ACTIVE_EQUIPMENT.freezerId,
+        freezerTempC: typeof parsed.freezerTempC === "number" ? parsed.freezerTempC : DEFAULT_ACTIVE_EQUIPMENT.freezerTempC,
       };
     }
   } catch {}
