@@ -147,6 +147,7 @@ export default defineConfig({
   plugins: [react(), shotPngServerPlugin()],
   base: "./",
   build: {
+    target: ["chrome69", "es2018"],
     outDir: "dist",
     assetsDir: "assets",
     sourcemap: false,

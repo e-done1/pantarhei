@@ -1,0 +1,19 @@
+{
+  "id": "pantarhei",
+  "name": "PantaRhei",
+  "version": "1.0.0",
+  "description": "Modern, data-intensive Decent DE1 web skin with ambient fluid dynamic background, live extraction physics, and deep bean inventory",
+  "author": "Idan & PantaRhei Team",
+  "entry": "index.html",
+  "targetResolution": "1340x800",
+  "minResolution": "1005x552",
+  "supportedFeatures": [
+    "live_telemetry_60fps",
+    "fluid_background",
+    "beans_inventory_deep_indexing",
+    "decaid_v2_profile_editor",
+    "local_qr_sharing_engine",
+    "anti_burn_in_screensaver",
+    "equipment_profile_matching"
+  ]
+}
