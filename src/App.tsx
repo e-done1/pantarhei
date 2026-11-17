@@ -364,6 +364,9 @@ export function App() {
 
   // Subscribe to live/simulated Decaid telemetry
   useEffect(() => {
+    if (!decaid.isLiveConnected()) {
+      decaid.enableSimulatorMode();
+    }
     const unsubscribe = decaid.subscribe((point, mach, sc) => {
       setCurrentPoint(point);
       setMachine(mach);

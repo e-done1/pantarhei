@@ -22,10 +22,9 @@ PantaRhei is a responsive, data-intensive web skin designed for Decaid on Decent
 | :---: | :---: |
 | ![Shot Dial-in & Curve Inspection](screenshots/07_shot_inspection_graph.png) | ![Machine Maintenance Assistant & Pairing](screenshots/08_machine_maintenance_and_pairing.png) |
 
-<div align="center">
-  <img src="screenshots/09_equipment_management.png" alt="Equipment Inventory & Puck Prep Routine" width="85%" />
-  <p><em>Equipment Inventory & Puck Prep Routine Configuration (Grinders, Burrs, Baskets, Tampers, WDT, and RDT)</em></p>
-</div>
+| Equipment & Puck Prep Routine | DE1 Machine Connection & Setup Wizard |
+| :---: | :---: |
+| ![Equipment Inventory & Puck Prep Routine](screenshots/09_equipment_management.png) | ![DE1 Connection & Setup Wizard](screenshots/10_de1_connection_modal.png) |
 
 ---
 
