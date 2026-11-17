@@ -1,0 +1,6774 @@
+{
+  "sey": [
+    {
+      "title": "SEY/NewBasket/Yes 2 Espresso (Big flat) Flat Flow 1.8",
+      "author": "Idan Gafni",
+      "notes": "This profile is a dedicated profile to light roasted coffees that are more challenging to extract. The increased extraction is achieved by using various extraction mechanics such as soaking, blooming, fresh water introduction, and an extended contact time.",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Surge Read Protection",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "7.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "7.0",
+          "seconds": "9.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.20"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "89.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "4.0",
+          "seconds": "5.00",
+          "volume": "0",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.50"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Bloom",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0.0",
+          "seconds": "20.00",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Increase",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.00",
+          "seconds": "3.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "2.00"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Constant Flow",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "1.8",
+          "seconds": "25.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0.0",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "36",
+      "target_volume": "0",
+      "target_volume_count_start": "6",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "SEY__NewBasket__Yes_2_Espresso_Big_flat_Flat_Flow_18",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "sey",
+      "archetypeName": "SEY (Ultra-Light Clarity)",
+      "filename": "SEY__NewBasket__Yes_2_Espresso_Big_flat_Flat_Flow_18.json"
+    },
+    {
+      "title": "SEY/Yes 2 Espresso (Big flat)",
+      "author": "Idan Gafni",
+      "notes": "This profile is a dedicated profile for light roasted coffees that are more challenging to extract. The increased extraction is achieved by using various extraction mechanics such as temprature, pressure, and contact time.",
+      "beverage_type": "tea_portafilter",
+      "steps": [
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "96.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "10.0",
+          "seconds": "6.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "3.10"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "96.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "4.0",
+          "seconds": "5.00",
+          "volume": "100",
+          "weight": "5.00",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "3.40"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Bloom",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0",
+          "seconds": "20.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Increase",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.00",
+          "seconds": "3.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "6.60"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Flow extraction start",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "5.0",
+          "flow": "1.0",
+          "seconds": "3.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "6.6",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Flow extraction target",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "smooth",
+          "pressure": "5.0",
+          "flow": "3.0",
+          "seconds": "20.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "6.6",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "37",
+      "target_volume": "150",
+      "target_volume_count_start": "0",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "SEY__Espresso_Big_flat",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "sey",
+      "archetypeName": "SEY (Ultra-Light Clarity)",
+      "filename": "SEY__Yes_2_Espresso_Big_flat.json"
+    },
+    {
+      "title": "SEY/Yes 2 Espresso (Big flat) 2 bar",
+      "author": "Idan Gafni",
+      "notes": "This profile is a dedicated profile to light roasted coffees that are more challenging to extract. The increased extraction is achieved by using various extraction mechanics such as soaking, blooming, fresh water introduction, and an extended contact time.",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Surge Read Protection",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "7.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "7.0",
+          "seconds": "9.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "2.80"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "89.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "4.0",
+          "seconds": "5.00",
+          "volume": "0",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "3.20"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Bloom",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0.0",
+          "seconds": "20.00",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Increase",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.00",
+          "seconds": "3.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "2.50"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Constant Pressure",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "2.0",
+          "flow": "0.00",
+          "seconds": "30.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "36",
+      "target_volume": "0",
+      "target_volume_count_start": "0",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "SEY__Yes_2_Espresso_Big_flat_2_bar",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "sey",
+      "archetypeName": "SEY (Ultra-Light Clarity)",
+      "filename": "SEY__Yes_2_Espresso_Big_flat_2_bar.json"
+    },
+    {
+      "title": "SEY/Yes 2 Espresso (Big flat) Flat Flow",
+      "author": "Idan Gafni",
+      "notes": "This profile is a dedicated profile to light roasted coffees that are more challenging to extract. The increased extraction is achieved by using various extraction mechanics such as soaking, blooming, fresh water introduction, and an extended contact time.",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Surge Read Protection",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "7.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "7.0",
+          "seconds": "9.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "2.80"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "89.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "4.0",
+          "seconds": "5.00",
+          "volume": "0",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "3.20"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Bloom",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0.0",
+          "seconds": "20.00",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Increase",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.00",
+          "seconds": "3.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "2.00"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Constant Flow",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "2.0",
+          "seconds": "25.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0.0",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "36",
+      "target_volume": "0",
+      "target_volume_count_start": "6",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "SEY__Yes_2_Espresso_Big_flat_Flat_Constant_Flow",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "sey",
+      "archetypeName": "SEY (Ultra-Light Clarity)",
+      "filename": "SEY__Yes_2_Espresso_Big_flat_Flat_Constant_Flow.json"
+    },
+    {
+      "title": "SEY/Yes 2 Espresso (Big flat) Flat Flow 2",
+      "author": "Idan Gafni",
+      "notes": "This profile is a dedicated profile to light roasted coffees that are more challenging to extract. The increased extraction is achieved by using various extraction mechanics such as soaking, blooming, fresh water introduction, and an extended contact time.",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Surge Read Protection",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "7.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "7.0",
+          "seconds": "9.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.50"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "89.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "4.0",
+          "seconds": "5.00",
+          "volume": "0",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "2.00"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Bloom",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0.0",
+          "seconds": "20.00",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Increase",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.00",
+          "seconds": "3.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "2.00"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Constant Flow",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "1.6",
+          "seconds": "25.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0.0",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "36",
+      "target_volume": "0",
+      "target_volume_count_start": "6",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "SEY__Yes_2_Espresso_Big_flat_Flat_Flow_2",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "sey",
+      "archetypeName": "SEY (Ultra-Light Clarity)",
+      "filename": "SEY__Yes_2_Espresso_Big_flat_Flat_Flow_2.json"
+    },
+    {
+      "title": "SEY/Yes 2 Espresso CB HU Flow 1.8",
+      "author": "Idan Gafni",
+      "notes": "This profile is a dedicated profile to light roasted coffees that are more challenging to extract. The increased extraction is achieved by using various extraction mechanics such as soaking, blooming, fresh water introduction, and an extended contact time.",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Surge Read Protection",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "7.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "7.0",
+          "seconds": "9.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.20"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "89.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "4.0",
+          "seconds": "5.00",
+          "volume": "0",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.50"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Bloom",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0.0",
+          "seconds": "20.00",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Increase",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.00",
+          "seconds": "3.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "2.00"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Constant Flow",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "1.8",
+          "seconds": "25.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0.0",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "36",
+      "target_volume": "0",
+      "target_volume_count_start": "0",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "SEY__Yes_2_Espresso_CB_HU_Flow_18",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "sey",
+      "archetypeName": "SEY (Ultra-Light Clarity)",
+      "filename": "SEY__Yes_2_Espresso_CB_HU_Flow_18.json"
+    },
+    {
+      "title": "SEY/Yes 2 Espresso CB HU Flow 2",
+      "author": "Idan Gafni",
+      "notes": "This profile is a dedicated profile to light roasted coffees that are more challenging to extract. The increased extraction is achieved by using various extraction mechanics such as soaking, blooming, fresh water introduction, and an extended contact time.",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Surge Read Protection",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "7.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "7.0",
+          "seconds": "9.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.50"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "89.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "4.0",
+          "seconds": "5.00",
+          "volume": "0",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "2.00"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Bloom",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0.0",
+          "seconds": "20.00",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Increase",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.00",
+          "seconds": "3.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "2.00"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Constant Flow",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "1.8",
+          "seconds": "25.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0.0",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "36",
+      "target_volume": "0",
+      "target_volume_count_start": "0",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "SEY__Yes_2_Espresso_CB_HU_Flow_2",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "sey",
+      "archetypeName": "SEY (Ultra-Light Clarity)",
+      "filename": "SEY__Yes_2_Espresso_CB_HU_Flow_2.json"
+    },
+    {
+      "title": "SEY/Yes 2 Espresso CB LU Flow 1.8",
+      "author": "Idan Gafni",
+      "notes": "This profile is a dedicated profile to light roasted coffees that are more challenging to extract. The increased extraction is achieved by using various extraction mechanics such as soaking, blooming, fresh water introduction, and an extended contact time.",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Surge Read Protection",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "7.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "6.0",
+          "seconds": "9.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.20"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "89.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "4.0",
+          "seconds": "5.00",
+          "volume": "0",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.80"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Bloom",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0.0",
+          "seconds": "20.00",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Increase",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.00",
+          "seconds": "3.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "2.20"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Constant Flow",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "1.6",
+          "seconds": "25.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0.0",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "36",
+      "target_volume": "0",
+      "target_volume_count_start": "0",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "SEY__Yes_2_Espresso_CB_LU_Flow_18",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "sey",
+      "archetypeName": "SEY (Ultra-Light Clarity)",
+      "filename": "SEY__Yes_2_Espresso_CB_LU_Flow_18.json"
+    },
+    {
+      "title": "SEY/Yes 2 Espresso NB Flow 1.8",
+      "author": "Idan Gafni",
+      "notes": "This profile is a dedicated profile to light roasted coffees that are more challenging to extract. The increased extraction is achieved by using various extraction mechanics such as soaking, blooming, fresh water introduction, and an extended contact time.",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Surge Read Protection",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "7.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "7.0",
+          "seconds": "9.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.20"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "89.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "4.0",
+          "seconds": "5.00",
+          "volume": "0",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.50"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Bloom",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0.0",
+          "seconds": "20.00",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Increase",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.00",
+          "seconds": "3.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "2.00"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Constant Flow",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "1.8",
+          "seconds": "25.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0.0",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "36",
+      "target_volume": "0",
+      "target_volume_count_start": "6",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "SEY__Yes_2_Espresso_NB_Flow_18",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "sey",
+      "archetypeName": "SEY (Ultra-Light Clarity)",
+      "filename": "SEY__Yes_2_Espresso_NB_Flow_18.json"
+    },
+    {
+      "title": "SEY/Yes 2 Espresso NB HU Flow 1.5",
+      "author": "Idan Gafni",
+      "notes": "This profile is a dedicated profile to light roasted coffees that are more challenging to extract. The increased extraction is achieved by using various extraction mechanics such as soaking, blooming, fresh water introduction, and an extended contact time.",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Surge Read Protection",
+          "temperature": "91.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "4.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "4.5",
+          "seconds": "9.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.50"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "2.5",
+          "seconds": "5.00",
+          "volume": "0",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.00"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Bloom",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0.0",
+          "seconds": "25.00",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Increase",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.00",
+          "seconds": "3.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "2.00"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Constant Flow",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "1.5",
+          "seconds": "25.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0.0",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "36",
+      "target_volume": "0",
+      "target_volume_count_start": "6",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "SEY__Yes_2_Espresso_NB_HU_Flow_15",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "sey",
+      "archetypeName": "SEY (Ultra-Light Clarity)",
+      "filename": "SEY__Yes_2_Espresso_NB_HU_Flow_15.json"
+    },
+    {
+      "title": "SEY/Yes 2 Espresso NB HU Flow 1.8",
+      "author": "Idan Gafni",
+      "notes": "This profile is a dedicated profile to light roasted coffees that are more challenging to extract. The increased extraction is achieved by using various extraction mechanics such as soaking, blooming, fresh water introduction, and an extended contact time.",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Surge Read Protection",
+          "temperature": "91.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "4.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "4.5",
+          "seconds": "9.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.20"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "2.5",
+          "seconds": "5.00",
+          "volume": "0",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.40"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Bloom",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0.0",
+          "seconds": "20.00",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Increase",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.00",
+          "seconds": "3.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "2.00"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Constant Flow",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "1.8",
+          "seconds": "25.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0.0",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "36",
+      "target_volume": "0",
+      "target_volume_count_start": "0",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "SEY__Yes_2_Espresso_NB_HU_Flow_18",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "sey",
+      "archetypeName": "SEY (Ultra-Light Clarity)",
+      "filename": "SEY__Yes_2_Espresso_NB_HU_Flow_18.json"
+    },
+    {
+      "title": "SEY/Yes 2 Espresso NB LU Flow 1.5",
+      "author": "Idan Gafni",
+      "notes": "This profile is a dedicated profile to light roasted coffees that are more challenging to extract. The increased extraction is achieved by using various extraction mechanics such as soaking, blooming, fresh water introduction, and an extended contact time.",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Surge Read Protection",
+          "temperature": "91.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "4.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "3.0",
+          "seconds": "9.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.50"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "2.8",
+          "seconds": "5.00",
+          "volume": "0",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.00"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Bloom",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0.0",
+          "seconds": "25.00",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Increase",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.00",
+          "seconds": "3.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.40"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Constant Flow",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "1.5",
+          "seconds": "25.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0.0",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "36",
+      "target_volume": "0",
+      "target_volume_count_start": "0",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "SEY__Yes_2_Espresso_NB_LU_Flow_15",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "sey",
+      "archetypeName": "SEY (Ultra-Light Clarity)",
+      "filename": "SEY__Yes_2_Espresso_NB_LU_Flow_15.json"
+    },
+    {
+      "title": "SEY/Yes 2 Espresso NB LU Flow 1.8",
+      "author": "Idan Gafni",
+      "notes": "This profile is a dedicated profile to light roasted coffees that are more challenging to extract. The increased extraction is achieved by using various extraction mechanics such as soaking, blooming, fresh water introduction, and an extended contact time. Usually this profile generates around 22 and 23 EY with a bit shift towards complexity.",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Surge Read Protection",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "4.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "5.0",
+          "seconds": "9.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.50"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "89.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "4.0",
+          "seconds": "5.00",
+          "volume": "0",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.00"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Bloom",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0.0",
+          "seconds": "20.00",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Increase",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.00",
+          "seconds": "3.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.50"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Constant Flow",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "1.8",
+          "seconds": "25.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0.0",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "36",
+      "target_volume": "0",
+      "target_volume_count_start": "0",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "SEY__Yes_2_Espresso_NB_LU_Flow_18",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "sey",
+      "archetypeName": "SEY (Ultra-Light Clarity)",
+      "filename": "SEY__Yes_2_Espresso_NB_LU_Flow_18.json"
+    },
+    {
+      "title": "SEY/Yes 2 Espresso OB Flat Flow 2",
+      "author": "Idan Gafni",
+      "notes": "This profile is a dedicated profile to light roasted coffees that are more challenging to extract. The increased extraction is achieved by using various extraction mechanics such as soaking, blooming, fresh water introduction, and an extended contact time.",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Surge Read Protection",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "7.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "7.0",
+          "seconds": "9.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.50"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "89.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "4.0",
+          "seconds": "5.00",
+          "volume": "0",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "2.00"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Bloom",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0.0",
+          "seconds": "20.00",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Increase",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.00",
+          "seconds": "3.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "2.00"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Constant Flow",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "1.8",
+          "seconds": "25.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0.0",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "36",
+      "target_volume": "0",
+      "target_volume_count_start": "6",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "SEY__Yes_2_Espresso_OB_Flat_Flow_2",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "sey",
+      "archetypeName": "SEY (Ultra-Light Clarity)",
+      "filename": "SEY__Yes_2_Espresso_OB_Flat_Flow_2.json"
+    }
+  ],
+  "peony": [
+    {
+      "title": "Peony/Flow",
+      "author": "Idan Gafni",
+      "notes": "Peony Flow is a simple yet smart profile for uneven extraction from Nordic style roasts to Medium roasts to reduce roast flavors. \n\nAdaptation to your coffee and setup:\nReduce flow in last flow stage for lower uniformity burrs if you don't like the result and see many channels in your extraction (low extraction)\nChange pause time as blooming for higher extraction (through contact time)",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Fill Protection",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "6.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.80"
+          },
+          "limiter": {
+            "value": "7.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "5.0",
+          "seconds": "4.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "2.00"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pause",
+          "temperature": "85.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "0",
+          "seconds": "2.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Fill",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.0",
+          "flow": "0",
+          "seconds": "4.00",
+          "volume": "100.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.00"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Flow",
+          "temperature": "84.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "8.3",
+          "flow": "2.6",
+          "seconds": "20.00",
+          "volume": "100.00",
+          "weight": "0",
+          "limiter": {
+            "value": "7.4",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "34",
+      "target_volume": "0",
+      "target_volume_count_start": "2",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "Peony__Flow",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "peony",
+      "archetypeName": "Peony (Dynamic Flow Profiling)",
+      "filename": "Peony__Flow.json"
+    },
+    {
+      "title": "Peony/FlowHUCB",
+      "author": "Idan Gafni",
+      "notes": "Peony Flow is a simple yet smart profile for uneven extraction from Nordic style roasts to Medium roasts to reduce roast flavors. \n\nAdaptation to your coffee and setup:\nReduce flow in last flow stage for lower uniformity burrs if you don't like the result and see many channels in your extraction (low extraction)\nChange pause time as blooming for higher extraction (through contact time)",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Fill Protection",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "6.0",
+          "seconds": "6.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.00"
+          },
+          "limiter": {
+            "value": "7.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "5.0",
+          "seconds": "4.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.40"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pause",
+          "temperature": "85.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "0",
+          "seconds": "2.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Fill",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.0",
+          "flow": "0",
+          "seconds": "4.00",
+          "volume": "100.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.40"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Flow",
+          "temperature": "84.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "8.3",
+          "flow": "1.7",
+          "seconds": "20.00",
+          "volume": "100.00",
+          "weight": "0",
+          "limiter": {
+            "value": "7.4",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "34",
+      "target_volume": "0",
+      "target_volume_count_start": "2",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "Peony__FlowHUCB",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "peony",
+      "archetypeName": "Peony (Dynamic Flow Profiling)",
+      "filename": "Peony__FlowHUCB.json"
+    },
+    {
+      "title": "Peony/FlowHUNB",
+      "author": "Idan Gafni",
+      "notes": "Peony Flow is a simple yet smart profile for uneven extraction from Nordic style roasts to Medium roasts to reduce roast flavors. \n\nAdaptation to your coffee and setup:\nReduce flow in last flow stage for lower uniformity burrs if you don't like the result and see many channels in your extraction (low extraction)\nChange pause time as blooming for higher extraction (through contact time)",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Fill Protection",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "5.0",
+          "seconds": "6.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.40"
+          },
+          "limiter": {
+            "value": "7.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "4.0",
+          "seconds": "4.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.00"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pause",
+          "temperature": "85.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "0",
+          "seconds": "2.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Fill",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.0",
+          "flow": "0",
+          "seconds": "4.00",
+          "volume": "100.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.00"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Flow",
+          "temperature": "84.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "8.3",
+          "flow": "2.0",
+          "seconds": "20.00",
+          "volume": "100.00",
+          "weight": "0",
+          "limiter": {
+            "value": "7.4",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "34",
+      "target_volume": "0",
+      "target_volume_count_start": "2",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "Peony__FlowHUNB",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "peony",
+      "archetypeName": "Peony (Dynamic Flow Profiling)",
+      "filename": "Peony__FlowHUNB.json"
+    },
+    {
+      "title": "Peony/FlowHUNB1.6",
+      "author": "Idan Gafni",
+      "notes": "Peony Flow is a simple yet smart profile for uneven extraction from Nordic style roasts to Medium roasts to reduce roast flavors. \n\nAdaptation to your coffee and setup:\nReduce flow in last flow stage for lower uniformity burrs if you don't like the result and see many channels in your extraction (low extraction)\nChange pause time as blooming for higher extraction (through contact time)",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Fill Protection",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "6.0",
+          "seconds": "6.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.40"
+          },
+          "limiter": {
+            "value": "7.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "3.5",
+          "seconds": "4.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.80"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pause",
+          "temperature": "85.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "0",
+          "seconds": "1.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Fill",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.0",
+          "flow": "0",
+          "seconds": "4.00",
+          "volume": "100.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.10"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Flow",
+          "temperature": "84.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "8.3",
+          "flow": "1.6",
+          "seconds": "20.00",
+          "volume": "100.00",
+          "weight": "0",
+          "limiter": {
+            "value": "7.4",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "87.0",
+      "target_weight": "34",
+      "target_volume": "95",
+      "archetype": "peony",
+      "archetypeName": "Peony (Dynamic Flow Profiling)",
+      "filename": "Peony__FlowHUNB16.json"
+    },
+    {
+      "title": "Peony/FlowHUNB2.3",
+      "author": "Idan Gafni",
+      "notes": "Peony Flow is a simple yet smart profile for uneven extraction from Nordic style roasts to Medium roasts to reduce roast flavors. \n\nAdaptation to your coffee and setup:\nReduce flow in last flow stage for lower uniformity burrs if you don't like the result and see many channels in your extraction (low extraction)\nChange pause time as blooming for higher extraction (through contact time)",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Fill Protection",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "5.0",
+          "seconds": "6.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.40"
+          },
+          "limiter": {
+            "value": "7.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "4.0",
+          "seconds": "4.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.70"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pause",
+          "temperature": "85.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "0",
+          "seconds": "1.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Fill",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.0",
+          "flow": "0",
+          "seconds": "3.00",
+          "volume": "100.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.60"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Flow",
+          "temperature": "84.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "8.3",
+          "flow": "2.3",
+          "seconds": "20.00",
+          "volume": "100.00",
+          "weight": "0",
+          "limiter": {
+            "value": "7.4",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "87.0",
+      "target_weight": "34",
+      "target_volume": "95",
+      "archetype": "peony",
+      "archetypeName": "Peony (Dynamic Flow Profiling)",
+      "filename": "Peony__FlowHUNB23.json"
+    },
+    {
+      "title": "Peony/FlowHUNB2.6",
+      "author": "Idan Gafni",
+      "notes": "Peony Flow is a simple yet smart profile for uneven extraction from Nordic style roasts to Medium roasts to reduce roast flavors. \n\nAdaptation to your coffee and setup:\nReduce flow in last flow stage for lower uniformity burrs if you don't like the result and see many channels in your extraction (low extraction)\nChange pause time as blooming for higher extraction (through contact time)",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Fill Protection",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "5.0",
+          "seconds": "6.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.00"
+          },
+          "limiter": {
+            "value": "7.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "4.0",
+          "seconds": "4.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.50"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pause",
+          "temperature": "85.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "0",
+          "seconds": "2.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Fill",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.0",
+          "flow": "0",
+          "seconds": "4.00",
+          "volume": "100.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.30"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Flow",
+          "temperature": "84.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "8.3",
+          "flow": "2.6",
+          "seconds": "20.00",
+          "volume": "100.00",
+          "weight": "0",
+          "limiter": {
+            "value": "7.4",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "87.0",
+      "target_weight": "34",
+      "target_volume": "95",
+      "archetype": "peony",
+      "archetypeName": "Peony (Dynamic Flow Profiling)",
+      "filename": "Peony__FlowHUNB26.json"
+    },
+    {
+      "title": "Peony/FlowLUCB",
+      "author": "Idan Gafni",
+      "notes": "Peony Flow is a simple yet smart profile for uneven extraction from Nordic style roasts to Medium roasts to reduce roast flavors. \n\nAdaptation to your coffee and setup:\nReduce flow in last flow stage for lower uniformity burrs if you don't like the result and see many channels in your extraction (low extraction)\nChange pause time as blooming for higher extraction (through contact time)",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Fill Protection",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "6.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.70"
+          },
+          "limiter": {
+            "value": "7.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "4.0",
+          "seconds": "4.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.50"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pause",
+          "temperature": "85.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "0",
+          "seconds": "2.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Fill",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.0",
+          "flow": "0",
+          "seconds": "4.00",
+          "volume": "100.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.50"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Flow",
+          "temperature": "84.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "8.3",
+          "flow": "1.5",
+          "seconds": "30.00",
+          "volume": "100.00",
+          "weight": "0",
+          "limiter": {
+            "value": "7.4",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "34",
+      "target_volume": "0",
+      "target_volume_count_start": "0",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "Peony__FlowLUCB",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "peony",
+      "archetypeName": "Peony (Dynamic Flow Profiling)",
+      "filename": "Peony__FlowLUCB.json"
+    },
+    {
+      "title": "Peony/FlowLUNB",
+      "author": "Idan Gafni",
+      "notes": "Peony Flow is a simple yet smart profile for uneven extraction from Nordic style roasts to Medium roasts to reduce roast flavors. \n\nAdaptation to your coffee and setup:\nReduce flow in last flow stage for lower uniformity burrs if you don't like the result and see many channels in your extraction (low extraction)\nChange pause time as blooming for higher extraction (through contact time)",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Fill Protection",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "3.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.50"
+          },
+          "limiter": {
+            "value": "7.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "5.0",
+          "seconds": "2.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.70"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pause",
+          "temperature": "85.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "0",
+          "seconds": "2.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Fill",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.0",
+          "flow": "0",
+          "seconds": "4.00",
+          "volume": "100.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.00"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Flow",
+          "temperature": "84.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "8.3",
+          "flow": "1.8",
+          "seconds": "20.00",
+          "volume": "100.00",
+          "weight": "0",
+          "limiter": {
+            "value": "7.4",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "34",
+      "target_volume": "0",
+      "target_volume_count_start": "2",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "Peony__FlowLUNB",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "peony",
+      "archetypeName": "Peony (Dynamic Flow Profiling)",
+      "filename": "Peony__FlowLUNB.json"
+    },
+    {
+      "title": "Peony/FlowMPCB",
+      "author": "Idan Gafni",
+      "notes": "Peony Flow is a simple yet smart profile for uneven extraction from Nordic style roasts to Medium roasts to reduce roast flavors. \n\nAdaptation to your coffee and setup:\nReduce flow in last flow stage for lower uniformity burrs if you don't like the result and see many channels in your extraction (low extraction)\nChange pause time as blooming for higher extraction (through contact time)",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Fill Protection",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "6.0",
+          "seconds": "6.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.00"
+          },
+          "limiter": {
+            "value": "7.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "5.0",
+          "seconds": "4.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.40"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pause",
+          "temperature": "85.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "0",
+          "seconds": "2.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Fill",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.0",
+          "flow": "0",
+          "seconds": "4.00",
+          "volume": "100.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.40"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Flow",
+          "temperature": "84.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "8.3",
+          "flow": "1.8",
+          "seconds": "20.00",
+          "volume": "100.00",
+          "weight": "0",
+          "limiter": {
+            "value": "7.4",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "34",
+      "target_volume": "0",
+      "target_volume_count_start": "2",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "Peony__FlowMPCB",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "peony",
+      "archetypeName": "Peony (Dynamic Flow Profiling)",
+      "filename": "Peony__FlowMPCB.json"
+    },
+    {
+      "title": "Peony/FlowMPNB",
+      "author": "Idan Gafni",
+      "notes": "Peony Flow is a simple yet smart profile for uneven extraction from Nordic style roasts to Medium roasts to reduce roast flavors. \n\nAdaptation to your coffee and setup:\nReduce flow in last flow stage for lower uniformity burrs if you don't like the result and see many channels in your extraction (low extraction)\nChange pause time as blooming for higher extraction (through contact time)",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Fill Protection",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "5.0",
+          "seconds": "6.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.40"
+          },
+          "limiter": {
+            "value": "7.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "4.0",
+          "seconds": "4.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.00"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pause",
+          "temperature": "85.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "0",
+          "seconds": "2.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Fill",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.0",
+          "flow": "0",
+          "seconds": "4.00",
+          "volume": "100.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.00"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Flow",
+          "temperature": "84.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "8.3",
+          "flow": "2.2",
+          "seconds": "20.00",
+          "volume": "100.00",
+          "weight": "0",
+          "limiter": {
+            "value": "7.4",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "34",
+      "target_volume": "0",
+      "target_volume_count_start": "2",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "Peony__FlowMPNB",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "peony",
+      "archetypeName": "Peony (Dynamic Flow Profiling)",
+      "filename": "Peony__FlowMPNB.json"
+    },
+    {
+      "title": "Peony/MDLever",
+      "author": "Idan Gafni",
+      "notes": "Peony MDLever for lever style extraction for medium-dark roasts. It is aimed to bring more body while reducing bitterness. Requires fine grind.",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Fill Protection",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "6.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "2.00"
+          },
+          "limiter": {
+            "value": "7.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "PreInfusion",
+          "temperature": "88.00",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "0",
+          "seconds": "10.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Fill",
+          "temperature": "88.00",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0",
+          "seconds": "4.00",
+          "volume": "100.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "7.0"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Lever Decline",
+          "temperature": "86.00",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "smooth",
+          "pressure": "4.5",
+          "flow": "1.7",
+          "seconds": "35.00",
+          "volume": "100.00",
+          "weight": "0",
+          "limiter": {
+            "value": "2.0",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "34",
+      "target_volume": "0",
+      "target_volume_count_start": "2",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "Peony__MDLever",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "peony",
+      "archetypeName": "Peony (Dynamic Flow Profiling)",
+      "filename": "Peony__MDLever.json"
+    },
+    {
+      "title": "Peony/PesadoFlow",
+      "author": "Idan Gafni",
+      "notes": "Peony Flow is a simple yet smart profile for uneven extraction from Nordic style roasts to Medium roasts to reduce roast flavors. \n\nAdaptation to your coffee and setup:\nReduce flow in last flow stage for lower uniformity burrs if you don't like the result and see many channels in your extraction (low extraction)\nChange pause time as blooming for higher extraction (through contact time)",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Fill Protection",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "6.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.00"
+          },
+          "limiter": {
+            "value": "7.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "5.0",
+          "seconds": "4.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.20"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pause",
+          "temperature": "85.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "0",
+          "seconds": "2.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Fill",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.0",
+          "flow": "0",
+          "seconds": "4.00",
+          "volume": "100.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.00"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Flow",
+          "temperature": "84.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "8.3",
+          "flow": "2.0",
+          "seconds": "20.00",
+          "volume": "100.00",
+          "weight": "0",
+          "limiter": {
+            "value": "7.4",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "34",
+      "target_volume": "0",
+      "target_volume_count_start": "2",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "Peony__PesadoFlow",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "peony",
+      "archetypeName": "Peony (Dynamic Flow Profiling)",
+      "filename": "Peony__PesadoFlow.json"
+    },
+    {
+      "title": "Peony/PesadoFlowHU",
+      "author": "Idan Gafni",
+      "notes": "Peony Flow is a simple yet smart profile for uneven extraction from Nordic style roasts to Medium roasts to reduce roast flavors. \n\nAdaptation to your coffee and setup:\nReduce flow in last flow stage for lower uniformity burrs if you don't like the result and see many channels in your extraction (low extraction)\nChange pause time as blooming for higher extraction (through contact time)",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Fill Protection",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "6.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.50"
+          },
+          "limiter": {
+            "value": "7.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "5.0",
+          "seconds": "4.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.70"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pause",
+          "temperature": "85.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "0",
+          "seconds": "2.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Fill",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.0",
+          "flow": "0",
+          "seconds": "4.00",
+          "volume": "100.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.00"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Flow",
+          "temperature": "84.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "8.3",
+          "flow": "1.8",
+          "seconds": "20.00",
+          "volume": "100.00",
+          "weight": "0",
+          "limiter": {
+            "value": "7.4",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "34",
+      "target_volume": "0",
+      "target_volume_count_start": "2",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "Peony__PesadoFlowHU",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "peony",
+      "archetypeName": "Peony (Dynamic Flow Profiling)",
+      "filename": "Peony__PesadoFlowHU.json"
+    },
+    {
+      "title": "Peony/UpFlowHUNB",
+      "author": "Idan Gafni",
+      "notes": "Peony Flow is a simple yet smart profile for uneven extraction from Nordic style roasts to Medium roasts to reduce roast flavors. \n\nAdaptation to your coffee and setup:\nReduce flow in last flow stage for lower uniformity burrs if you don't like the result and see many channels in your extraction (low extraction)\nChange pause time as blooming for higher extraction (through contact time)",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Fill Protection",
+          "temperature": "88.00",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "5.0",
+          "seconds": "6.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.20"
+          },
+          "limiter": {
+            "value": "7.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "87.00",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "4.0",
+          "seconds": "4.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.50"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pause",
+          "temperature": "85.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "0",
+          "seconds": "1.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Fill",
+          "temperature": "87.00",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.0",
+          "flow": "0",
+          "seconds": "4.00",
+          "volume": "100.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.40"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Flow",
+          "temperature": "87.00",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "8.3",
+          "flow": "1.8",
+          "seconds": "2.00",
+          "volume": "50.00",
+          "weight": "0",
+          "limiter": {
+            "value": "6.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "FlowTarget",
+          "temperature": "87.00",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "smooth",
+          "pressure": "8.3",
+          "flow": "3.5",
+          "seconds": "20.00",
+          "volume": "100.00",
+          "weight": "0",
+          "limiter": {
+            "value": "6.0",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "36.0",
+      "target_volume": "0",
+      "target_volume_count_start": "0",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "Peony__UpFlowHUNB",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "peony",
+      "archetypeName": "Peony (Dynamic Flow Profiling)",
+      "filename": "Peony__UpFlowHUNB.json"
+    }
+  ],
+  "push": [
+    {
+      "title": "Push/MaX-Traction",
+      "author": "Idan Gafni",
+      "notes": "25+ EY. High extraction low body beverage. Requires grinding of about 200+ microns from burrs lock. This profile is a dedicated profile to light roasted coffees that are more challenging to extract. The increased extraction is achieved by using various extraction mechanics such as multiple fills with fresh water,multiple blooms, and contact time. With high flow baskets (unibasket, sworks flow, wafo soe, pesado etc) it will drizzle throughout the extraction.",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Surge read protection",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "6.0",
+          "flow": "0",
+          "seconds": "2.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "6.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "6.0",
+          "flow": "0",
+          "seconds": "5.00",
+          "volume": "0",
+          "weight": "0.00",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.00"
+          },
+          "limiter": {
+            "value": "5.5",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Bloom",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0",
+          "seconds": "18.00",
+          "volume": "0.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "2nd Fill",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.00",
+          "seconds": "5.00",
+          "volume": "0",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.50"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "2nd Bloom",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "0.0",
+          "seconds": "14.00",
+          "volume": "0.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "3rd Fill",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.0",
+          "seconds": "4.00",
+          "volume": "0.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.30"
+          },
+          "limiter": {
+            "value": "0.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "3rd Bloom",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "0.0",
+          "seconds": "12.00",
+          "volume": "0.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "4th Fill",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.0",
+          "seconds": "5.00",
+          "volume": "0.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.20"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "4th Bloom",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "0.0",
+          "seconds": "12.00",
+          "volume": "0.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "5th Fill",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.0",
+          "seconds": "5.00",
+          "volume": "0.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.20"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "5th Bloom",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "0.0",
+          "seconds": "15.00",
+          "volume": "0.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "6th Fill",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.0",
+          "seconds": "5.00",
+          "volume": "0.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.20"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "6th Bloom",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "8.6",
+          "flow": "0.0",
+          "seconds": "10.00",
+          "volume": "0.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Final Flow",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "1.0",
+          "seconds": "25.00",
+          "volume": "0.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "36",
+      "target_volume": "0",
+      "target_volume_count_start": "0",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "Push__MaX-Traction",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "push",
+      "archetypeName": "Push (Extraction Maximizer)",
+      "filename": "Push__MaX-Traction.json"
+    },
+    {
+      "title": "Push/MaX-Traction2",
+      "author": "Idan Gafni",
+      "notes": "25+ EY. High extraction low body beverage. Requires grinding of about 200+ microns from burrs lock. This profile is a dedicated profile to light roasted coffees that are more challenging to extract. The increased extraction is achieved by using various extraction mechanics such as multiple fills with fresh water,multiple blooms, and contact time. With high flow baskets (unibasket, sworks flow, wafo soe, pesado etc) it will drizzle throughout the extraction.",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Surge read protection",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "6.0",
+          "flow": "0",
+          "seconds": "2.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "6.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "6.0",
+          "flow": "0",
+          "seconds": "5.00",
+          "volume": "0",
+          "weight": "0.00",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.20"
+          },
+          "limiter": {
+            "value": "4.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Bloom",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0",
+          "seconds": "25.00",
+          "volume": "0.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "2nd Fill",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.00",
+          "seconds": "5.00",
+          "volume": "0",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.50"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "2nd Bloom",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "0.0",
+          "seconds": "22.00",
+          "volume": "0.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "3rd Fill",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.0",
+          "seconds": "4.00",
+          "volume": "0.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.50"
+          },
+          "limiter": {
+            "value": "0.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "3rd Bloom",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "0.0",
+          "seconds": "20.00",
+          "volume": "0.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "4th Fill",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.0",
+          "seconds": "5.00",
+          "volume": "0.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.30"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "4th Bloom",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "0.0",
+          "seconds": "17.00",
+          "volume": "0.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "5th Fill",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.0",
+          "seconds": "5.00",
+          "volume": "0.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.30"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "5th Bloom",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "0.0",
+          "seconds": "15.00",
+          "volume": "0.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "6th Fill",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.0",
+          "seconds": "5.00",
+          "volume": "0.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.20"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "6th Bloom",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "8.6",
+          "flow": "0.0",
+          "seconds": "15.00",
+          "volume": "0.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Final Flow",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "1.0",
+          "seconds": "25.00",
+          "volume": "0.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "36",
+      "target_volume": "0",
+      "target_volume_count_start": "0",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "Push__MaX-Traction2",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "push",
+      "archetypeName": "Push (Extraction Maximizer)",
+      "filename": "Push__MaX-Traction2.json"
+    },
+    {
+      "title": "Push/MaX-Traction64HU",
+      "author": "Idan Gafni",
+      "notes": "25+ EY. High extraction low body beverage. Requires grinding of about 200+ microns from burrs lock. This profile is a dedicated profile to light roasted coffees that are more challenging to extract. The increased extraction is achieved by using various extraction mechanics such as multiple fills with fresh water,multiple blooms, and contact time. With high flow baskets (unibasket, sworks flow, wafo soe, pesado etc) it will drizzle throughout the extraction.",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Surge read protection",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "6.0",
+          "flow": "0",
+          "seconds": "2.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "6.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "6.0",
+          "flow": "0",
+          "seconds": "5.00",
+          "volume": "0",
+          "weight": "0.00",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.00"
+          },
+          "limiter": {
+            "value": "5.5",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Bloom",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0",
+          "seconds": "20.00",
+          "volume": "0.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "2nd Fill",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.00",
+          "seconds": "5.00",
+          "volume": "0",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.50"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "2nd Bloom",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "0.0",
+          "seconds": "20.00",
+          "volume": "0.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "3rd Fill",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.0",
+          "seconds": "4.00",
+          "volume": "0.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.50"
+          },
+          "limiter": {
+            "value": "0.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "3rd Bloom",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "0.0",
+          "seconds": "18.00",
+          "volume": "0.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "4th Fill",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.0",
+          "seconds": "5.00",
+          "volume": "0.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.30"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "4th Bloom",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "0.0",
+          "seconds": "15.00",
+          "volume": "0.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "5th Fill",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.0",
+          "seconds": "5.00",
+          "volume": "0.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.20"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "5th Bloom",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "0.0",
+          "seconds": "15.00",
+          "volume": "0.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "6th Fill",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.0",
+          "seconds": "5.00",
+          "volume": "0.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.20"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "6th Bloom",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "8.6",
+          "flow": "0.0",
+          "seconds": "10.00",
+          "volume": "0.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Final Flow",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "1.0",
+          "seconds": "25.00",
+          "volume": "0.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "36",
+      "target_volume": "0",
+      "target_volume_count_start": "0",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "Push__MaX-Traction",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "push",
+      "archetypeName": "Push (Extraction Maximizer)",
+      "filename": "Push__MaX-Traction64HU.json"
+    },
+    {
+      "title": "Push/NotSoTurbo",
+      "author": "Idan Gafni",
+      "notes": "19-21/22 EY with 1:2 ratio and lower. Aimed for darker light roasts, drum roasts, fermented processing. Not an even extraction by design. Based on experiments that showed the turbo concept can produce optimized results when the profile is flow based and not pressure based (so no turbo flow in the end).",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Fill Protection",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "6.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.80"
+          },
+          "limiter": {
+            "value": "7.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "5.0",
+          "seconds": "4.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "2.00"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pause",
+          "temperature": "85.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "0",
+          "seconds": "2.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Fill",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.0",
+          "flow": "0",
+          "seconds": "4.00",
+          "volume": "100.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "5.00"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Flow",
+          "temperature": "84.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "8.3",
+          "flow": "2.6",
+          "seconds": "20.00",
+          "volume": "100.00",
+          "weight": "0",
+          "limiter": {
+            "value": "7.4",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "34",
+      "target_volume": "95",
+      "target_volume_count_start": "2",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "Push__NotSoTurbo",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "push",
+      "archetypeName": "Push (Extraction Maximizer)",
+      "filename": "Push__NotSoTurbo.json"
+    },
+    {
+      "title": "Push/NotSoTurboLUNB",
+      "author": "Idan Gafni",
+      "notes": "19-21/22 EY with 1:2 ratio and lower. Aimed for darker light roasts, drum roasts, fermented processing. Not an even extraction by design. Based on experiments that showed the turbo concept can produce optimized results when the profile is flow based and not pressure based (so no turbo flow in the end).",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Fill Protection",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "4.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.40"
+          },
+          "limiter": {
+            "value": "7.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "5.0",
+          "seconds": "4.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.60"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pause",
+          "temperature": "85.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "0",
+          "seconds": "1.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Fill",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.0",
+          "flow": "0",
+          "seconds": "4.00",
+          "volume": "100.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.70"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Flow",
+          "temperature": "84.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "8.3",
+          "flow": "2.6",
+          "seconds": "20.00",
+          "volume": "100.00",
+          "weight": "0",
+          "limiter": {
+            "value": "7.4",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "34",
+      "target_volume": "95",
+      "target_volume_count_start": "2",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "Push__NotSoTurboLUNB",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "push",
+      "archetypeName": "Push (Extraction Maximizer)",
+      "filename": "Push__NotSoTurboLUNB.json"
+    },
+    {
+      "title": "Push/X-Traction",
+      "author": "Idan Gafni",
+      "notes": "21-23/24 EY. requires a coarser grind of about 200 microns from burrs lock. This profile is a dedicated profile to light roasted coffees that are more challenging to extract. The increased extraction is achieved by using various extraction mechanics such as multiple fills with fresh water,multiple blooms, and contact time.",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Initial Fill",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "6.0",
+          "flow": "0",
+          "seconds": "2.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "6.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "90.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "6.0",
+          "flow": "0",
+          "seconds": "5.00",
+          "volume": "100",
+          "weight": "3.00",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "2.00"
+          },
+          "limiter": {
+            "value": "5.5",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Bloom",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0",
+          "seconds": "15.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Increase",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.9",
+          "flow": "0.00",
+          "seconds": "4.00",
+          "volume": "0",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "0.80"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Flow",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "0.6",
+          "seconds": "6.00",
+          "volume": "8.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Late Bloomer",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "0.0",
+          "seconds": "15.00",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Go With Flow",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "1.0",
+          "seconds": "25.00",
+          "volume": "20.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "36",
+      "target_volume": "0",
+      "target_volume_count_start": "0",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "Push__X-Traction",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "push",
+      "archetypeName": "Push (Extraction Maximizer)",
+      "filename": "Push__X-Traction.json"
+    }
+  ],
+  "tanat": [
+    {
+      "title": "Kawa/Flow",
+      "author": "Idan Gafni",
+      "notes": "Flow profile for Dror",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Fill Protection",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "6.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.40"
+          },
+          "limiter": {
+            "value": "7.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "4.0",
+          "seconds": "4.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.80"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pause",
+          "temperature": "85.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "0",
+          "seconds": "2.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Fill",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.0",
+          "flow": "0",
+          "seconds": "4.00",
+          "volume": "100.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.20"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Flow",
+          "temperature": "84.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "8.3",
+          "flow": "1.6",
+          "seconds": "30.00",
+          "volume": "100.00",
+          "weight": "0",
+          "limiter": {
+            "value": "7.4",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "34",
+      "target_volume": "0",
+      "target_volume_count_start": "2",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "Kawa__Flow",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "tanat",
+      "archetypeName": "Tanat / Kawa (Specialty Roast Turbo & Flow)",
+      "filename": "Tanat__Flow.json"
+    },
+    {
+      "title": "Kawa/Witch HUnt Turbo",
+      "author": "Idan Gafni",
+      "notes": "This profile is based on the Hendon turbo shot concept appropriate for the HU burrs and simulates a Bezzera Strega lever machine manually manipulated to increase EY. It imitates the technique I developed with my lever machine after years of lever manipulation iterations to satisfy my need for good espresso base for dry cappuccino. The gradual water filling combined with a blooming phase enables good saturation throughout the puck. Standard flow rates with this profile are usually 1.5-3.5 ml/s with most beans Strega in Italian translates to a witch so hopefully you get magical cups with this profile.",
+      "beverage_type": "tea_portafilter",
+      "steps": [
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "10.0",
+          "seconds": "6.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.50"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation 1",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "6.0",
+          "seconds": "5.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.80"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation 2",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "2.5",
+          "seconds": "4.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "2.20"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Bloom",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0",
+          "seconds": "10.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Increase",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0.00",
+          "seconds": "6.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "6.50"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Gradual Decline",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "smooth",
+          "pressure": "2.0",
+          "flow": "0.00",
+          "seconds": "20.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "3.5",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Finish pressure",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "3.0",
+          "flow": "0.00",
+          "seconds": "20.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "35",
+      "target_volume": "150",
+      "target_volume_count_start": "0",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "Kawa Witch HUnt Turbo",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "tanat",
+      "archetypeName": "Tanat / Kawa (Specialty Roast Turbo & Flow)",
+      "filename": "Tanat__Witch_HUnt_Turbo.json"
+    },
+    {
+      "title": "Kawa/Witch HUnt Turbo (bloom)",
+      "author": "Idan Gafni",
+      "notes": "This Kawa profile is intended to serve Nordic roasted coffee that is not difficult to extract but challenges in terms of avoiding roastiness flavors.\nWitch HUnt family of profiles is intended to imitate lever manipulations performed with coffee that is ground with High Uniformity particle distribution.",
+      "beverage_type": "tea_portafilter",
+      "steps": [
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "10.0",
+          "seconds": "6.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.50"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation 1",
+          "temperature": "88.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "6.0",
+          "seconds": "5.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.80"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation 2",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "2.5",
+          "seconds": "4.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "2.20"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Bloom",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "0.00",
+          "seconds": "5",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Increase",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0.00",
+          "seconds": "6.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "6.50"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Gradual Decline",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "smooth",
+          "pressure": "2.0",
+          "flow": "0.00",
+          "seconds": "25.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "4.5",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Finish pressure",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "3.0",
+          "seconds": "20.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "35",
+      "target_volume": "150",
+      "target_volume_count_start": "0",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "Kawa__Witch_HUnt_Turbo_bloom",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "tanat",
+      "archetypeName": "Tanat / Kawa (Specialty Roast Turbo & Flow)",
+      "filename": "Tanat__Witch_HUnt_Turbo_bloom.json"
+    }
+  ],
+  "filter3": [
+    {
+      "title": "Filter3/HeyHu",
+      "author": "Idan Gafni",
+      "notes": "Idan's Filter3 profiles family. This profile requires a flow calibration test as described in the “!ProfilesCalibration” description. This profile is for High EY with High Uniformity burrs.\nDose: 16-20g\nGrind size ~600 microns",
+      "beverage_type": "filter",
+      "steps": [
+        {
+          "name": "InitialPour",
+          "temperature": "92.00",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "3.0",
+          "seconds": "25.00",
+          "volume": "65.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        },
+        {
+          "name": "Bloom",
+          "temperature": "90.00",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0",
+          "seconds": "40.00",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        },
+        {
+          "name": "2nd Pour Start",
+          "temperature": "88.00",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "3.0",
+          "seconds": "4.00",
+          "volume": "20.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        },
+        {
+          "name": "2nd Pour",
+          "temperature": "88.00",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "1.5",
+          "seconds": "40.00",
+          "volume": "80.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        },
+        {
+          "name": "2nd Bloom",
+          "temperature": "88.00",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0.0",
+          "seconds": "25.00",
+          "volume": "0.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        },
+        {
+          "name": "3rd Pour Start",
+          "temperature": "88.00",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "3.0",
+          "seconds": "5.00",
+          "volume": "20.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        },
+        {
+          "name": "Short Pause",
+          "temperature": "88.00",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0.0",
+          "seconds": "8.00",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        },
+        {
+          "name": "3rd Pour",
+          "temperature": "88.00",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "1.2",
+          "seconds": "110.00",
+          "volume": "200.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        },
+        {
+          "name": "Drawdown",
+          "temperature": "88.0",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0",
+          "seconds": "25.00",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "0.0",
+      "target_volume": "330",
+      "target_volume_count_start": "0",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "Filter3__HeyHu",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "filter3",
+      "archetypeName": "Filter 3.0 (Filter Coffee on DE1)",
+      "filename": "Filter3__hEYhU.json"
+    },
+    {
+      "title": "Filter3/HeyLu",
+      "author": "Idan Gafni",
+      "notes": "Idan's Filter3 profiles family. This profile requires a flow calibration test as described in the “!ProfilesCalibration” description. This profile is for High EY with Low Uniformity burrs.\nDose: 12-14.5g\nGrind size ~600-650 microns",
+      "beverage_type": "filter",
+      "steps": [
+        {
+          "name": "InitialPour",
+          "temperature": "92.00",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "3.0",
+          "seconds": "10.00",
+          "volume": "35.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        },
+        {
+          "name": "Pause",
+          "temperature": "92.00",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0",
+          "seconds": "5.00",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        },
+        {
+          "name": "InitialPour",
+          "temperature": "92.00",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "1.0",
+          "seconds": "10.00",
+          "volume": "35.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        },
+        {
+          "name": "Bloom",
+          "temperature": "90.00",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0",
+          "seconds": "50.00",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        },
+        {
+          "name": "2nd Pour",
+          "temperature": "88.00",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "1.2",
+          "seconds": "40.00",
+          "volume": "80.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        },
+        {
+          "name": "2nd Bloom",
+          "temperature": "88.00",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0.0",
+          "seconds": "50.00",
+          "volume": "0.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        },
+        {
+          "name": "3rd Pour",
+          "temperature": "88.00",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "1.1",
+          "seconds": "40.00",
+          "volume": "50",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        },
+        {
+          "name": "3rd Bloom",
+          "temperature": "88.00",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0",
+          "seconds": "35.00",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        },
+        {
+          "name": "4th Pour",
+          "temperature": "88.00",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "1.0",
+          "seconds": "40.00",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        },
+        {
+          "name": "4th Bloom",
+          "temperature": "88.00",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0.0",
+          "seconds": "32.00",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        },
+        {
+          "name": "5th Pour",
+          "temperature": "88.00",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0.9",
+          "seconds": "85.00",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        },
+        {
+          "name": "Drawdown",
+          "temperature": "88.0",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0",
+          "seconds": "35.00",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "0.0",
+      "target_volume": "330",
+      "target_volume_count_start": "0",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "Filter3__HeyLu",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "filter3",
+      "archetypeName": "Filter 3.0 (Filter Coffee on DE1)",
+      "filename": "Filter3__hEYLU.json"
+    },
+    {
+      "title": "Filter3/LeyHu",
+      "author": "Idan Gafni",
+      "notes": "Idan's Filter3 profiles family. This profile requires a flow calibration test as described in the “!ProfilesCalibration” description. The profile is for Low EY with High Uniformity burrs.\nDose: 16-20g\nGrind size ~600 microns",
+      "beverage_type": "filter",
+      "steps": [
+        {
+          "name": "InitialPour",
+          "temperature": "90.00",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "3.0",
+          "seconds": "25.00",
+          "volume": "65.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        },
+        {
+          "name": "Bloom",
+          "temperature": "90.00",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0",
+          "seconds": "30.00",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        },
+        {
+          "name": "2nd Pour",
+          "temperature": "86.00",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "1.3",
+          "seconds": "90",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        },
+        {
+          "name": "Cont...",
+          "temperature": "86.00",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "1.3",
+          "seconds": "90",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        },
+        {
+          "name": "Drawdown",
+          "temperature": "88.0",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0",
+          "seconds": "25.00",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "0.0",
+      "target_volume": "330",
+      "target_volume_count_start": "0",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "Filter3__LeyHu",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "filter3",
+      "archetypeName": "Filter 3.0 (Filter Coffee on DE1)",
+      "filename": "Filter3__LeyHu.json"
+    },
+    {
+      "title": "Filter3/LeyLu",
+      "author": "Idan Gafni",
+      "notes": "Idan's Filter3 profiles family. This profile requires a flow calibration test as described in the “!ProfilesCalibration” description. The profile is for Low EY with Low Uniformity burrs.\nDose: 14-17g\nGrind size ~600-650 microns\n",
+      "beverage_type": "filter",
+      "steps": [
+        {
+          "name": "InitialPour",
+          "temperature": "90.00",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "3.0",
+          "seconds": "15.00",
+          "volume": "50.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        },
+        {
+          "name": "Bloom",
+          "temperature": "90.00",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0",
+          "seconds": "30.00",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        },
+        {
+          "name": "2nd Pour",
+          "temperature": "87.00",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "1.0",
+          "seconds": "110.00",
+          "volume": "80.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        },
+        {
+          "name": "Pause",
+          "temperature": "88.00",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0.0",
+          "seconds": "5.00",
+          "volume": "0.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        },
+        {
+          "name": "3rd Pour",
+          "temperature": "86.00",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "1.0",
+          "seconds": "110.00",
+          "volume": "50",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        },
+        {
+          "name": "Drawdown",
+          "temperature": "88.0",
+          "sensor": "water",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "0",
+          "seconds": "35.00",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.9"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "0.0",
+      "target_volume": "330",
+      "target_volume_count_start": "0",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "Filter3__LeyLu",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "filter3",
+      "archetypeName": "Filter 3.0 (Filter Coffee on DE1)",
+      "filename": "Filter3__LeyLu.json"
+    }
+  ],
+  "turbo": [
+    {
+      "title": "Niche Turbo Bloom",
+      "author": "Idan Gafni",
+      "notes": "The goal of this profile is to manage a turbo style shot using a burr grinder like the Niche Zero. \n\n",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Init_Fill",
+          "temperature": "92.00",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "1",
+          "flow": "6.0",
+          "seconds": "13.00",
+          "volume": "40.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "4.00"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Bloom",
+          "temperature": "87.00",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "1",
+          "flow": "0.0",
+          "seconds": "20.00",
+          "volume": "0",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "ramp",
+          "temperature": "87.00",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "4.0",
+          "flow": "6.0",
+          "seconds": "1.00",
+          "volume": "500",
+          "weight": "0",
+          "limiter": {
+            "value": "6.0",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "40",
+      "target_volume": "0",
+      "target_volume_count_start": "2",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "Niche_Turbo_Bloom",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "turbo",
+      "archetypeName": "Turbo / Fast Flow",
+      "filename": "Niche_Turbo_Bloom.json"
+    }
+  ],
+  "hmc": [
+    {
+      "title": "HMC/FlowHUCB18",
+      "author": "Idan Gafni",
+      "notes": "HMC Flow is a simple yet smart profile for uneven extraction from HMC style roasts. \n\nAdaptation to your coffee and setup:\nAdjust fill stages according to basket with lower target pressure exit conditions for high flow baskets or higher ones for classic baskets\nReduce flow in last flow stage for lower uniformity burrs if you don't like the result and see many channels in your extraction (low extraction)\nChange pause time as blooming for higher extraction (through contact time)\nIncrease flow to get less even extraction",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Fill Protection",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "5.0",
+          "seconds": "6.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.00"
+          },
+          "limiter": {
+            "value": "7.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "4.0",
+          "seconds": "4.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.50"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pause",
+          "temperature": "85.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "0",
+          "seconds": "2.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Fill",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.0",
+          "flow": "0",
+          "seconds": "4.00",
+          "volume": "100.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.50"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Flow",
+          "temperature": "84.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "8.3",
+          "flow": "1.8",
+          "seconds": "20.00",
+          "volume": "100.00",
+          "weight": "0",
+          "limiter": {
+            "value": "7.4",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "34",
+      "target_volume": "0",
+      "target_volume_count_start": "2",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "en",
+      "hidden": "0",
+      "reference_file": "HMC__FlowHUCB18",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "hmc",
+      "archetypeName": "HMC (Half Moon Coffee)",
+      "filename": "HMC__FlowHUCB18.json"
+    },
+    {
+      "title": "HMC/FlowHUCB2.0",
+      "author": "Idan Gafni",
+      "notes": "HMC Flow is a simple yet smart profile for uneven extraction from HMC style roasts. \n\nAdaptation to your coffee and setup:\nAdjust fill stages according to basket with lower target pressure exit conditions for high flow baskets or higher ones for classic baskets\nReduce flow in last flow stage for lower uniformity burrs if you don't like the result and see many channels in your extraction (low extraction)\nChange pause time as blooming for higher extraction (through contact time)\nIncrease flow to get less even extraction",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Fill Protection",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "4.5",
+          "seconds": "6.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.00"
+          },
+          "limiter": {
+            "value": "7.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "4.0",
+          "seconds": "4.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.20"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pause",
+          "temperature": "85.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "0",
+          "seconds": "4.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Fill",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.0",
+          "flow": "0",
+          "seconds": "4.00",
+          "volume": "100.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "2.00"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Flow",
+          "temperature": "84.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "8.3",
+          "flow": "2.0",
+          "seconds": "20.00",
+          "volume": "100.00",
+          "weight": "0",
+          "limiter": {
+            "value": "7.4",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "87.0",
+      "target_weight": "34",
+      "target_volume": "95",
+      "archetype": "hmc",
+      "archetypeName": "HMC (Half Moon Coffee)",
+      "filename": "HMC__FlowHUCB20.json"
+    },
+    {
+      "title": "HMC/FlowHUCB2.2",
+      "author": "Idan Gafni",
+      "notes": "HMC Flow is a simple yet smart profile for uneven extraction from HMC style roasts. \n\nAdaptation to your coffee and setup:\nAdjust fill stages according to basket with lower target pressure exit conditions for high flow baskets or higher ones for classic baskets\nReduce flow in last flow stage for lower uniformity burrs if you don't like the result and see many channels in your extraction (low extraction)\nChange pause time as blooming for higher extraction (through contact time)\nIncrease flow to get less even extraction",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Fill Protection",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "5.0",
+          "seconds": "6.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.00"
+          },
+          "limiter": {
+            "value": "7.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "4.0",
+          "seconds": "4.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.50"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pause",
+          "temperature": "85.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "0",
+          "seconds": "4.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Fill",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.0",
+          "flow": "0",
+          "seconds": "4.00",
+          "volume": "100.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "2.00"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Flow",
+          "temperature": "84.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "8.3",
+          "flow": "2.2",
+          "seconds": "20.00",
+          "volume": "100.00",
+          "weight": "0",
+          "limiter": {
+            "value": "7.4",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "87.0",
+      "target_weight": "34",
+      "target_volume": "95",
+      "archetype": "hmc",
+      "archetypeName": "HMC (Half Moon Coffee)",
+      "filename": "HMC__FlowHUCB22.json"
+    },
+    {
+      "title": "HMC/FlowHUNB2.5",
+      "author": "Idan Gafni",
+      "notes": "HMC Flow is a simple yet smart profile for uneven extraction from HMC style roasts. \n\nAdaptation to your coffee and setup:\nAdjust fill stages according to basket with lower target pressure exit conditions for high flow baskets or higher ones for classic baskets\nReduce flow in last flow stage for lower uniformity burrs if you don't like the result and see many channels in your extraction (low extraction)\nChange pause time as blooming for higher extraction (through contact time)\nIncrease flow to get less even extraction",
+      "beverage_type": "espresso",
+      "steps": [
+        {
+          "name": "Fill Protection",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "8.0",
+          "seconds": "2.00",
+          "volume": "120.00",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Fast Ramp Up",
+          "temperature": "87.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "5.0",
+          "seconds": "6.00",
+          "volume": "120.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.00"
+          },
+          "limiter": {
+            "value": "7.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Fill Regulation",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "4.0",
+          "seconds": "4.00",
+          "volume": "100",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.50"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pause",
+          "temperature": "85.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "2.00",
+          "flow": "0",
+          "seconds": "2.00",
+          "volume": "100",
+          "weight": "0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure Fill",
+          "temperature": "86.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.0",
+          "flow": "0",
+          "seconds": "4.00",
+          "volume": "100.00",
+          "weight": "0",
+          "exit": {
+            "type": "pressure",
+            "condition": "over",
+            "value": "1.30"
+          },
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Flow",
+          "temperature": "84.0",
+          "sensor": "coffee",
+          "pump": "flow",
+          "transition": "fast",
+          "pressure": "8.3",
+          "flow": "2.5",
+          "seconds": "20.00",
+          "volume": "100.00",
+          "weight": "0",
+          "limiter": {
+            "value": "7.4",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "87.0",
+      "target_weight": "34",
+      "target_volume": "95",
+      "archetype": "hmc",
+      "archetypeName": "HMC (Half Moon Coffee)",
+      "filename": "HMC__FlowHUNB25.json"
+    }
+  ],
+  "cleaning": [
+    {
+      "title": "Cleaning/Thorough Forward Flush",
+      "author": "Idan Gafni",
+      "notes": "A convenient way to perform a cleaning routine of the group head. Based on the forward flush X5 with some tweaks. (1) Put a blind basket in your portafilter  (2) Put 3g (1/2 teaspoon) of espresso machine detergent in the blind basket  (3) Run this profile  (4) When it is done, remove the portafilter off Flush the DE1 until the water goes clear  (5) Put the portafilter back without detergent and run this profile again  (6) Finally, run FLUSH for 20 seconds.",
+      "beverage_type": "Cleaning",
+      "steps": [
+        {
+          "name": "Pressure rise 1",
+          "temperature": "98.00",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "10.0",
+          "flow": "4.00",
+          "seconds": "30.00",
+          "volume": "500",
+          "weight": "0.0",
+          "limiter": {
+            "value": "0.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pause 1",
+          "temperature": "99.00",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "6.50",
+          "seconds": "15.00",
+          "volume": "500",
+          "weight": "0.0",
+          "limiter": {
+            "value": "0.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure rise 2",
+          "temperature": "98.00",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "9.5",
+          "flow": "6.50",
+          "seconds": "20.00",
+          "volume": "500",
+          "weight": "0.0",
+          "limiter": {
+            "value": "0.0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pause 2",
+          "temperature": "95.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "-3.885780586188048e-16",
+          "flow": "6.50",
+          "seconds": "15.00",
+          "volume": "500",
+          "weight": "0.0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure rise 3",
+          "temperature": "98.00",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "9.0",
+          "flow": "6.50",
+          "seconds": "10.00",
+          "volume": "500",
+          "weight": "0.0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pause 3",
+          "temperature": "95.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "-5.717648576819556e-15",
+          "flow": "6.50",
+          "seconds": "10.00",
+          "volume": "500",
+          "weight": "0.0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure rise 4",
+          "temperature": "98.00",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.0",
+          "flow": "6.50",
+          "seconds": "20.00",
+          "volume": "500",
+          "weight": "0.0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pause 4",
+          "temperature": "95.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "-5.717648576819556e-15",
+          "flow": "6.50",
+          "seconds": "5.00",
+          "volume": "500",
+          "weight": "0.0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure rise 5",
+          "temperature": "98.00",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "9.5",
+          "flow": "6.50",
+          "seconds": "15.00",
+          "volume": "500",
+          "weight": "0.0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pause 5",
+          "temperature": "95.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "0",
+          "flow": "6.50",
+          "seconds": "12.00",
+          "volume": "500",
+          "weight": "0.0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        },
+        {
+          "name": "Pressure rise 6",
+          "temperature": "95.0",
+          "sensor": "coffee",
+          "pump": "pressure",
+          "transition": "fast",
+          "pressure": "8.0",
+          "flow": "6.50",
+          "seconds": "20.00",
+          "volume": "500",
+          "weight": "0.0",
+          "limiter": {
+            "value": "0",
+            "range": "0.6"
+          }
+        }
+      ],
+      "tank_temperature": "0",
+      "target_weight": "0.0",
+      "target_volume": "0",
+      "target_volume_count_start": "2",
+      "legacy_profile_type": "settings_2c",
+      "type": "advanced",
+      "lang": "kr",
+      "hidden": "0",
+      "reference_file": "Cleaning__Thorough_Forward_Flush",
+      "changes_since_last_espresso": "",
+      "version": "2",
+      "archetype": "cleaning",
+      "archetypeName": "Maintenance & Cleaning",
+      "filename": "Cleaning__Thorough_Forward_Flush.json"
+    }
+  ],
+  "espresso": []
+}

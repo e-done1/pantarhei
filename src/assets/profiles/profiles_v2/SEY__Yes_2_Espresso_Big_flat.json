@@ -1,0 +1,130 @@
+{
+  "title": "SEY/Yes 2 Espresso (Big flat)",
+  "author": "Idan Gafni",
+  "notes": "This profile is a dedicated profile for light roasted coffees that are more challenging to extract. The increased extraction is achieved by using various extraction mechanics such as temprature, pressure, and contact time.",
+  "beverage_type": "tea_portafilter",
+  "steps": [
+    {
+      "name": "Fill Fast Ramp Up",
+      "temperature": "96.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "2.00",
+      "flow": "10.0",
+      "seconds": "6.00",
+      "volume": "120.00",
+      "weight": "0",
+      "exit": {
+        "type": "pressure",
+        "condition": "over",
+        "value": "3.10"
+      },
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Fill Regulation",
+      "temperature": "96.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "2.00",
+      "flow": "4.0",
+      "seconds": "5.00",
+      "volume": "100",
+      "weight": "5.00",
+      "exit": {
+        "type": "pressure",
+        "condition": "over",
+        "value": "3.40"
+      },
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Bloom",
+      "temperature": "87.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "9.0",
+      "flow": "0",
+      "seconds": "20.00",
+      "volume": "100",
+      "weight": "0",
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Pressure Increase",
+      "temperature": "86.0",
+      "sensor": "coffee",
+      "pump": "pressure",
+      "transition": "fast",
+      "pressure": "8.9",
+      "flow": "0.00",
+      "seconds": "3.00",
+      "volume": "100",
+      "weight": "0",
+      "exit": {
+        "type": "pressure",
+        "condition": "over",
+        "value": "6.60"
+      },
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Flow extraction start",
+      "temperature": "86.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "5.0",
+      "flow": "1.0",
+      "seconds": "3.00",
+      "volume": "100",
+      "weight": "0",
+      "limiter": {
+        "value": "6.6",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Flow extraction target",
+      "temperature": "86.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "smooth",
+      "pressure": "5.0",
+      "flow": "3.0",
+      "seconds": "20.00",
+      "volume": "100",
+      "weight": "0",
+      "limiter": {
+        "value": "6.6",
+        "range": "0.6"
+      }
+    }
+  ],
+  "tank_temperature": "0",
+  "target_weight": "37",
+  "target_volume": "150",
+  "target_volume_count_start": "0",
+  "legacy_profile_type": "settings_2c",
+  "type": "advanced",
+  "lang": "en",
+  "hidden": "0",
+  "reference_file": "SEY__Espresso_Big_flat",
+  "changes_since_last_espresso": "",
+  "version": "2"
+}

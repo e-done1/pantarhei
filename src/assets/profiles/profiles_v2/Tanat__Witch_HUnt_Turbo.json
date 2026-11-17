@@ -1,0 +1,151 @@
+{
+  "title": "Kawa/Witch HUnt Turbo",
+  "author": "Idan Gafni",
+  "notes": "This profile is based on the Hendon turbo shot concept appropriate for the HU burrs and simulates a Bezzera Strega lever machine manually manipulated to increase EY. It imitates the technique I developed with my lever machine after years of lever manipulation iterations to satisfy my need for good espresso base for dry cappuccino. The gradual water filling combined with a blooming phase enables good saturation throughout the puck. Standard flow rates with this profile are usually 1.5-3.5 ml/s with most beans Strega in Italian translates to a witch so hopefully you get magical cups with this profile.",
+  "beverage_type": "tea_portafilter",
+  "steps": [
+    {
+      "name": "Fill Fast Ramp Up",
+      "temperature": "88.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "2.00",
+      "flow": "10.0",
+      "seconds": "6.00",
+      "volume": "120.00",
+      "weight": "0",
+      "exit": {
+        "type": "pressure",
+        "condition": "over",
+        "value": "1.50"
+      },
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Fill Regulation 1",
+      "temperature": "88.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "2.00",
+      "flow": "6.0",
+      "seconds": "5.00",
+      "volume": "100",
+      "weight": "0",
+      "exit": {
+        "type": "pressure",
+        "condition": "over",
+        "value": "1.80"
+      },
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Fill Regulation 2",
+      "temperature": "87.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "2.00",
+      "flow": "2.5",
+      "seconds": "4.00",
+      "volume": "100",
+      "weight": "0",
+      "exit": {
+        "type": "pressure",
+        "condition": "over",
+        "value": "2.20"
+      },
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Bloom",
+      "temperature": "87.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "9.0",
+      "flow": "0",
+      "seconds": "10.00",
+      "volume": "100",
+      "weight": "0",
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Pressure Increase",
+      "temperature": "86.0",
+      "sensor": "coffee",
+      "pump": "pressure",
+      "transition": "fast",
+      "pressure": "9.0",
+      "flow": "0.00",
+      "seconds": "6.00",
+      "volume": "100",
+      "weight": "0",
+      "exit": {
+        "type": "pressure",
+        "condition": "over",
+        "value": "6.50"
+      },
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Pressure Gradual Decline",
+      "temperature": "86.0",
+      "sensor": "coffee",
+      "pump": "pressure",
+      "transition": "smooth",
+      "pressure": "2.0",
+      "flow": "0.00",
+      "seconds": "20.00",
+      "volume": "100",
+      "weight": "0",
+      "limiter": {
+        "value": "3.5",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Finish pressure",
+      "temperature": "86.0",
+      "sensor": "coffee",
+      "pump": "pressure",
+      "transition": "fast",
+      "pressure": "3.0",
+      "flow": "0.00",
+      "seconds": "20.00",
+      "volume": "100",
+      "weight": "0",
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    }
+  ],
+  "tank_temperature": "0",
+  "target_weight": "35",
+  "target_volume": "150",
+  "target_volume_count_start": "0",
+  "legacy_profile_type": "settings_2c",
+  "type": "advanced",
+  "lang": "en",
+  "hidden": "0",
+  "reference_file": "Kawa Witch HUnt Turbo",
+  "changes_since_last_espresso": "",
+  "version": "2"
+}

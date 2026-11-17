@@ -1,0 +1,130 @@
+{
+  "title": "Push/NotSoTurboLUNB",
+  "author": "Idan Gafni",
+  "notes": "19-21/22 EY with 1:2 ratio and lower. Aimed for darker light roasts, drum roasts, fermented processing. Not an even extraction by design. Based on experiments that showed the turbo concept can produce optimized results when the profile is flow based and not pressure based (so no turbo flow in the end).",
+  "beverage_type": "espresso",
+  "steps": [
+    {
+      "name": "Fill Protection",
+      "temperature": "87.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "2.00",
+      "flow": "8.0",
+      "seconds": "2.00",
+      "volume": "120.00",
+      "weight": "0",
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Fill Fast Ramp Up",
+      "temperature": "87.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "2.00",
+      "flow": "8.0",
+      "seconds": "4.00",
+      "volume": "120.00",
+      "weight": "0",
+      "exit": {
+        "type": "pressure",
+        "condition": "over",
+        "value": "0.40"
+      },
+      "limiter": {
+        "value": "7.0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Fill Regulation",
+      "temperature": "86.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "2.00",
+      "flow": "5.0",
+      "seconds": "4.00",
+      "volume": "100",
+      "weight": "0",
+      "exit": {
+        "type": "pressure",
+        "condition": "over",
+        "value": "0.60"
+      },
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Pause",
+      "temperature": "85.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "2.00",
+      "flow": "0",
+      "seconds": "1.00",
+      "volume": "100",
+      "weight": "0",
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Pressure Fill",
+      "temperature": "86.0",
+      "sensor": "coffee",
+      "pump": "pressure",
+      "transition": "fast",
+      "pressure": "8.0",
+      "flow": "0",
+      "seconds": "4.00",
+      "volume": "100.00",
+      "weight": "0",
+      "exit": {
+        "type": "pressure",
+        "condition": "over",
+        "value": "0.70"
+      },
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Flow",
+      "temperature": "84.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "8.3",
+      "flow": "2.6",
+      "seconds": "20.00",
+      "volume": "100.00",
+      "weight": "0",
+      "limiter": {
+        "value": "7.4",
+        "range": "0.6"
+      }
+    }
+  ],
+  "tank_temperature": "0",
+  "target_weight": "34",
+  "target_volume": "95",
+  "target_volume_count_start": "2",
+  "legacy_profile_type": "settings_2c",
+  "type": "advanced",
+  "lang": "en",
+  "hidden": "0",
+  "reference_file": "Push__NotSoTurboLUNB",
+  "changes_since_last_espresso": "",
+  "version": "2"
+}

@@ -1,0 +1,109 @@
+{
+  "title": "Peony/MDLever",
+  "author": "Idan Gafni",
+  "notes": "Peony MDLever for lever style extraction for medium-dark roasts. It is aimed to bring more body while reducing bitterness. Requires fine grind.",
+  "beverage_type": "espresso",
+  "steps": [
+    {
+      "name": "Fill Protection",
+      "temperature": "87.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "2.00",
+      "flow": "8.0",
+      "seconds": "2.00",
+      "volume": "120.00",
+      "weight": "0",
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Fill Fast",
+      "temperature": "87.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "2.00",
+      "flow": "8.0",
+      "seconds": "6.00",
+      "volume": "120.00",
+      "weight": "0",
+      "exit": {
+        "type": "pressure",
+        "condition": "over",
+        "value": "2.00"
+      },
+      "limiter": {
+        "value": "7.0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "PreInfusion",
+      "temperature": "88.00",
+      "sensor": "coffee",
+      "pump": "pressure",
+      "transition": "fast",
+      "pressure": "2.00",
+      "flow": "0",
+      "seconds": "10.00",
+      "volume": "100",
+      "weight": "0",
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Pressure Fill",
+      "temperature": "88.00",
+      "sensor": "coffee",
+      "pump": "pressure",
+      "transition": "fast",
+      "pressure": "9.0",
+      "flow": "0",
+      "seconds": "4.00",
+      "volume": "100.00",
+      "weight": "0",
+      "exit": {
+        "type": "pressure",
+        "condition": "over",
+        "value": "7.0"
+      },
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Lever Decline",
+      "temperature": "86.00",
+      "sensor": "coffee",
+      "pump": "pressure",
+      "transition": "smooth",
+      "pressure": "4.5",
+      "flow": "1.7",
+      "seconds": "35.00",
+      "volume": "100.00",
+      "weight": "0",
+      "limiter": {
+        "value": "2.0",
+        "range": "0.6"
+      }
+    }
+  ],
+  "tank_temperature": "0",
+  "target_weight": "34",
+  "target_volume": "0",
+  "target_volume_count_start": "2",
+  "legacy_profile_type": "settings_2c",
+  "type": "advanced",
+  "lang": "en",
+  "hidden": "0",
+  "reference_file": "Peony__MDLever",
+  "changes_since_last_espresso": "",
+  "version": "2"
+}

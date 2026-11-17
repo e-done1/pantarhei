@@ -1,0 +1,28 @@
+# Logs and local artifacts
+node_modules/
+dist/
+build/
+*.log
+.DS_Store
+Thumbs.db
+
+# Environment and local configs
+.env
+.env.local
+.env.*.local
+
+# Handover and local notes
+context.md
+
+# Specifications and development files
+.agents/
+AGENTS.md
+GEMINI.md
+docs/
+scripts/
+
+# Decaid local test / dev artifacts
+*.zip
+*.tar.gz
+temp/
+coverage/

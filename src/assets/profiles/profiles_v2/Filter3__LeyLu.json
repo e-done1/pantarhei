@@ -1,0 +1,115 @@
+{
+  "title": "Filter3/LeyLu",
+  "author": "Idan Gafni",
+  "notes": "Idan's Filter3 profiles family. This profile requires a flow calibration test as described in the “!ProfilesCalibration” description. The profile is for Low EY with Low Uniformity burrs.\nDose: 14-17g\nGrind size ~600-650 microns\n",
+  "beverage_type": "filter",
+  "steps": [
+    {
+      "name": "InitialPour",
+      "temperature": "90.00",
+      "sensor": "water",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "9.0",
+      "flow": "3.0",
+      "seconds": "15.00",
+      "volume": "50.00",
+      "weight": "0",
+      "limiter": {
+        "value": "0",
+        "range": "0.9"
+      }
+    },
+    {
+      "name": "Bloom",
+      "temperature": "90.00",
+      "sensor": "water",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "9.0",
+      "flow": "0",
+      "seconds": "30.00",
+      "volume": "0",
+      "weight": "0",
+      "limiter": {
+        "value": "0",
+        "range": "0.9"
+      }
+    },
+    {
+      "name": "2nd Pour",
+      "temperature": "87.00",
+      "sensor": "water",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "9.0",
+      "flow": "1.0",
+      "seconds": "110.00",
+      "volume": "80.00",
+      "weight": "0",
+      "limiter": {
+        "value": "0",
+        "range": "0.9"
+      }
+    },
+    {
+      "name": "Pause",
+      "temperature": "88.00",
+      "sensor": "water",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "9.0",
+      "flow": "0.0",
+      "seconds": "5.00",
+      "volume": "0.00",
+      "weight": "0",
+      "limiter": {
+        "value": "0",
+        "range": "0.9"
+      }
+    },
+    {
+      "name": "3rd Pour",
+      "temperature": "86.00",
+      "sensor": "water",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "9.0",
+      "flow": "1.0",
+      "seconds": "110.00",
+      "volume": "50",
+      "weight": "0",
+      "limiter": {
+        "value": "0",
+        "range": "0.9"
+      }
+    },
+    {
+      "name": "Drawdown",
+      "temperature": "88.0",
+      "sensor": "water",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "9.0",
+      "flow": "0",
+      "seconds": "35.00",
+      "volume": "0",
+      "weight": "0",
+      "limiter": {
+        "value": "0",
+        "range": "0.9"
+      }
+    }
+  ],
+  "tank_temperature": "0",
+  "target_weight": "0.0",
+  "target_volume": "330",
+  "target_volume_count_start": "0",
+  "legacy_profile_type": "settings_2c",
+  "type": "advanced",
+  "lang": "en",
+  "hidden": "0",
+  "reference_file": "Filter3__LeyLu",
+  "changes_since_last_espresso": "",
+  "version": "2"
+}

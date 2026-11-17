@@ -1,0 +1,130 @@
+{
+  "title": "Peony/PesadoFlowHU",
+  "author": "Idan Gafni",
+  "notes": "Peony Flow is a simple yet smart profile for uneven extraction from Nordic style roasts to Medium roasts to reduce roast flavors. \n\nAdaptation to your coffee and setup:\nReduce flow in last flow stage for lower uniformity burrs if you don't like the result and see many channels in your extraction (low extraction)\nChange pause time as blooming for higher extraction (through contact time)",
+  "beverage_type": "espresso",
+  "steps": [
+    {
+      "name": "Fill Protection",
+      "temperature": "87.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "2.00",
+      "flow": "8.0",
+      "seconds": "2.00",
+      "volume": "120.00",
+      "weight": "0",
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Fill Fast Ramp Up",
+      "temperature": "87.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "2.00",
+      "flow": "8.0",
+      "seconds": "6.00",
+      "volume": "120.00",
+      "weight": "0",
+      "exit": {
+        "type": "pressure",
+        "condition": "over",
+        "value": "1.50"
+      },
+      "limiter": {
+        "value": "7.0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Fill Regulation",
+      "temperature": "86.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "2.00",
+      "flow": "5.0",
+      "seconds": "4.00",
+      "volume": "100",
+      "weight": "0",
+      "exit": {
+        "type": "pressure",
+        "condition": "over",
+        "value": "1.70"
+      },
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Pause",
+      "temperature": "85.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "2.00",
+      "flow": "0",
+      "seconds": "2.00",
+      "volume": "100",
+      "weight": "0",
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Pressure Fill",
+      "temperature": "86.0",
+      "sensor": "coffee",
+      "pump": "pressure",
+      "transition": "fast",
+      "pressure": "8.0",
+      "flow": "0",
+      "seconds": "4.00",
+      "volume": "100.00",
+      "weight": "0",
+      "exit": {
+        "type": "pressure",
+        "condition": "over",
+        "value": "1.00"
+      },
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Flow",
+      "temperature": "84.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "8.3",
+      "flow": "1.8",
+      "seconds": "20.00",
+      "volume": "100.00",
+      "weight": "0",
+      "limiter": {
+        "value": "7.4",
+        "range": "0.6"
+      }
+    }
+  ],
+  "tank_temperature": "0",
+  "target_weight": "34",
+  "target_volume": "0",
+  "target_volume_count_start": "2",
+  "legacy_profile_type": "settings_2c",
+  "type": "advanced",
+  "lang": "en",
+  "hidden": "0",
+  "reference_file": "Peony__PesadoFlowHU",
+  "changes_since_last_espresso": "",
+  "version": "2"
+}

@@ -1,0 +1,122 @@
+{
+  "title": "HMC/FlowHUCB2.0",
+  "author": "Idan Gafni",
+  "notes": "HMC Flow is a simple yet smart profile for uneven extraction from HMC style roasts. \n\nAdaptation to your coffee and setup:\nAdjust fill stages according to basket with lower target pressure exit conditions for high flow baskets or higher ones for classic baskets\nReduce flow in last flow stage for lower uniformity burrs if you don't like the result and see many channels in your extraction (low extraction)\nChange pause time as blooming for higher extraction (through contact time)\nIncrease flow to get less even extraction",
+  "beverage_type": "espresso",
+  "steps": [
+    {
+      "name": "Fill Protection",
+      "temperature": "87.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "2.00",
+      "flow": "8.0",
+      "seconds": "2.00",
+      "volume": "120.00",
+      "weight": "0",
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Fill Fast Ramp Up",
+      "temperature": "87.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "2.00",
+      "flow": "4.5",
+      "seconds": "6.00",
+      "volume": "120.00",
+      "weight": "0",
+      "exit": {
+        "type": "pressure",
+        "condition": "over",
+        "value": "1.00"
+      },
+      "limiter": {
+        "value": "7.0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Fill Regulation",
+      "temperature": "86.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "2.00",
+      "flow": "4.0",
+      "seconds": "4.00",
+      "volume": "100",
+      "weight": "0",
+      "exit": {
+        "type": "pressure",
+        "condition": "over",
+        "value": "1.20"
+      },
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Pause",
+      "temperature": "85.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "2.00",
+      "flow": "0",
+      "seconds": "4.00",
+      "volume": "100",
+      "weight": "0",
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Pressure Fill",
+      "temperature": "86.0",
+      "sensor": "coffee",
+      "pump": "pressure",
+      "transition": "fast",
+      "pressure": "8.0",
+      "flow": "0",
+      "seconds": "4.00",
+      "volume": "100.00",
+      "weight": "0",
+      "exit": {
+        "type": "pressure",
+        "condition": "over",
+        "value": "2.00"
+      },
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Flow",
+      "temperature": "84.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "8.3",
+      "flow": "2.0",
+      "seconds": "20.00",
+      "volume": "100.00",
+      "weight": "0",
+      "limiter": {
+        "value": "7.4",
+        "range": "0.6"
+      }
+    }
+  ],
+  "tank_temperature": "87.0",
+  "target_weight": "34",
+  "target_volume": "95"
+}

@@ -1,0 +1,273 @@
+{
+  "title": "Push/MaX-Traction64HU",
+  "author": "Idan Gafni",
+  "notes": "25+ EY. High extraction low body beverage. Requires grinding of about 200+ microns from burrs lock. This profile is a dedicated profile to light roasted coffees that are more challenging to extract. The increased extraction is achieved by using various extraction mechanics such as multiple fills with fresh water,multiple blooms, and contact time. With high flow baskets (unibasket, sworks flow, wafo soe, pesado etc) it will drizzle throughout the extraction.",
+  "beverage_type": "espresso",
+  "steps": [
+    {
+      "name": "Surge read protection",
+      "temperature": "90.0",
+      "sensor": "coffee",
+      "pump": "pressure",
+      "transition": "fast",
+      "pressure": "6.0",
+      "flow": "0",
+      "seconds": "2.00",
+      "volume": "100",
+      "weight": "0",
+      "limiter": {
+        "value": "6.0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Fill Fast Ramp Up",
+      "temperature": "90.0",
+      "sensor": "coffee",
+      "pump": "pressure",
+      "transition": "fast",
+      "pressure": "6.0",
+      "flow": "0",
+      "seconds": "5.00",
+      "volume": "0",
+      "weight": "0.00",
+      "exit": {
+        "type": "pressure",
+        "condition": "over",
+        "value": "1.00"
+      },
+      "limiter": {
+        "value": "5.5",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Bloom",
+      "temperature": "87.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "9.0",
+      "flow": "0",
+      "seconds": "20.00",
+      "volume": "0.00",
+      "weight": "0",
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "2nd Fill",
+      "temperature": "88.0",
+      "sensor": "coffee",
+      "pump": "pressure",
+      "transition": "fast",
+      "pressure": "8.9",
+      "flow": "0.00",
+      "seconds": "5.00",
+      "volume": "0",
+      "weight": "0",
+      "exit": {
+        "type": "pressure",
+        "condition": "over",
+        "value": "0.50"
+      },
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "2nd Bloom",
+      "temperature": "88.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "0",
+      "flow": "0.0",
+      "seconds": "20.00",
+      "volume": "0.00",
+      "weight": "0",
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "3rd Fill",
+      "temperature": "88.0",
+      "sensor": "coffee",
+      "pump": "pressure",
+      "transition": "fast",
+      "pressure": "8.9",
+      "flow": "0.0",
+      "seconds": "4.00",
+      "volume": "0.00",
+      "weight": "0",
+      "exit": {
+        "type": "pressure",
+        "condition": "over",
+        "value": "0.50"
+      },
+      "limiter": {
+        "value": "0.0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "3rd Bloom",
+      "temperature": "88.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "0",
+      "flow": "0.0",
+      "seconds": "18.00",
+      "volume": "0.00",
+      "weight": "0",
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "4th Fill",
+      "temperature": "88.0",
+      "sensor": "coffee",
+      "pump": "pressure",
+      "transition": "fast",
+      "pressure": "8.9",
+      "flow": "0.0",
+      "seconds": "5.00",
+      "volume": "0.00",
+      "weight": "0",
+      "exit": {
+        "type": "pressure",
+        "condition": "over",
+        "value": "0.30"
+      },
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "4th Bloom",
+      "temperature": "88.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "0",
+      "flow": "0.0",
+      "seconds": "15.00",
+      "volume": "0.00",
+      "weight": "0",
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "5th Fill",
+      "temperature": "88.0",
+      "sensor": "coffee",
+      "pump": "pressure",
+      "transition": "fast",
+      "pressure": "8.9",
+      "flow": "0.0",
+      "seconds": "5.00",
+      "volume": "0.00",
+      "weight": "0",
+      "exit": {
+        "type": "pressure",
+        "condition": "over",
+        "value": "0.20"
+      },
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "5th Bloom",
+      "temperature": "88.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "0",
+      "flow": "0.0",
+      "seconds": "15.00",
+      "volume": "0.00",
+      "weight": "0",
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "6th Fill",
+      "temperature": "88.0",
+      "sensor": "coffee",
+      "pump": "pressure",
+      "transition": "fast",
+      "pressure": "8.9",
+      "flow": "0.0",
+      "seconds": "5.00",
+      "volume": "0.00",
+      "weight": "0",
+      "exit": {
+        "type": "pressure",
+        "condition": "over",
+        "value": "0.20"
+      },
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "6th Bloom",
+      "temperature": "88.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "8.6",
+      "flow": "0.0",
+      "seconds": "10.00",
+      "volume": "0.00",
+      "weight": "0",
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Final Flow",
+      "temperature": "88.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "0",
+      "flow": "1.0",
+      "seconds": "25.00",
+      "volume": "0.00",
+      "weight": "0",
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    }
+  ],
+  "tank_temperature": "0",
+  "target_weight": "36",
+  "target_volume": "0",
+  "target_volume_count_start": "0",
+  "legacy_profile_type": "settings_2c",
+  "type": "advanced",
+  "lang": "en",
+  "hidden": "0",
+  "reference_file": "Push__MaX-Traction",
+  "changes_since_last_espresso": "",
+  "version": "2"
+}

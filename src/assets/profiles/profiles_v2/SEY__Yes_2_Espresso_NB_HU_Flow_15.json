@@ -1,0 +1,130 @@
+{
+  "title": "SEY/Yes 2 Espresso NB HU Flow 1.5",
+  "author": "Idan Gafni",
+  "notes": "This profile is a dedicated profile to light roasted coffees that are more challenging to extract. The increased extraction is achieved by using various extraction mechanics such as soaking, blooming, fresh water introduction, and an extended contact time.",
+  "beverage_type": "espresso",
+  "steps": [
+    {
+      "name": "Surge Read Protection",
+      "temperature": "91.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "2.00",
+      "flow": "4.0",
+      "seconds": "2.00",
+      "volume": "120.00",
+      "weight": "0",
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Fill Fast Ramp Up",
+      "temperature": "90.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "2.00",
+      "flow": "4.5",
+      "seconds": "9.00",
+      "volume": "120.00",
+      "weight": "0",
+      "exit": {
+        "type": "pressure",
+        "condition": "over",
+        "value": "0.50"
+      },
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Fill Regulation",
+      "temperature": "90.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "2.00",
+      "flow": "2.5",
+      "seconds": "5.00",
+      "volume": "0",
+      "weight": "0",
+      "exit": {
+        "type": "pressure",
+        "condition": "over",
+        "value": "1.00"
+      },
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Bloom",
+      "temperature": "87.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "9.0",
+      "flow": "0.0",
+      "seconds": "25.00",
+      "volume": "0",
+      "weight": "0",
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Pressure Increase",
+      "temperature": "88.0",
+      "sensor": "coffee",
+      "pump": "pressure",
+      "transition": "fast",
+      "pressure": "8.9",
+      "flow": "0.00",
+      "seconds": "3.00",
+      "volume": "100",
+      "weight": "0",
+      "exit": {
+        "type": "pressure",
+        "condition": "over",
+        "value": "2.00"
+      },
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Constant Flow",
+      "temperature": "88.0",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "0",
+      "flow": "1.5",
+      "seconds": "25.00",
+      "volume": "120.00",
+      "weight": "0",
+      "limiter": {
+        "value": "0.0",
+        "range": "0.6"
+      }
+    }
+  ],
+  "tank_temperature": "0",
+  "target_weight": "36",
+  "target_volume": "0",
+  "target_volume_count_start": "6",
+  "legacy_profile_type": "settings_2c",
+  "type": "advanced",
+  "lang": "en",
+  "hidden": "0",
+  "reference_file": "SEY__Yes_2_Espresso_NB_HU_Flow_15",
+  "changes_since_last_espresso": "",
+  "version": "2"
+}

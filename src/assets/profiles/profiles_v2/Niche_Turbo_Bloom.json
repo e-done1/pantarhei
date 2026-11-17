@@ -1,0 +1,72 @@
+{
+  "title": "Niche Turbo Bloom",
+  "author": "Idan Gafni",
+  "notes": "The goal of this profile is to manage a turbo style shot using a burr grinder like the Niche Zero. \n\n",
+  "beverage_type": "espresso",
+  "steps": [
+    {
+      "name": "Init_Fill",
+      "temperature": "92.00",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "1",
+      "flow": "6.0",
+      "seconds": "13.00",
+      "volume": "40.00",
+      "weight": "0",
+      "exit": {
+        "type": "pressure",
+        "condition": "over",
+        "value": "4.00"
+      },
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "Bloom",
+      "temperature": "87.00",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "1",
+      "flow": "0.0",
+      "seconds": "20.00",
+      "volume": "0",
+      "weight": "0",
+      "limiter": {
+        "value": "0",
+        "range": "0.6"
+      }
+    },
+    {
+      "name": "ramp",
+      "temperature": "87.00",
+      "sensor": "coffee",
+      "pump": "flow",
+      "transition": "fast",
+      "pressure": "4.0",
+      "flow": "6.0",
+      "seconds": "1.00",
+      "volume": "500",
+      "weight": "0",
+      "limiter": {
+        "value": "6.0",
+        "range": "0.6"
+      }
+    }
+  ],
+  "tank_temperature": "0",
+  "target_weight": "40",
+  "target_volume": "0",
+  "target_volume_count_start": "2",
+  "legacy_profile_type": "settings_2c",
+  "type": "advanced",
+  "lang": "en",
+  "hidden": "0",
+  "reference_file": "Niche_Turbo_Bloom",
+  "changes_since_last_espresso": "",
+  "version": "2"
+}
