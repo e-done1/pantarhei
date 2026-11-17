@@ -32,7 +32,7 @@ PantaRhei is a responsive, data-intensive web skin designed for Decaid on Decent
 
 ### 1. Live Extraction & Telemetry Graphs
 - **Real-Time Extraction Physics**: High-frequency 60 FPS telemetry visualizing pressure, water flow, gravimetric flow, temperature, scale weight, and puck resistance ($R = P/F^2$).
-- **Dual Automotive Needle Gauges**: Real-time extraction meters displaying instant head pressure (0–12 bar) and flow rate (0–8 ml/s) needles with dynamic sweep geometry, digital telemetry, and peak hold indicators.
+- **Dual Automotive Needle Gauges**: Real-time extraction meters displaying instant head pressure (0–9 bar) and flow rate (0–8 ml/s) needles with dynamic sweep geometry, digital telemetry, and peak hold indicators.
 - **Step Names & Phase Indicators**: Clearly displays current and upcoming profile steps (e.g., Pre-infusion, Soak, Pressure Ramp, Flow Hold, Decline) along with their names, target parameters, and step timers directly aligned with the graph.
 - **Channeling Detection & dR/dt Derivative Math**: Automatically flags potential channeling using mathematical central difference derivative ($dR/dt$) monitoring puck resistance rate of change, displaying debounced warning badges directly on the graph.
 - **Interactive Data Inspector**: Continuous point-by-point scrubbing window across both live and historical curves with sub-second spline interpolation, exposing exact pressure, flow, temperature, weight, and resistance data at every sub-second point along the timeline.
@@ -103,7 +103,8 @@ PantaRhei is a responsive, data-intensive web skin designed for Decaid on Decent
 
 ### 10. Customizable Ambient Screensaver & Floating Clock
 - **Idle Activation Delay**: Configurable inactivity timer (1, 2, 5, 10, 15, or 30 minutes) before the screensaver engages.
-- **Curated Specialty Coffee Slideshow**: Ambient high-resolution specialty coffee station and terroir photography slideshow with configurable slide intervals (5–60s) and random shuffling.
+- **Local Image Folder Selection**: Dedicated folder picker allowing baristas to choose any local folder containing images (e.g. tablet photo gallery, custom roast and cafe photography). Automatically scans, previews, and caches the image pool for persistent slideshow playback.
+- **Offline Default Artwork Pool**: Embedded high-resolution specialty coffee and terroir artwork available out of the box with zero network dependencies when no custom folder is selected.
 - **Dimming & Visual Presentation**: Adjustable screen dimming (10% to 100%) and image fit styling (`contain_blur` with ambient backdrop glow, or full `cover`).
 - **Anti-Burn-In Protection**: Dynamic clock drifting across display quadrants with adjustable drift speeds (slow, medium, dynamic) to protect tablet and OLED panels from static image burn-in.
 - **Multi-Zone Clock Color Customization**: Complete color personalization with dedicated hex color pickers for every section of the floating clock:

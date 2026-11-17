@@ -7,7 +7,8 @@
 export interface ScreensaverConfig {
   enabled: boolean;
   idleTimeoutMinutes: number;           // 1, 2, 5, 10, 15, 30
-  imageFolder: string;                  // e.g. "assets/screensaver" or "/sdcard/Pictures/Screensaver"
+  imageFolder: string;                  // e.g. "assets/screensaver" or custom picked folder name
+  imageCount?: number;                  // number of images loaded in pool
   slideshowIntervalSeconds: number;     // 5 to 60 seconds
   shuffle: boolean;
   dimmingLevel: number;                 // 0.1 (darkest) to 1.0 (brightest)

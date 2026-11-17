@@ -111,9 +111,17 @@ import {
   FolderOpen,
   History,
   Snowflake,
+  Trash2,
 } from "lucide-react";
 import type { EquipmentInventory, FreezerEquipmentItem } from "../types/equipment.ts";
 import { loadEquipmentInventory, saveEquipmentInventory, getFreezerSlowdownFactor } from "../types/equipment.ts";
+import {
+  saveScreensaverImages,
+  loadScreensaverImages,
+  getScreensaverImageCount,
+  clearScreensaverImages,
+  DEFAULT_OFFLINE_SCREENSAVER_IMAGES,
+} from "../services/screensaverImageStore.ts";
 import type { SystemVersionInfo, ReleaseChannel } from "../types/device.ts";
 import type { MachineMaintenanceConfig } from "../types/maintenance.ts";
 import {
@@ -347,6 +355,74 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     if (onScreensaverConfigChange) {
       onScreensaverConfigChange(updated);
     }
+  };
+
+  // Screensaver Custom Folder & Image Pool State
+  const folderInputRef = useRef<HTMLInputElement>(null);
+  const [customImagesCount, setCustomImagesCount] = useState<number>(0);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [isReadingFolder, setIsReadingFolder] = useState<boolean>(false);
+  const [folderFeedback, setFolderFeedback] = useState<string | null>(null);
+
+  useEffect(() => {
+    getScreensaverImageCount().then((count) => setCustomImagesCount(count));
+    loadScreensaverImages().then((imgs) => setImagePreviews(imgs.slice(0, 12)));
+  }, []);
+
+  const handleFolderSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsReadingFolder(true);
+    setFolderFeedback("Reading images from selected folder...");
+
+    try {
+      const imageFiles = Array.from(files).filter((file) =>
+        file.type.startsWith("image/") || /\.(jpe?g|png|webp|gif|bmp|avif)$/i.test(file.name)
+      );
+
+      if (imageFiles.length === 0) {
+        setFolderFeedback("No image files (.jpg, .png, .webp) found in the selected folder.");
+        setIsReadingFolder(false);
+        return;
+      }
+
+      // Infer folder name from first relative path or input
+      const firstPath = (imageFiles[0] as any).webkitRelativePath || "";
+      const folderName = firstPath ? firstPath.split("/")[0] : "Custom Folder";
+
+      // Read images into Data URLs
+      const readPromises = imageFiles.map((file) => {
+        return new Promise<{ name: string; dataUrl: string }>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve({ name: file.name, dataUrl: reader.result as string });
+          reader.onerror = () => reject(reader.error);
+          reader.readAsDataURL(file);
+        });
+      });
+
+      const loadedImages = await Promise.all(readPromises);
+      await saveScreensaverImages(loadedImages);
+
+      setCustomImagesCount(loadedImages.length);
+      setImagePreviews(loadedImages.slice(0, 12).map((img) => img.dataUrl));
+      updateScreensaver({ imageFolder: folderName, imageCount: loadedImages.length });
+      setFolderFeedback(`✓ Loaded ${loadedImages.length} images from folder "${folderName}"!`);
+      setTimeout(() => setFolderFeedback(null), 5000);
+    } catch (err) {
+      setFolderFeedback(`Error loading images: ${String(err)}`);
+    } finally {
+      setIsReadingFolder(false);
+    }
+  };
+
+  const handleClearImages = async () => {
+    await clearScreensaverImages();
+    setCustomImagesCount(0);
+    setImagePreviews(DEFAULT_OFFLINE_SCREENSAVER_IMAGES);
+    updateScreensaver({ imageFolder: "Default Specialty Coffee Collection", imageCount: 0 });
+    setFolderFeedback("Reset to default offline specialty coffee collection.");
+    setTimeout(() => setFolderFeedback(null), 3000);
   };
 
   // Reactive Device States from decaid (Pairing tab)
@@ -1373,25 +1449,90 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     </div>
                   </div>
 
-                  {/* Images Folder Path & Options */}
-                  <div className="grid grid-cols-2 gap-3 pt-1">
-                    <div>
-                      <label className="text-xs text-decent-muted block mb-1 flex items-center space-x-1">
-                        <Folder className="w-3.5 h-3.5 text-amber-400" />
-                        <span>Screensaver Images Folder</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={screensaver.imageFolder}
-                        onChange={(e) => updateScreensaver({ imageFolder: e.target.value })}
-                        placeholder="e.g. /sdcard/Pictures/Screensaver or assets/screensaver"
-                        className="w-full px-3 py-1.5 rounded-xl bg-decent-dark border border-decent-border text-white text-xs font-mono focus:outline-none focus:border-amber-400"
-                      />
+                  {/* Images Folder Picker & Pool Management */}
+                  <div className="p-3 rounded-2xl bg-decent-dark border border-decent-border/70 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <FolderOpen className="w-4 h-4 text-amber-400" />
+                        <div>
+                          <span className="text-xs font-bold text-white uppercase tracking-wider block">
+                            Screensaver Image Pool
+                          </span>
+                          <span className="text-[10.5px] text-decent-muted">
+                            {customImagesCount > 0
+                              ? `Loaded ${customImagesCount} custom images from "${screensaver.imageFolder}"`
+                              : "Using default offline specialty coffee collection"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <input
+                          ref={folderInputRef}
+                          type="file"
+                          // @ts-ignore
+                          webkitdirectory=""
+                          directory=""
+                          multiple
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleFolderSelect}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => folderInputRef.current?.click()}
+                          disabled={isReadingFolder}
+                          className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/50 text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer active:scale-95"
+                          title="Select a local folder on your tablet or computer containing screensaver images"
+                        >
+                          <FolderOpen className="w-3.5 h-3.5" />
+                          <span>{isReadingFolder ? "Loading Folder..." : "Pick Image Folder"}</span>
+                        </button>
+                        {customImagesCount > 0 && (
+                          <button
+                            type="button"
+                            onClick={handleClearImages}
+                            className="px-2.5 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-xs transition-all cursor-pointer"
+                            title="Reset to default specialty coffee collection"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </div>
 
-                    <div>
-                      <label className="text-xs text-decent-muted block mb-1">
-                        Slideshow Interval ({screensaver.slideshowIntervalSeconds}s)
+                    {/* Feedback message */}
+                    {folderFeedback && (
+                      <div className="text-[11px] px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 font-mono">
+                        {folderFeedback}
+                      </div>
+                    )}
+
+                    {/* Thumbnail Preview Strip */}
+                    <div className="flex items-center space-x-2 overflow-x-auto pb-1 pt-0.5">
+                      {imagePreviews.map((src, idx) => (
+                        <div
+                          key={idx}
+                          className="w-14 h-10 rounded-lg overflow-hidden shrink-0 border border-decent-border/60 bg-black/40 relative shadow-sm"
+                        >
+                          <img
+                            src={src}
+                            alt={`Preview ${idx + 1}`}
+                            className="w-full h-full object-cover block"
+                          />
+                        </div>
+                      ))}
+                      {imagePreviews.length === 0 && (
+                        <span className="text-[11px] text-decent-muted italic py-1">
+                          No images loaded. Click "Pick Image Folder" to select your photo folder.
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Slideshow Interval Slider */}
+                    <div className="pt-2 border-t border-decent-border/50 flex items-center justify-between">
+                      <label className="text-xs text-decent-muted">
+                        Slideshow Interval: <span className="font-mono text-amber-300 font-bold">{screensaver.slideshowIntervalSeconds}s</span>
                       </label>
                       <input
                         type="range"
@@ -1402,7 +1543,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         onChange={(e) =>
                           updateScreensaver({ slideshowIntervalSeconds: parseInt(e.target.value, 10) })
                         }
-                        className="w-full accent-amber-400 h-1.5 rounded bg-decent-dark mt-2 cursor-pointer"
+                        className="w-48 accent-amber-400 h-1.5 rounded bg-decent-dark cursor-pointer"
                       />
                     </div>
                   </div>

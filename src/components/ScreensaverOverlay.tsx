@@ -1,19 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import type { ScreensaverConfig } from "../types/screensaver.ts";
+import {
+  loadScreensaverImages,
+  DEFAULT_OFFLINE_SCREENSAVER_IMAGES,
+} from "../services/screensaverImageStore.ts";
 
 interface ScreensaverOverlayProps {
   config: ScreensaverConfig;
   isMachineActive: boolean; // True if espresso, steam, or rinse is running
 }
-
-// Curated high-resolution specialty coffee station & terroir aesthetics for default screensaver
-const SAMPLE_SCREENSAVER_IMAGES = [
-  "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?q=80&w=1600&auto=format&fit=crop", // Espresso pour
-  "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?q=80&w=1600&auto=format&fit=crop", // Coffee beans & light
-  "https://images.unsplash.com/photo-1509785307050-d4066910ec1e?q=80&w=1600&auto=format&fit=crop", // Terroir farm
-  "https://images.unsplash.com/photo-1442512595331-e89e73853f31?q=80&w=1600&auto=format&fit=crop", // Warm barista station
-  "https://images.unsplash.com/photo-1447933601403-0c6688de566e?q=80&w=1600&auto=format&fit=crop", // Roasting beans
-];
 
 export const ScreensaverOverlay: React.FC<ScreensaverOverlayProps> = ({
   config,
@@ -21,7 +16,21 @@ export const ScreensaverOverlay: React.FC<ScreensaverOverlayProps> = ({
 }) => {
   const [isActive, setIsActive] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [imagePool, setImagePool] = useState<string[]>(DEFAULT_OFFLINE_SCREENSAVER_IMAGES);
   const [time, setTime] = useState(new Date());
+
+  // Load screensaver image pool (from custom picked folder or offline defaults)
+  useEffect(() => {
+    loadScreensaverImages().then((imgs) => {
+      if (imgs && imgs.length > 0) {
+        if (config.shuffle) {
+          setImagePool([...imgs].sort(() => Math.random() - 0.5));
+        } else {
+          setImagePool(imgs);
+        }
+      }
+    });
+  }, [isActive, config.imageFolder, config.shuffle]);
 
   // Anti-burn-in quadrant position (0: top-left, 1: top-right, 2: bottom-right, 3: bottom-left)
   const [quadrant, setQuadrant] = useState(0);
@@ -85,14 +94,14 @@ export const ScreensaverOverlay: React.FC<ScreensaverOverlayProps> = ({
 
   // Slideshow interval
   useEffect(() => {
-    if (!isActive) return;
+    if (!isActive || imagePool.length === 0) return;
     const intervalSec = Math.max(5, config.slideshowIntervalSeconds || 15);
     const timer = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % SAMPLE_SCREENSAVER_IMAGES.length);
+      setCurrentImageIndex((prev) => (prev + 1) % imagePool.length);
     }, intervalSec * 1000);
 
     return () => clearInterval(timer);
-  }, [isActive, config.slideshowIntervalSeconds]);
+  }, [isActive, config.slideshowIntervalSeconds, imagePool.length]);
 
   // Anti-burn-in drifting clock across quadrants
   useEffect(() => {
@@ -124,7 +133,7 @@ export const ScreensaverOverlay: React.FC<ScreensaverOverlayProps> = ({
     day: "numeric",
   });
 
-  const currentImg = SAMPLE_SCREENSAVER_IMAGES[currentImageIndex];
+  const currentImg = imagePool[currentImageIndex % imagePool.length] || DEFAULT_OFFLINE_SCREENSAVER_IMAGES[0];
 
   // Quadrant coordinates for smooth anti-burn-in drift
   const quadrantStyles: React.CSSProperties[] = [
