@@ -4,13 +4,39 @@ PantaRhei is a responsive, data-intensive web skin designed for Decaid on Decent
 
 ---
 
+## Visual Tour & UI Showcase
+
+| Main Cockpit & Channel Alert Detection | Live Real-Time Extraction Dashboard |
+| :---: | :---: |
+| ![PantaRhei Cockpit & Shot Graph](screenshots/01_cockpit_idle_and_graph.png) | ![Live Extraction Dashboard](screenshots/02_live_extraction_telemetry.png) |
+
+| Post-Shot Summary & Instant QR Sharing | Specialty Coffee & Bean Cellar |
+| :---: | :---: |
+| ![Post-Shot Sensory Evaluation & QR Card](screenshots/03_post_shot_summary_modal.png) | ![Specialty Bean Inventory & Rest Tracking](screenshots/04_bean_management.png) |
+
+| Curated Decaid v2 Profiles Library | Historical Extraction Archive |
+| :---: | :---: |
+| ![Curated Decaid v2 Profiles](screenshots/05_profile_library.png) | ![Shot History Archive](screenshots/06_shot_history.png) |
+
+| Dedicated Shot Curve Inspector | Machine Maintenance & Pairing |
+| :---: | :---: |
+| ![Shot Dial-in & Curve Inspection](screenshots/07_shot_inspection_graph.png) | ![Machine Maintenance Assistant & Pairing](screenshots/08_machine_maintenance_and_pairing.png) |
+
+<div align="center">
+  <img src="screenshots/09_equipment_management.png" alt="Equipment Inventory & Puck Prep Routine" width="85%" />
+  <p><em>Equipment Inventory & Puck Prep Routine Configuration (Grinders, Burrs, Baskets, Tampers, WDT, and RDT)</em></p>
+</div>
+
+---
+
 ## Key Features
 
 ### 1. Live Extraction & Telemetry Graphs
 - **Real-Time Extraction Physics**: High-frequency telemetry visualizing pressure, water flow, gravimetric flow, temperature, scale weight, and puck resistance ($R = P/F^2$).
+- **Dual Needle & Gauge Cockpit**: Real-time extraction gauge displaying instant head pressure and flow rate needles with responsive digital telemetry.
 - **Step Names & Phase Indicators**: Clearly displays current and upcoming profile steps (e.g., Pre-infusion, Soak, Pressure Ramp, Flow Hold, Decline) along with their names, target parameters, and step timers directly aligned with the graph.
-- **Channeling Detection Flags**: Automatically flags potential channeling and flow spikes in real time to diagnose puck degradation and grind distribution issues.
-- **Interactive Data Inspector**: Point-by-point scrubbing window across both live and historical curves, exposing exact pressure, flow, temperature, weight, and resistance data at every point along the extraction timeline.
+- **Channeling Detection Flags**: Automatically flags potential channeling and flow spikes in real time to diagnose puck degradation and grind distribution issues (with prominent crimson warning badges on the graph).
+- **Interactive Data Inspector**: Continuous point-by-point scrubbing window across both live and historical curves, exposing exact pressure, flow, temperature, weight, and resistance data at every sub-second point along the timeline.
 - **Cockpit Operation Modes**: Dedicated operational modes for Coffee, Steam, Hot Water, and Rinse, featuring automatic UL safety compliance detection to switch seamlessly between software triggers and hardware buttons.
 
 ### 2. Auto QR & Shot Sharing
@@ -97,7 +123,7 @@ PantaRhei is optimized for the standard Decent DE1 landscape tablet resolution:
 1. Copy or clone this repository into the Decaid `skins/` directory on your DE1 tablet:
    ```bash
    cd ~/decaid/skins/
-   git clone <repository-url> pantarhei
+   git clone https://github.com/e-done1/pantarhei.git pantarhei
    ```
 2. Open Decaid **Settings** $\rightarrow$ **Skins** and select **PantaRhei**.
 
