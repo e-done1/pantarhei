@@ -9,7 +9,7 @@ import type { TelemetryPoint } from "./telemetrySimulator.ts";
 import type { PantaBean } from "../types/bean.ts";
 
 export interface ShotCardOptions {
-  bean: PantaBean;
+  bean?: PantaBean;
   history: TelemetryPoint[];
   dose: number;
   finalYield: number;
@@ -92,18 +92,22 @@ export async function generateShotCardBlob(
 
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 24px system-ui, sans-serif";
-  ctx.fillText(options.bean.name, 56, 154);
+  ctx.fillText(options.bean?.name || "Espresso Lot", 56, 154);
 
   ctx.fillStyle = "#cbd5e1";
   ctx.font = "16px system-ui, sans-serif";
-  ctx.fillText(`${options.bean.roaster} · ${options.bean.countryOfOrigin}`, 56, 182);
+  const roasterStr = options.bean ? `${options.bean.roaster} · ${options.bean.countryOfOrigin}` : "Fresh Roast · Standby";
+  ctx.fillText(roasterStr, 56, 182);
 
   ctx.fillStyle = "#94a3b8";
   ctx.font = "13px ui-monospace, monospace";
-  const varietals = Array.isArray(options.bean.varietal)
-    ? options.bean.varietal.join(", ")
-    : options.bean.varietal || "Heirloom";
-  ctx.fillText(`${options.bean.process} · ${varietals}`, 56, 210);
+  const varietals = options.bean
+    ? (Array.isArray(options.bean.varietal)
+        ? options.bean.varietal.join(", ")
+        : options.bean.varietal || "Heirloom")
+    : "Arabica Blend";
+  const processStr = options.bean?.process || "Washed";
+  ctx.fillText(`${processStr} · ${varietals}`, 56, 210);
 
   // 4. Metrics Cards Grid (Right of Coffee Box)
   const metrics = [

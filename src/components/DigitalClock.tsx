@@ -97,29 +97,29 @@ export const DigitalClock: React.FC<DigitalClockProps> = ({
   });
 
   return (
-    <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-decent-surface/60 border border-decent-border/40 backdrop-blur-md shadow-lg select-none">
+    <div className="flex flex-col items-center justify-center p-2 lg:p-3 rounded-2xl bg-decent-surface/60 border border-decent-border/40 backdrop-blur-md shadow-lg select-none">
       <span
-        className="text-xs font-medium tracking-widest uppercase mb-1"
+        className="text-[10px] lg:text-xs font-medium tracking-widest uppercase mb-0.5 lg:mb-1"
         style={{ color: palette.date }}
       >
         {dateStr}
       </span>
-      <div className="font-mono text-4xl font-bold tracking-wider flex items-baseline">
+      <div className="font-mono text-2xl lg:text-4xl font-bold tracking-wider flex items-baseline">
         <span style={{ color: palette.hours }}>{hours}</span>
         <span
-          className="mx-1 animate-pulse"
+          className="mx-0.5 lg:mx-1 animate-pulse"
           style={{ color: palette.separators }}
         >
           :
         </span>
         <span style={{ color: palette.minutes }}>{minutes}</span>
         <span
-          className="mx-1 animate-pulse"
+          className="mx-0.5 lg:mx-1 animate-pulse"
           style={{ color: palette.separators }}
         >
           :
         </span>
-        <span className="text-2xl ml-0.5" style={{ color: palette.seconds }}>
+        <span className="text-base lg:text-2xl ml-0.5" style={{ color: palette.seconds }}>
           {seconds}
         </span>
       </div>

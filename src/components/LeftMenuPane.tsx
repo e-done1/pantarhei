@@ -41,7 +41,7 @@ interface LeftMenuPaneProps {
   onWaterConfigChange: (newConfig: WaterTabConfig) => void;
   maintenanceConfig: MaintenanceTabConfig;
   onMaintenanceConfigChange: (newConfig: MaintenanceTabConfig) => void;
-  activeBean: PantaBean;
+  activeBean?: PantaBean;
   activeProfileTitle: string;
   onOpenBeanDrawer: () => void;
   onOpenProfileDrawer: () => void;
@@ -76,7 +76,7 @@ export const LeftMenuPane: React.FC<LeftMenuPaneProps> = ({
   onOpenSettingsEquipment,
 }) => {
   const equipmentInv = loadEquipmentInventory();
-  const rest = calculateRestDays(activeBean, new Date(), equipmentInv.freezers);
+  const rest = activeBean ? calculateRestDays(activeBean, new Date(), equipmentInv.freezers) : null;
 
   // Steam Temp Presets
   const [steamTempPresets, setSteamTempPresets] = useState<number[]>(() => {
@@ -184,14 +184,14 @@ export const LeftMenuPane: React.FC<LeftMenuPaneProps> = ({
   };
 
   return (
-    <aside className="w-[390px] h-full flex flex-col justify-between bg-decent-surface/95 border-r border-decent-border/60 backdrop-blur-md p-4 select-none z-20 shadow-xl">
+    <aside className="w-[270px] sm:w-[290px] lg:w-[330px] xl:w-[370px] shrink-0 h-full flex flex-col bg-decent-surface/95 border-r border-decent-border/60 backdrop-blur-md p-2.5 lg:p-4 select-none z-20 shadow-xl overflow-hidden">
       {/* 1. Top 4 Operational Tabs */}
-      <div>
-        <div className="grid grid-cols-[1fr_1fr_1fr_1.35fr] gap-1 p-1 bg-decent-dark/80 rounded-xl border border-decent-border/50 mb-4">
+      <div className="shrink-0 mb-2">
+        <div className="grid grid-cols-[1fr_1fr_1fr_1.2fr] gap-1 p-0.5 lg:p-1 bg-decent-dark/80 rounded-xl border border-decent-border/50">
           <button
             type="button"
             onClick={() => onTabChange("coffee")}
-            className={`flex items-center justify-center py-2 px-1 rounded-lg text-xs font-semibold transition-all duration-200 ${
+            className={`flex items-center justify-center py-1.5 lg:py-2 px-0.5 lg:px-1 rounded-lg text-[11px] lg:text-xs font-semibold transition-all duration-200 ${
               activeTab === "coffee"
                 ? "bg-amber-600/30 text-amber-300 border border-amber-500/50 shadow-sm"
                 : "text-decent-muted hover:text-white"
@@ -204,7 +204,7 @@ export const LeftMenuPane: React.FC<LeftMenuPaneProps> = ({
           <button
             type="button"
             onClick={() => onTabChange("steam")}
-            className={`flex items-center justify-center py-2 px-1 rounded-lg text-xs font-semibold transition-all duration-200 ${
+            className={`flex items-center justify-center py-1.5 lg:py-2 px-0.5 lg:px-1 rounded-lg text-[11px] lg:text-xs font-semibold transition-all duration-200 ${
               activeTab === "steam"
                 ? "bg-amber-500/30 text-amber-300 border border-amber-400/50 shadow-sm"
                 : "text-decent-muted hover:text-white"
@@ -217,7 +217,7 @@ export const LeftMenuPane: React.FC<LeftMenuPaneProps> = ({
           <button
             type="button"
             onClick={() => onTabChange("water")}
-            className={`flex items-center justify-center py-2 px-1 rounded-lg text-xs font-semibold transition-all duration-200 ${
+            className={`flex items-center justify-center py-1.5 lg:py-2 px-0.5 lg:px-1 rounded-lg text-[11px] lg:text-xs font-semibold transition-all duration-200 ${
               activeTab === "water"
                 ? "bg-sky-500/30 text-sky-300 border border-sky-400/50 shadow-sm"
                 : "text-decent-muted hover:text-white"
@@ -230,67 +230,90 @@ export const LeftMenuPane: React.FC<LeftMenuPaneProps> = ({
           <button
             type="button"
             onClick={() => onTabChange("maintenance")}
-            className={`flex items-center justify-center py-2 px-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
+            className={`flex items-center justify-center py-1.5 lg:py-2 px-0.5 lg:px-1 rounded-lg text-[11px] lg:text-xs font-semibold transition-all duration-200 ${
               activeTab === "maintenance"
                 ? "bg-emerald-500/30 text-emerald-300 border border-emerald-400/50 shadow-sm"
                 : "text-decent-muted hover:text-white"
             }`}
           >
             <Wrench className="w-3.5 h-3.5 mr-1 shrink-0" />
-            <span>Maintenance</span>
+            <span>Clean</span>
           </button>
         </div>
+      </div>
 
-        {/* 2. Active Tab Content Container */}
+      {/* 2. Scrollable Middle Content Section */}
+      <div className="flex-1 overflow-y-auto min-h-0 space-y-2 pr-0.5">
         {activeTab === "coffee" && (
-          <div className="space-y-3">
-            {/* Active Coffee Card */}
-            <div
-              onClick={onOpenBeanDrawer}
-              className="p-3.5 rounded-xl bg-decent-card border border-decent-border/60 hover:border-amber-500/50 cursor-pointer transition-all duration-200 shadow-sm"
-            >
-              <div className="flex items-center justify-between text-xs text-amber-400 font-semibold mb-1">
-                <span>{activeBean.roaster}</span>
-                <div className="flex items-center space-x-1.5 text-[10px] px-2 py-0.5 rounded-full bg-decent-dark border border-decent-border">
-                  <span className="font-mono text-slate-300 font-medium">{rest.roastAgeText}</span>
-                  <span className="text-decent-muted">·</span>
-                  <span className={`flex items-center font-semibold ${activeBean.isFrozen ? "text-cyan-400" : "text-amber-300"}`}>
-                    {activeBean.isFrozen ? (
-                      <Snowflake className="w-2.5 h-2.5 mr-0.5 text-cyan-400" />
-                    ) : (
-                      <Sun className="w-2.5 h-2.5 mr-0.5 text-amber-400" />
+          <div className="space-y-2">
+            {/* Active Coffee Card (or prompt to add/select) */}
+            {activeBean ? (
+              <div
+                onClick={onOpenBeanDrawer}
+                className="p-2.5 lg:p-3.5 rounded-xl bg-decent-card border border-decent-border/60 hover:border-amber-500/50 cursor-pointer transition-all duration-200 shadow-sm"
+              >
+                <div className="flex items-center justify-between text-xs text-amber-400 font-semibold mb-1">
+                  <span className="truncate">{activeBean.roaster}</span>
+                  {rest && (
+                    <div className="flex items-center space-x-1.5 text-[10px] px-2 py-0.5 rounded-full bg-decent-dark border border-decent-border shrink-0">
+                      <span className="font-mono text-slate-300 font-medium">{rest.roastAgeText}</span>
+                      <span className="text-decent-muted">·</span>
+                      <span className={`flex items-center font-semibold ${activeBean.isFrozen ? "text-cyan-400" : "text-amber-300"}`}>
+                        {activeBean.isFrozen ? (
+                          <Snowflake className="w-2.5 h-2.5 mr-0.5 text-cyan-400" />
+                        ) : (
+                          <Sun className="w-2.5 h-2.5 mr-0.5 text-amber-400" />
+                        )}
+                        <span>{rest.storageLabel}</span>
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="text-sm lg:text-base font-bold text-white truncate flex items-center justify-between">
+                  <span className="truncate">{activeBean.name}</span>
+                  <ChevronRight className="w-4 h-4 text-decent-muted shrink-0" />
+                </div>
+                <div className="text-xs text-decent-muted mt-0.5 truncate">
+                  {formatVarietals(activeBean.varietal)}{activeBean.process ? ` · ${activeBean.process}` : ""}
+                </div>
+                {activeBean.isFrozen && rest && (
+                  <div className="flex items-center flex-wrap gap-1.5 mt-2 pt-2 border-t border-decent-border/50">
+                    {rest.freezerAgeText && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-950/40 border border-cyan-500/40 font-mono text-cyan-300 font-medium flex items-center space-x-1">
+                        <Snowflake className="w-2.5 h-2.5 text-cyan-400" />
+                        <span>{rest.freezerAgeText}</span>
+                      </span>
                     )}
-                    <span>{rest.storageLabel}</span>
-                  </span>
+                    {rest.actualAgeText && (
+                      <span
+                        className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950/40 border border-emerald-500/40 font-mono text-emerald-300 font-bold flex items-center space-x-1"
+                        title="Physiological aging based on storage conditions and temperature slowdown factor"
+                      >
+                        <Zap className="w-2.5 h-2.5 text-emerald-400" />
+                        <span>~{rest.actualAgeText}</span>
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div
+                onClick={onOpenBeanDrawer}
+                className="p-2.5 lg:p-3 rounded-xl bg-decent-card/60 hover:bg-decent-card border border-dashed border-decent-border/70 hover:border-amber-400/60 cursor-pointer transition-all duration-200 shadow-sm group"
+              >
+                <div className="flex items-center justify-between text-xs text-amber-400 font-semibold mb-0.5">
+                  <span>Coffee Beans</span>
+                  <Plus className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
+                </div>
+                <div className="text-sm lg:text-base font-bold text-slate-200 group-hover:text-white flex items-center justify-between">
+                  <span>Select or Add Bean</span>
+                  <ChevronRight className="w-4 h-4 text-decent-muted shrink-0" />
+                </div>
+                <div className="text-[11px] text-decent-muted mt-0.5">
+                  Tap to choose coffee, dose & grind presets
                 </div>
               </div>
-              <div className="text-base font-bold text-white truncate flex items-center justify-between">
-                <span>{activeBean.name}</span>
-                <ChevronRight className="w-4 h-4 text-decent-muted" />
-              </div>
-              <div className="text-xs text-decent-muted mt-1 truncate">
-                {formatVarietals(activeBean.varietal)} · {activeBean.process}
-              </div>
-              {activeBean.isFrozen && (
-                <div className="flex items-center flex-wrap gap-1.5 mt-2 pt-2 border-t border-decent-border/50">
-                  {rest.freezerAgeText && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-950/40 border border-cyan-500/40 font-mono text-cyan-300 font-medium flex items-center space-x-1">
-                      <Snowflake className="w-2.5 h-2.5 text-cyan-400" />
-                      <span>{rest.freezerAgeText}</span>
-                    </span>
-                  )}
-                  {rest.actualAgeText && (
-                    <span
-                      className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950/40 border border-emerald-500/40 font-mono text-emerald-300 font-bold flex items-center space-x-1"
-                      title="Physiological aging based on storage conditions and temperature slowdown factor"
-                    >
-                      <Zap className="w-2.5 h-2.5 text-emerald-400" />
-                      <span>~{rest.actualAgeText}</span>
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
+            )}
 
             {/* Dose Stepper */}
             <div className="p-3 rounded-xl bg-decent-card border border-decent-border/60 flex items-center justify-between">
@@ -828,38 +851,38 @@ export const LeftMenuPane: React.FC<LeftMenuPaneProps> = ({
       </div>
 
       {/* 3. Bottom Navigation Shortcuts */}
-      <div className="pt-3 border-t border-decent-border/50 grid grid-cols-4 gap-2">
+      <div className="shrink-0 mt-auto pt-2 lg:pt-2.5 border-t border-decent-border/50 grid grid-cols-4 gap-1.5">
         <button
           type="button"
           onClick={onOpenBeanDrawer}
-          className="flex flex-col items-center justify-center py-2 rounded-xl bg-decent-card/60 hover:bg-decent-card border border-decent-border/40 text-decent-muted hover:text-white text-[11px] transition-all"
+          className="flex flex-col items-center justify-center py-1.5 lg:py-2 rounded-xl bg-decent-card/60 hover:bg-decent-card border border-decent-border/40 text-decent-muted hover:text-white text-[10px] lg:text-[11px] font-medium transition-all cursor-pointer active:scale-95"
         >
-          <FolderArchive className="w-4 h-4 mb-1" />
-          Beans
+          <FolderArchive className="w-3.5 h-3.5 lg:w-4 lg:h-4 mb-0.5" />
+          <span>Beans</span>
         </button>
         <button
           type="button"
           onClick={onOpenProfileDrawer}
-          className="flex flex-col items-center justify-center py-2 rounded-xl bg-decent-card/60 hover:bg-decent-card border border-decent-border/40 text-decent-muted hover:text-white text-[11px] transition-all"
+          className="flex flex-col items-center justify-center py-1.5 lg:py-2 rounded-xl bg-decent-card/60 hover:bg-decent-card border border-decent-border/40 text-decent-muted hover:text-white text-[10px] lg:text-[11px] font-medium transition-all cursor-pointer active:scale-95"
         >
-          <BookOpen className="w-4 h-4 mb-1" />
-          Profiles
+          <BookOpen className="w-3.5 h-3.5 lg:w-4 lg:h-4 mb-0.5" />
+          <span>Profiles</span>
         </button>
         <button
           type="button"
           onClick={onOpenHistory}
-          className="flex flex-col items-center justify-center py-2 rounded-xl bg-decent-card/60 hover:bg-decent-card border border-decent-border/40 text-decent-muted hover:text-white text-[11px] transition-all"
+          className="flex flex-col items-center justify-center py-1.5 lg:py-2 rounded-xl bg-decent-card/60 hover:bg-decent-card border border-decent-border/40 text-decent-muted hover:text-white text-[10px] lg:text-[11px] font-medium transition-all cursor-pointer active:scale-95"
         >
-          <History className="w-4 h-4 mb-1" />
-          History
+          <History className="w-3.5 h-3.5 lg:w-4 lg:h-4 mb-0.5" />
+          <span>History</span>
         </button>
         <button
           type="button"
           onClick={onOpenSettings}
-          className="flex flex-col items-center justify-center py-2 rounded-xl bg-decent-card/60 hover:bg-decent-card border border-decent-border/40 text-decent-muted hover:text-white text-[11px] transition-all"
+          className="flex flex-col items-center justify-center py-1.5 lg:py-2 rounded-xl bg-decent-card/60 hover:bg-decent-card border border-decent-border/40 text-decent-muted hover:text-white text-[10px] lg:text-[11px] font-medium transition-all cursor-pointer active:scale-95"
         >
-          <Sliders className="w-4 h-4 mb-1" />
-          Settings
+          <Sliders className="w-3.5 h-3.5 lg:w-4 lg:h-4 mb-0.5" />
+          <span>Settings</span>
         </button>
       </div>
     </aside>

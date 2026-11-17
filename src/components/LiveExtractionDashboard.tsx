@@ -287,15 +287,17 @@ export const LiveExtractionDashboard: React.FC<LiveExtractionDashboardProps> = (
           <div className="flex items-center space-x-2 shrink-0">
             <Coffee className="w-3.5 h-3.5 text-amber-400 shrink-0" />
             <span className="text-xs font-bold text-white truncate max-w-[170px]">
-              {bean?.name || "Worka Sakaro"}
+              {bean?.name || "Espresso"}
             </span>
-            <span className="text-[11px] text-amber-400/90 font-medium truncate max-w-[120px]">
-              ({bean?.roaster || "Sey Coffee"})
-            </span>
+            {bean?.roaster && (
+              <span className="text-[11px] text-amber-400/90 font-medium truncate max-w-[120px]">
+                ({bean.roaster})
+              </span>
+            )}
             <span className="text-decent-muted text-[10px]">·</span>
             <span className="text-xs font-semibold text-cyan-300 px-2 py-0.5 rounded-md bg-cyan-950/60 border border-cyan-500/40 font-mono flex items-center space-x-1 shadow-sm">
               <Sparkles className="w-2.5 h-2.5 text-cyan-400" />
-              <span>{profileTitle || "Idan's Strega Plus"}</span>
+              <span>{profileTitle || "Default Espresso"}</span>
             </span>
           </div>
 

@@ -4,7 +4,7 @@ import { simulator, type TelemetryPoint, type MachineSnapshot, type ScaleSnapsho
 import type { CockpitTabId, CoffeeTabConfig, SteamTabConfig, WaterTabConfig, MaintenanceTabConfig } from "./types/cockpitTabs.ts";
 import { resolveGoButtonState } from "./services/cockpitWorkflow.ts";
 import type { PantaBean } from "./types/bean.ts";
-import { loadBeansFromStorage, saveBeansToStorage } from "./types/bean.ts";
+import { loadBeansFromStorage, saveBeansToStorage, createNewBeanEntry } from "./types/bean.ts";
 import type { CafeHeaderConfig } from "./types/header.ts";
 import { syncShotToDYE } from "./services/dyeBridge.ts";
 import { uploadShotToVisualizer, loadVisualizerSettings } from "./services/visualizerBridge.ts";
@@ -53,115 +53,7 @@ import {
 } from "./types/shot.ts";
 import { mergeShots } from "./types/backup.ts";
 
-// Realistic Initial Reference Shot History at 10Hz Decaid telemetry resolution (0.1s increments)
-const INITIAL_REFERENCE_HISTORY: TelemetryPoint[] = Array.from({ length: 271 }, (_, i) => {
-  const t = Math.round(i * 1) / 10;
-  let p = 0;
-  let phase: TelemetryPoint["phase"] = "preinfusion";
-  let stepName = "Pre-infusion";
 
-  if (t < 5) {
-    p = t * 0.8;
-    phase = "preinfusion";
-    stepName = "Pre-infusion";
-  } else if (t < 8) {
-    p = 4.0 + (t - 5) * 1.6;
-    phase = "soak";
-    stepName = "Soak";
-  } else if (t < 18) {
-    p = Math.max(7.5, 9.1 - (t - 8) * 0.16);
-    phase = "extraction";
-    stepName = "Extraction";
-  } else {
-    p = Math.max(5.8, 7.5 - (t - 18) * 0.17);
-    phase = "extraction";
-    stepName = "Decline";
-  }
-
-  let flow = t < 5 ? 0.4 : t < 8 ? 2.4 : 2.1 + Math.sin(t / 4) * 0.15;
-  let channelDetected = false;
-
-  // Realistic micro-channel event around t = 14s (sudden fissure with flow surge and pressure dip)
-  if (t >= 13.8 && t <= 14.2) {
-    p = 6.6;
-    flow = 3.3;
-    channelDetected = true;
-  }
-
-  const weight = t < 6 ? 0 : Math.min(36.2, ((t - 6) / 21) * 36.2);
-  const weightFlow = t < 6 ? 0 : 2.0 + Math.sin(t / 2) * 0.15;
-  return {
-    timestamp: Date.now() - (270 - i) * 100,
-    timeSeconds: t,
-    pressure: Math.round(p * 10) / 10,
-    targetPressure: p > 4 ? 9.0 : 4.0,
-    flow: Math.round(flow * 10) / 10,
-    targetFlow: 2.2,
-    weightFlow: Math.round(weightFlow * 10) / 10,
-    weight: Math.round(weight * 10) / 10,
-    groupTemperature: 93.0,
-    targetGroupTemp: 93.0,
-    steamTemperature: 150.0,
-    puckResistance: p > 0 ? Math.round((p / flow) * 100) / 100 : 0,
-    phase,
-    stepName,
-    channelDetected,
-  };
-});
-const INITIAL_BEANS: PantaBean[] = [
-  {
-    id: "bean-worka",
-    name: "Worka Sakaro",
-    roaster: "Sey Coffee",
-    countryOfOrigin: "Ethiopia",
-    region: "Gedeb, Yirgacheffe",
-    farm: "Worka Cooperative",
-    varietal: ["Kurume", "Dega"],
-    process: "Washed",
-    altitude: "2000-2200m",
-    cropYear: "2024",
-    roastDate: "2026-11-01",
-    roastProfile: "Ultra-Light/Nordic",
-    tastingNotes: ["Bergamot", "Jasmine", "Peach", "Earl Grey"],
-    recommendedRestDays: 21,
-    totalGrams: 250,
-    remainingGrams: 214,
-    isFrozen: false,
-    targetDose: 18.0,
-    targetYield: 36.0,
-    targetGrind: "4.2",
-    preferredProfileId: "sey-flow",
-    preferredBasket: "CB",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "bean-kenya",
-    name: "Gichathaini AB",
-    roaster: "April Coffee",
-    countryOfOrigin: "Kenya",
-    region: "Nyeri",
-    farm: "Gichathaini Factory",
-    varietal: ["SL28", "SL34"],
-    process: "Washed",
-    altitude: "1850m",
-    cropYear: "2023/2024",
-    roastDate: "2026-10-25",
-    roastProfile: "Light",
-    tastingNotes: ["Blackcurrant", "Redcurrant", "Rhubarb"],
-    recommendedRestDays: 14,
-    totalGrams: 250,
-    remainingGrams: 160,
-    isFrozen: false,
-    targetDose: 18.5,
-    targetYield: 45.0,
-    targetGrind: "3.8",
-    preferredProfileId: "strega-plus",
-    preferredBasket: "NB",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
 
 export function App() {
   // Telemetry State
@@ -202,30 +94,25 @@ export function App() {
   });
 
   const [telemetryHistory, setTelemetryHistory] = useState<TelemetryPoint[]>([]);
-  const [completedShotHistory, setCompletedShotHistory] = useState<TelemetryPoint[]>(INITIAL_REFERENCE_HISTORY);
+  const [completedShotHistory, setCompletedShotHistory] = useState<TelemetryPoint[]>([]);
   const telemetryHistoryRef = useRef<TelemetryPoint[]>([]);
   const [shotStartTime, setShotStartTime] = useState<number>(0);
   const [showSummaryModal, setShowSummaryModal] = useState(false);
-  const [lastShotBean, setLastShotBean] = useState<PantaBean>(INITIAL_BEANS[0]);
-  const [lastShotProfileTitle, setLastShotProfileTitle] = useState<string>("Idan's Strega Plus");
+  const [lastShotBean, setLastShotBean] = useState<PantaBean | undefined>(undefined);
+  const [lastShotProfileTitle, setLastShotProfileTitle] = useState<string | undefined>(undefined);
   const [lastShotSummary, setLastShotSummary] = useState<{
     extractionTime: number;
     yieldGrams: number;
     peakPressure: number;
     eyPercentage?: number;
-  } | undefined>({
-    extractionTime: 27.4,
-    yieldGrams: 36.2,
-    peakPressure: 9.1,
-    eyPercentage: 20.8,
-  });
+  } | undefined>(undefined);
 
   // Operational Tabs State
   const [activeTab, setActiveTab] = useState<CockpitTabId>("coffee");
   const [coffeeConfig, setCoffeeConfig] = useState<CoffeeTabConfig>({
     dose: 18.0,
     targetYield: 36.0,
-    profileId: "idan-strega-plus",
+    profileId: "default-espresso",
     ratioText: "1:2.0",
   });
   const [steamConfig, setSteamConfig] = useState<SteamTabConfig>({
@@ -249,9 +136,18 @@ export function App() {
   });
 
   // Coffee & Profiles Selection
-  const [beans, setBeans] = useState<PantaBean[]>(() => loadBeansFromStorage(INITIAL_BEANS));
-  const [activeBean, setActiveBean] = useState<PantaBean>(INITIAL_BEANS[0]);
-  const [activeProfileTitle, setActiveProfileTitle] = useState("Idan's Strega Plus");
+  const [beans, setBeans] = useState<PantaBean[]>(() => loadBeansFromStorage([]));
+  const [activeBean, setActiveBean] = useState<PantaBean | undefined>(() => {
+    const loaded = loadBeansFromStorage([]);
+    return loaded.length > 0 ? loaded[0] : undefined;
+  });
+  const [activeProfileTitle, setActiveProfileTitle] = useState<string>(() => {
+    try {
+      return localStorage.getItem("pantarhei_active_profile_title") || "Default Espresso";
+    } catch {
+      return "Default Espresso";
+    }
+  });
   const [activeProfile, setActiveProfile] = useState<ProfileItem | null>(null);
 
   // Home Cafe Header & Theming
@@ -433,8 +329,8 @@ export function App() {
           profileId: coffeeConfig.profileId,
           targetDose: coffeeConfig.dose,
           targetYield: coffeeConfig.targetYield,
-          grindSetting: activeBean.targetGrind,
-          basket: activeEquipment.basket || activeBean.preferredBasket,
+          grindSetting: activeBean?.targetGrind,
+          basket: activeEquipment.basket || activeBean?.preferredBasket,
           equipment: activeEquipment,
         });
 
@@ -696,7 +592,7 @@ export function App() {
             />
 
             {/* Right Pane: Digital Clock above the Round Race "Go!" Button */}
-            <aside className="w-[340px] h-full flex flex-col justify-between items-center py-6 px-4 bg-decent-surface/30 border-l border-decent-border/40 backdrop-blur-sm z-10">
+            <aside className="w-[210px] sm:w-[230px] lg:w-[270px] xl:w-[320px] shrink-0 h-full flex flex-col justify-between items-center py-2 lg:py-5 px-1.5 lg:px-4 bg-decent-surface/30 border-l border-decent-border/40 backdrop-blur-sm z-10 overflow-hidden">
               {/* Top: Sectional Digital Clock with Preset Palettes */}
               <div className="w-full flex flex-col items-center">
                 <DigitalClock paletteId={clockPaletteId} />
@@ -747,7 +643,7 @@ export function App() {
                 )}
               </div>
 
-              <div className="text-[11px] font-mono text-decent-muted tracking-wider">
+              <div className="text-[10px] lg:text-[11px] font-mono text-decent-muted tracking-wider text-center truncate w-full">
                 {activeTab === "coffee"
                   ? `Active: ${coffeeConfig.dose}g -> ${coffeeConfig.targetYield}g (${coffeeConfig.ratioText})`
                   : activeTab === "steam"
@@ -789,7 +685,7 @@ export function App() {
         isOpen={isBeanDrawerOpen}
         onClose={() => setIsBeanDrawerOpen(false)}
         beans={beans}
-        activeBeanId={activeBean.id}
+        activeBeanId={activeBean?.id}
         onSelectBean={setActiveBean}
         onSaveBean={(newBean) => {
           setBeans((prev) => {
@@ -828,11 +724,13 @@ export function App() {
         shots={shots}
         onSelectShotAsReference={(selectedShot) => {
           setCompletedShotHistory(selectedShot.telemetry);
-          const matchingBean = beans.find((b) => b.id === selectedShot.beanId) || {
-            ...activeBean,
+          const matchingBean: PantaBean = beans.find((b) => b.id === selectedShot.beanId) || createNewBeanEntry({
             name: selectedShot.beanName,
             roaster: selectedShot.roaster,
-          };
+            countryOfOrigin: selectedShot.countryOfOrigin || "Various",
+            process: selectedShot.process || "Washed",
+            totalGrams: 250,
+          });
           setLastShotBean(matchingBean);
           setLastShotProfileTitle(selectedShot.profileTitle);
           setLastShotSummary({

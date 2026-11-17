@@ -72,223 +72,31 @@ export interface ShotFilterOptions {
 export const SHOT_HISTORY_STORAGE_KEY = "pantarhei_shot_history";
 
 /**
- * Pre-seeded realistic shot history ensuring rich immediate display
+ * Initial empty shot history (ensures no mock/demo shots are created)
  */
-export const INITIAL_SEEDED_SHOTS: ShotRecord[] = [
-  {
-    id: "shot-20261116-142200",
-    timestamp: Date.now() - 1000 * 60 * 35, // 35 minutes ago
-    dateFormatted: "Today · 14:22",
-    beanId: "bean-ethiopia",
-    beanName: "Worka Sakaro",
-    roaster: "Sey Coffee",
-    countryOfOrigin: "Ethiopia",
-    process: "Washed",
-    roastDate: "2026-11-01",
-    profileTitle: "Sey What (Big Flat)",
-    profileId: "sey-flow",
-    targetDose: 18.0,
-    targetYield: 36.0,
-    grindSetting: "4.2",
-    basket: "CB",
-    waterTemperature: 93.0,
-    actualDose: 18.0,
-    actualYield: 36.4,
-    ratio: 2.02,
-    durationSeconds: 27.2,
-    peakPressure: 8.9,
-    avgPressure: 6.8,
-    avgFlow: 1.85,
-    avgWeightFlow: 1.62,
-    tds: 9.6,
-    ey: 19.41,
-    channelDetected: false,
-    channelCount: 0,
-    rating: 9.2,
-    tags: ["Bergamot", "Jasmine", "High Clarity", "Sweet"],
-    baristaNotes: "Ultra-clean cup, bright peach finish. Grind 4.2 was spot on with the conical basket.",
-    telemetry: Array.from({ length: 28 }, (_, i) => ({
-      timestamp: Date.now() - 1000 * 60 * 35 + i * 1000,
-      timeSeconds: i,
-      pressure: i < 5 ? 2.5 : i < 18 ? 8.8 : Math.max(4.0, 8.8 - (i - 18) * 0.45),
-      targetPressure: 9.0,
-      flow: i < 5 ? 4.0 : 1.8,
-      targetFlow: 2.0,
-      weightFlow: i < 5 ? 0 : 1.6,
-      weight: i < 5 ? 0 : Math.min(36.4, (i - 5) * 1.65),
-      groupTemperature: 93.0,
-      targetGroupTemp: 93.0,
-      steamTemperature: 150.0,
-      puckResistance: i < 5 ? 0.6 : 3.8,
-      phase: i < 5 ? "preinfusion" : "extraction",
-      channelDetected: false,
-    })),
-  },
-  {
-    id: "shot-20261116-101500",
-    timestamp: Date.now() - 1000 * 60 * 60 * 4, // 4 hours ago
-    dateFormatted: "Today · 10:15",
-    beanId: "bean-kenya",
-    beanName: "Gichathaini AB",
-    roaster: "April Coffee",
-    countryOfOrigin: "Kenya",
-    process: "Washed",
-    roastDate: "2026-10-25",
-    profileTitle: "Strega Spring Lever",
-    profileId: "strega-plus",
-    targetDose: 18.5,
-    targetYield: 45.0,
-    grindSetting: "3.8",
-    basket: "NB",
-    waterTemperature: 92.5,
-    actualDose: 18.5,
-    actualYield: 44.8,
-    ratio: 2.42,
-    durationSeconds: 31.0,
-    peakPressure: 9.4,
-    avgPressure: 6.2,
-    avgFlow: 1.72,
-    avgWeightFlow: 1.55,
-    tds: 9.1,
-    ey: 22.03,
-    channelDetected: false,
-    channelCount: 0,
-    rating: 8.8,
-    tags: ["Blackcurrant", "Rhubarb", "Juicy", "Balanced"],
-    baristaNotes: "Juicy blackcurrant acidity, spring lever pressure decay gave great mouthfeel.",
-    telemetry: Array.from({ length: 31 }, (_, i) => ({
-      timestamp: Date.now() - 1000 * 60 * 60 * 4 + i * 1000,
-      timeSeconds: i,
-      pressure: i < 6 ? 3.0 : Math.max(3.5, 9.4 - (i - 6) * 0.24),
-      targetPressure: 9.0,
-      flow: i < 6 ? 3.5 : 1.7,
-      targetFlow: 2.0,
-      weightFlow: i < 6 ? 0 : 1.55,
-      weight: i < 6 ? 0 : Math.min(44.8, (i - 6) * 1.79),
-      groupTemperature: 92.5,
-      targetGroupTemp: 92.5,
-      steamTemperature: 150.0,
-      puckResistance: i < 6 ? 0.8 : 3.6,
-      phase: i < 6 ? "preinfusion" : "extraction",
-      channelDetected: false,
-    })),
-  },
-  {
-    id: "shot-20261115-164000",
-    timestamp: Date.now() - 1000 * 60 * 60 * 24, // Yesterday
-    dateFormatted: "Nov 15 · 16:40",
-    beanId: "bean-ethiopia",
-    beanName: "Worka Sakaro",
-    roaster: "Sey Coffee",
-    countryOfOrigin: "Ethiopia",
-    process: "Washed",
-    roastDate: "2026-11-01",
-    profileTitle: "Sey What (Big Flat)",
-    profileId: "sey-flow",
-    targetDose: 18.0,
-    targetYield: 36.0,
-    grindSetting: "4.5", // Too coarse, caused early channel
-    basket: "CB",
-    waterTemperature: 93.0,
-    actualDose: 18.0,
-    actualYield: 37.1,
-    ratio: 2.06,
-    durationSeconds: 21.5,
-    peakPressure: 7.4,
-    avgPressure: 5.1,
-    avgFlow: 2.65,
-    avgWeightFlow: 2.15,
-    tds: 8.7,
-    ey: 17.93,
-    channelDetected: true,
-    channelCount: 1,
-    rating: 6.5,
-    tags: ["High Acidity", "Fast Flow", "Channeling"],
-    baristaNotes: "Puck channeled at 13s due to slightly coarse 4.5 grind setting. Dialed finer to 4.2.",
-    telemetry: Array.from({ length: 22 }, (_, i) => ({
-      timestamp: Date.now() - 1000 * 60 * 60 * 24 + i * 1000,
-      timeSeconds: i,
-      pressure: i < 5 ? 2.5 : i === 13 ? 5.2 : Math.max(3.8, 7.4 - (i - 5) * 0.2),
-      targetPressure: 9.0,
-      flow: i < 5 ? 4.0 : i === 13 ? 3.4 : 2.5,
-      targetFlow: 2.0,
-      weightFlow: i < 5 ? 0 : 2.1,
-      weight: i < 5 ? 0 : Math.min(37.1, (i - 5) * 2.2),
-      groupTemperature: 93.0,
-      targetGroupTemp: 93.0,
-      steamTemperature: 150.0,
-      puckResistance: i < 5 ? 0.6 : i === 13 ? 1.8 : 2.6,
-      phase: i < 5 ? "preinfusion" : "extraction",
-      channelDetected: i >= 13 && i <= 15,
-    })),
-  },
-  {
-    id: "shot-20261114-112000",
-    timestamp: Date.now() - 1000 * 60 * 60 * 48, // 2 days ago
-    dateFormatted: "Nov 14 · 11:20",
-    beanId: "bean-colombia",
-    beanName: "El Paraiso Lychee",
-    roaster: "Manhattan Coffee",
-    countryOfOrigin: "Colombia",
-    process: "Thermal Shock",
-    roastDate: "2026-10-28",
-    profileTitle: "Blooming Allongé",
-    profileId: "blooming-allonge",
-    targetDose: 16.0,
-    targetYield: 64.0,
-    grindSetting: "5.0",
-    basket: "CB",
-    waterTemperature: 91.0,
-    actualDose: 16.0,
-    actualYield: 64.5,
-    ratio: 4.03,
-    durationSeconds: 34.0,
-    peakPressure: 6.2,
-    avgPressure: 4.1,
-    avgFlow: 2.4,
-    avgWeightFlow: 2.2,
-    tds: 6.8,
-    ey: 27.41,
-    channelDetected: false,
-    channelCount: 0,
-    rating: 9.5,
-    tags: ["Lychee", "Rose Water", "Floral", "Sweet"],
-    baristaNotes: "Incredible anaerobic aromatics. The 30s bloom created maximum sweetness.",
-    telemetry: Array.from({ length: 34 }, (_, i) => ({
-      timestamp: Date.now() - 1000 * 60 * 60 * 48 + i * 1000,
-      timeSeconds: i,
-      pressure: i < 6 ? 3.0 : i < 15 ? 0.8 : 6.0,
-      targetPressure: 6.0,
-      flow: i < 6 ? 4.0 : i < 15 ? 0.0 : 2.5,
-      targetFlow: 2.5,
-      weightFlow: i < 15 ? 0 : 2.2,
-      weight: i < 15 ? 0 : Math.min(64.5, (i - 15) * 3.39),
-      groupTemperature: 91.0,
-      targetGroupTemp: 91.0,
-      steamTemperature: 150.0,
-      puckResistance: 2.2,
-      phase: i < 6 ? "preinfusion" : i < 15 ? "soak" : "extraction",
-      channelDetected: false,
-    })),
-  },
-];
+export const INITIAL_SEEDED_SHOTS: ShotRecord[] = [];
 
 /**
- * Loads shot records from local storage with pre-seeded fallback
+ * Loads shot records from local storage, filtering out legacy demo shots
  */
 export function loadShotHistoryFromStorage(): ShotRecord[] {
   try {
-    if (typeof window === "undefined") return INITIAL_SEEDED_SHOTS;
+    if (typeof window === "undefined") return [];
     const raw = localStorage.getItem(SHOT_HISTORY_STORAGE_KEY);
-    if (!raw) {
-      saveShotHistoryToStorage(INITIAL_SEEDED_SHOTS);
-      return INITIAL_SEEDED_SHOTS;
-    }
+    if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_SEEDED_SHOTS;
+    if (Array.isArray(parsed)) {
+      return parsed.filter(
+        (s: ShotRecord) =>
+          !s.id.startsWith("shot-20261116-") &&
+          !s.id.startsWith("shot-20261115-") &&
+          s.beanName !== "Worka Sakaro"
+      );
+    }
+    return [];
   } catch (err) {
     console.warn("[PantaRhei] Failed to load shot history from storage:", err);
-    return INITIAL_SEEDED_SHOTS;
+    return [];
   }
 }
 
@@ -406,7 +214,7 @@ export function searchShotHistory(
  */
 export function createShotRecord(params: {
   telemetry: TelemetryPoint[];
-  bean: PantaBean;
+  bean?: PantaBean;
   profileTitle: string;
   profileId?: string;
   targetDose: number;
@@ -456,18 +264,18 @@ export function createShotRecord(params: {
     id: `shot-${now}`,
     timestamp: now,
     dateFormatted,
-    beanId: params.bean.id,
-    beanName: params.bean.name,
-    roaster: params.bean.roaster,
-    countryOfOrigin: params.bean.countryOfOrigin,
-    process: params.bean.process,
-    roastDate: params.bean.roastDate,
+    beanId: params.bean?.id || "bean_unspecified",
+    beanName: params.bean?.name || "Espresso",
+    roaster: params.bean?.roaster || "Unknown Roaster",
+    countryOfOrigin: params.bean?.countryOfOrigin || "Various",
+    process: params.bean?.process || "Washed",
+    roastDate: params.bean?.roastDate || new Date().toISOString().split("T")[0],
     profileTitle: params.profileTitle,
     profileId: params.profileId,
     targetDose: dose,
     targetYield: params.targetYield,
-    grindSetting: params.grindSetting || params.bean.targetGrind || "4.0",
-    basket: params.basket || params.bean.preferredBasket || "CB",
+    grindSetting: params.grindSetting || params.bean?.targetGrind || "4.0",
+    basket: params.basket || params.bean?.preferredBasket || "CB",
     waterTemperature: finalPt?.groupTemperature || 93.0,
     equipment: params.equipment,
     actualDose: dose,

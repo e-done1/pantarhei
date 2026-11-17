@@ -7,7 +7,7 @@ import { Check, Star, Download, ArrowRight, Smartphone, Copy } from "lucide-reac
 
 interface PostShotSummaryModalProps {
   history: TelemetryPoint[];
-  bean: PantaBean;
+  bean?: PantaBean;
   dose: number;
   onClose: () => void;
   onUpdateShot?: (updated: { tds: number; ey: number; rating: number; tags: string[] }) => void;
@@ -261,7 +261,7 @@ export const PostShotSummaryModal: React.FC<PostShotSummaryModalProps> = ({
               Extraction Complete
             </span>
             <h2 className="text-xl font-bold text-white mt-0.5">
-              {bean.name} · <span className="text-decent-muted font-normal">{bean.roaster}</span>
+              {bean?.name || "Espresso Extraction"} {bean?.roaster && <span className="text-decent-muted font-normal">· {bean.roaster}</span>}
             </h2>
           </div>
           <button

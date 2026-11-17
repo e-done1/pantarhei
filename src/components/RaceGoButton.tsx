@@ -70,7 +70,7 @@ export const RaceGoButton: React.FC<RaceGoButtonProps> = ({
           type="button"
           disabled={!isStopArmed}
           onClick={handleButtonClick}
-          className={`relative group w-36 h-36 rounded-full flex flex-col items-center justify-center transition-all duration-300 transform active:scale-95 shadow-2xl border-4 ${
+          className={`relative group w-28 h-28 lg:w-36 lg:h-36 rounded-full flex flex-col items-center justify-center transition-all duration-300 transform active:scale-95 shadow-2xl border-4 ${
             isStopArmed
               ? "bg-gradient-to-b from-red-600 to-red-800 border-red-400 text-white animate-race-stop cursor-pointer"
               : "bg-red-950/70 border-red-800/60 text-red-300/60 cursor-not-allowed opacity-80"
@@ -82,16 +82,16 @@ export const RaceGoButton: React.FC<RaceGoButtonProps> = ({
           }}
         >
           {/* Inner tactile bezel */}
-          <div className="w-28 h-28 rounded-full border border-white/20 flex flex-col items-center justify-center bg-black/20">
-            <span className="font-extrabold tracking-widest text-2xl uppercase">
+          <div className="w-22 h-22 lg:w-28 lg:h-28 rounded-full border border-white/20 flex flex-col items-center justify-center bg-black/20">
+            <span className="font-extrabold tracking-widest text-lg lg:text-2xl uppercase">
               {isStopArmed ? "STOP" : `ARMING`}
             </span>
-            <span className="text-[11px] font-semibold tracking-wider opacity-90 mt-0.5">
+            <span className="text-[10px] lg:text-[11px] font-semibold tracking-wider opacity-90 mt-0.5">
               {isStopArmed ? "ABORT SHOT" : `${countdownRemaining}s delay`}
             </span>
           </div>
         </button>
-        <span className="mt-3 text-xs font-medium text-red-400/90 tracking-wide">
+        <span className="mt-2 lg:mt-3 text-[11px] lg:text-xs font-medium text-red-400/90 tracking-wide">
           {isStopArmed ? "Tap STOP to finish" : "Safety 2s delay armed"}
         </span>
       </div>
@@ -123,33 +123,33 @@ export const RaceGoButton: React.FC<RaceGoButtonProps> = ({
         type="button"
         disabled={!viewModel.isReady}
         onClick={handleButtonClick}
-        className={`relative group w-36 h-36 rounded-full flex flex-col items-center justify-center transition-all duration-300 transform ${
+        className={`relative group w-28 h-28 lg:w-36 lg:h-36 rounded-full flex flex-col items-center justify-center transition-all duration-300 transform ${
           viewModel.isReady
             ? `active:scale-95 shadow-2xl border-4 ${haloClass} cursor-pointer`
             : "cursor-not-allowed opacity-40 border-4 border-slate-700"
         } bg-gradient-to-b ${buttonGradient}`}
       >
         {/* Metallic Bezel Ring */}
-        <div className="w-28 h-28 rounded-full border border-white/30 flex flex-col items-center justify-center bg-black/20 shadow-inner">
+        <div className="w-22 h-22 lg:w-28 lg:h-28 rounded-full border border-white/30 flex flex-col items-center justify-center bg-black/20 shadow-inner">
           {/* Operation Icon */}
           {viewModel.actionType === "espresso" && (
-            <Coffee className="w-5 h-5 mb-0.5 opacity-90 drop-shadow" />
+            <Coffee className="w-4 h-4 lg:w-5 lg:h-5 mb-0.5 opacity-90 drop-shadow" />
           )}
           {viewModel.actionType === "steam" && (
-            <Wind className="w-5 h-5 mb-0.5 opacity-90 drop-shadow" />
+            <Wind className="w-4 h-4 lg:w-5 lg:h-5 mb-0.5 opacity-90 drop-shadow" />
           )}
           {viewModel.actionType === "water" && (
-            <Droplets className="w-5 h-5 mb-0.5 opacity-90 drop-shadow" />
+            <Droplets className="w-4 h-4 lg:w-5 lg:h-5 mb-0.5 opacity-90 drop-shadow" />
           )}
           {viewModel.actionType === "flush" && (
-            <Wrench className="w-5 h-5 mb-0.5 opacity-90 drop-shadow" />
+            <Wrench className="w-4 h-4 lg:w-5 lg:h-5 mb-0.5 opacity-90 drop-shadow" />
           )}
 
-          <span className="font-extrabold tracking-widest text-3xl uppercase leading-none my-0.5">
+          <span className="font-extrabold tracking-widest text-xl lg:text-3xl uppercase leading-none my-0.5">
             {viewModel.label}
           </span>
           {viewModel.subLabel && viewModel.isReady && (
-            <span className="text-[11px] font-mono font-semibold tracking-wider opacity-90 mt-0.5">
+            <span className="text-[10px] lg:text-[11px] font-mono font-semibold tracking-wider opacity-90 mt-0.5">
               {viewModel.subLabel}
             </span>
           )}

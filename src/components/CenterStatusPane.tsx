@@ -64,6 +64,27 @@ interface StepMarker {
   name: string;
 }
 
+const drawRoundRect = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number
+) => {
+  if (typeof ctx.roundRect === "function") {
+    ctx.roundRect(x, y, w, h, r);
+  } else {
+    const radius = Math.min(r, Math.abs(w) / 2, Math.abs(h) / 2);
+    ctx.moveTo(x + radius, y);
+    ctx.arcTo(x + w, y, x + w, y + h, radius);
+    ctx.arcTo(x + w, y + h, x, y + h, radius);
+    ctx.arcTo(x, y + h, x, y, radius);
+    ctx.arcTo(x, y, x + w, y, radius);
+    ctx.closePath();
+  }
+};
+
 export const CenterStatusPane: React.FC<CenterStatusPaneProps> = ({
   machine,
   lastShotSummary,
@@ -655,7 +676,7 @@ export const CenterStatusPane: React.FC<CenterStatusPaneProps> = ({
       ctx.strokeStyle = "rgba(251, 191, 36, 0.55)";
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.roundRect(firstBoxX, firstBoxY, firstStepData.badgeW, badgeH, 4);
+      drawRoundRect(ctx, firstBoxX, firstBoxY, firstStepData.badgeW, badgeH, 4);
       ctx.fill();
       ctx.stroke();
 
@@ -696,7 +717,7 @@ export const CenterStatusPane: React.FC<CenterStatusPaneProps> = ({
       ctx.strokeStyle = "rgba(255, 255, 255, 0.30)";
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.roundRect(boxX, boxY, item.width, badgeH, 4);
+      drawRoundRect(ctx, boxX, boxY, item.width, badgeH, 4);
       ctx.fill();
       ctx.stroke();
 
@@ -848,6 +869,15 @@ export const CenterStatusPane: React.FC<CenterStatusPaneProps> = ({
         }
       }
     }
+
+    // Standby watermark when no shot has been completed yet
+    if (lastShotHistory.length === 0) {
+      ctx.fillStyle = "rgba(148, 163, 184, 0.3)";
+      ctx.font = "bold 13px system-ui, -apple-system, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("Cockpit Standby · Telemetry live · Ready to brew", padLeft + plotW / 2, padTop + plotH / 2);
+    }
   }, [lastShotHistory, lastShotSummary, visibility, stepMarkers, hoveredPoint, dRdtSeries, channelingEvents]);
 
   // Pointer & Touch Handlers for Non-Obscured Continuous Graph Scrubbing
@@ -937,239 +967,277 @@ export const CenterStatusPane: React.FC<CenterStatusPaneProps> = ({
   }, [hoveredPoint, channelingEvents]);
 
   return (
-    <div className="flex-1 h-full flex flex-col justify-between items-center py-3 px-4 select-none z-10 bg-transparent overflow-hidden">
+    <div className="flex-1 min-w-0 h-full flex flex-col justify-between items-center py-2 lg:py-3 px-2 lg:px-4 select-none z-10 bg-transparent overflow-hidden">
       {/* 1. Top Unified Line: Boilers, PantaRhei Emblem, and Water Level */}
-      <div className="w-full flex items-center justify-between pb-2 shrink-0">
+      <div className="w-full flex items-center justify-between pb-1.5 lg:pb-2 shrink-0 gap-1 overflow-x-hidden">
         {/* Left: Boiler Temperatures */}
-        <div className="flex items-center space-x-2">
-          <div className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-decent-surface/80 border border-decent-border/60 backdrop-blur-sm shadow-sm">
-            <Thermometer className="w-3.5 h-3.5 text-rose-400" />
-            <span className="text-[11px] font-semibold text-decent-muted">Group:</span>
-            <span className="text-[11px] font-bold font-mono text-white">
+        <div className="flex items-center space-x-1 sm:space-x-1.5 lg:space-x-2">
+          <div className="flex items-center space-x-1 lg:space-x-1.5 px-1.5 sm:px-2 lg:px-3 py-0.5 lg:py-1 rounded-full bg-decent-surface/80 border border-decent-border/60 backdrop-blur-sm shadow-sm">
+            <Thermometer className="w-2.5 h-2.5 lg:w-3.5 lg:h-3.5 text-rose-400" />
+            <span className="text-[9px] sm:text-[10px] lg:text-[11px] font-semibold text-decent-muted">Group:</span>
+            <span className="text-[9px] sm:text-[10px] lg:text-[11px] font-bold font-mono text-white">
               {machine.groupTemperature.toFixed(1)}°C
             </span>
           </div>
 
-          <div className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-decent-surface/80 border border-decent-border/60 backdrop-blur-sm shadow-sm">
-            <Gauge className="w-3.5 h-3.5 text-amber-400" />
-            <span className="text-[11px] font-semibold text-decent-muted">Steam:</span>
-            <span className="text-[11px] font-bold font-mono text-white">
+          <div className="flex items-center space-x-1 lg:space-x-1.5 px-1.5 sm:px-2 lg:px-3 py-0.5 lg:py-1 rounded-full bg-decent-surface/80 border border-decent-border/60 backdrop-blur-sm shadow-sm">
+            <Gauge className="w-2.5 h-2.5 lg:w-3.5 lg:h-3.5 text-amber-400" />
+            <span className="text-[9px] sm:text-[10px] lg:text-[11px] font-semibold text-decent-muted">Steam:</span>
+            <span className="text-[9px] sm:text-[10px] lg:text-[11px] font-bold font-mono text-white">
               {machine.steamTemperature.toFixed(0)}°C
             </span>
           </div>
         </div>
 
-        {/* Center: PantaRhei · Everything Flows Emblem */}
-        <div className="flex items-center space-x-2 px-3.5 py-1 rounded-full bg-decent-surface/60 border border-decent-border/50 backdrop-blur-sm shadow-inner">
-          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-          <span className="text-xs font-bold tracking-wider text-white">PantaRhei</span>
-          <span className="text-decent-muted text-[10px]">·</span>
-          <span className="text-[10px] text-amber-300 tracking-widest uppercase font-semibold">
+        {/* Center: PantaRhei Emblem */}
+        <div className="flex items-center space-x-1 sm:space-x-1.5 lg:space-x-2 px-2 sm:px-2.5 lg:px-3.5 py-0.5 lg:py-1 rounded-full bg-decent-surface/60 border border-decent-border/50 backdrop-blur-sm shadow-inner shrink-0">
+          <Sparkles className="w-2.5 h-2.5 lg:w-3.5 lg:h-3.5 text-amber-400" />
+          <span className="text-[10px] sm:text-[11px] lg:text-xs font-bold tracking-wider text-white">PantaRhei</span>
+          <span className="hidden xl:inline text-decent-muted text-[10px]">·</span>
+          <span className="hidden xl:inline text-[9.5px] lg:text-[10px] text-amber-300 tracking-widest uppercase font-semibold">
             Everything Flows
           </span>
         </div>
 
         {/* Right: Water Level in Milliliters */}
         <div
-          className={`flex items-center space-x-1.5 px-3 py-1 rounded-full backdrop-blur-sm border transition-all ${
+          className={`flex items-center space-x-1 lg:space-x-1.5 px-1.5 sm:px-2 lg:px-3 py-0.5 lg:py-1 rounded-full backdrop-blur-sm border transition-all shrink-0 ${
             isWaterLow
               ? "bg-red-950/60 border-red-500/80 text-red-300 animate-pulse"
               : "bg-decent-surface/80 border-decent-border/60 text-sky-400 shadow-sm"
           }`}
         >
-          <div className={`w-2 h-2 rounded-full ${isWaterLow ? "bg-red-500" : "bg-sky-400"}`} />
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-decent-muted">
+          <div className={`w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full ${isWaterLow ? "bg-red-500" : "bg-sky-400"}`} />
+          <span className="text-[9px] sm:text-[10px] lg:text-[11px] font-semibold uppercase tracking-wider text-decent-muted">
             Water:
           </span>
-          <span className="text-[11px] font-bold font-mono text-white">
+          <span className="text-[9px] sm:text-[10px] lg:text-[11px] font-bold font-mono text-white">
             {Math.round(machine.waterLevelMl)} ml
           </span>
         </div>
       </div>
 
       {/* 2. Main Full-Height Previous Shot & Large Telemetry Graph Card */}
-      <div className="flex-1 w-full flex flex-col justify-between rounded-3xl bg-decent-surface/85 border border-decent-border/70 backdrop-blur-md shadow-2xl p-4 my-1 overflow-hidden relative">
-        {/* Top Section of Card: QR Code prominently at Top-Left Corner, Bean Data & Metrics */}
-        <div className="flex items-center justify-between pb-2.5 border-b border-decent-border/50 shrink-0">
-          <div className="flex items-center space-x-3.5">
-            {/* Top-Left Corner QR Code (Scan directly from phone without extra clicks) */}
-            <div className="flex flex-col items-center">
-              <div
-                className="w-16 h-16 bg-white p-0.5 rounded-xl shadow-md flex items-center justify-center shrink-0 border border-white/20 transition-transform hover:scale-105 cursor-pointer"
-                onClick={onOpenSummaryModal}
-                title="Scan with phone camera to download shot card directly, or click to inspect"
-              >
-                {qrDataUrl ? (
-                  <img src={qrDataUrl} alt="Scan to download shot card" className="w-full h-full block" />
-                ) : (
-                  <div className="text-[8px] text-gray-500 font-mono text-center">QR Ready</div>
+      <div className="flex-1 w-full min-w-0 flex flex-col justify-between rounded-2xl lg:rounded-3xl bg-decent-surface/85 border border-decent-border/70 backdrop-blur-md shadow-2xl p-2.5 lg:p-4 my-0.5 lg:my-1 overflow-hidden relative">
+        {/* Top Section of Card: Previous Shot or Standby State */}
+        {lastShotSummary && lastShotHistory.length > 0 ? (
+          <div className="flex items-center justify-between pb-2 border-b border-decent-border/50 shrink-0 min-w-0">
+            <div className="flex items-center space-x-2.5 min-w-0">
+              {/* QR Code */}
+              <div className="flex flex-col items-center shrink-0">
+                <div
+                  className="w-11 h-11 lg:w-14 lg:h-14 bg-white p-0.5 rounded-xl shadow-md flex items-center justify-center shrink-0 border border-white/20 transition-transform hover:scale-105 cursor-pointer"
+                  onClick={onOpenSummaryModal}
+                  title="Scan with phone camera to download shot card directly, or click to inspect"
+                >
+                  {qrDataUrl ? (
+                    <img src={qrDataUrl} alt="Scan to download shot card" className="w-full h-full block" />
+                  ) : (
+                    <div className="text-[8px] text-gray-500 font-mono text-center">QR Ready</div>
+                  )}
+                </div>
+                <span className="text-[8px] font-mono text-emerald-400 mt-0.5 flex items-center space-x-0.5 font-bold">
+                  <Smartphone className="w-2.5 h-2.5" />
+                  <span>Scan PNG</span>
+                </span>
+              </div>
+
+              {/* Bean Data & Profile */}
+              <div className="min-w-0">
+                <div className="flex items-center space-x-1.5 flex-wrap">
+                  <span className="text-[9.5px] lg:text-[10px] uppercase font-bold text-emerald-400 tracking-wider flex items-center space-x-1 shrink-0">
+                    <CheckCircle2 className="w-3 h-3" />
+                    <span>Previous Shot</span>
+                  </span>
+                  {lastShotBean && (
+                    <>
+                      <span className="text-decent-muted text-[10px]">·</span>
+                      <span className="text-xs font-semibold text-white truncate max-w-[130px]">
+                        {lastShotBean.name}
+                      </span>
+                      <span className="text-decent-muted text-xs truncate max-w-[100px]">({lastShotBean.roaster})</span>
+                    </>
+                  )}
+                  {lastShotProfileTitle && (
+                    <>
+                      <span className="text-decent-muted text-[10px]">·</span>
+                      <span className="text-[10.5px] font-semibold text-cyan-300 px-1.5 py-0.2 rounded-md bg-cyan-950/50 border border-cyan-500/40 font-mono truncate max-w-[150px]">
+                        {lastShotProfileTitle}
+                      </span>
+                    </>
+                  )}
+                </div>
+                <div className="text-[10.5px] text-decent-muted flex items-center space-x-2 mt-0.5 truncate">
+                  {lastShotBean && (
+                    <>
+                      <span className="text-amber-400 font-medium truncate">
+                        {lastShotBean.countryOfOrigin}{lastShotBean.process ? ` · ${lastShotBean.process}` : ""}
+                      </span>
+                      <span>·</span>
+                    </>
+                  )}
+                  <span className="font-mono text-white shrink-0">
+                    Yield: {lastShotSummary.yieldGrams.toFixed(1)}g
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Core Extraction Metrics & Inspect Action */}
+            <div className="flex items-center space-x-1.5 shrink-0 ml-1.5">
+              <div className="flex items-center space-x-1 font-mono text-[10px] lg:text-xs">
+                <span className="px-1.5 py-0.5 rounded-lg bg-decent-dark border border-decent-border text-white font-bold">
+                  {lastShotSummary.extractionTime.toFixed(1)}s
+                </span>
+                <span className="px-1.5 py-0.5 rounded-lg bg-decent-dark border border-decent-border text-amber-400 font-bold">
+                  {lastShotSummary.yieldGrams.toFixed(1)}g
+                </span>
+                <span className="px-1.5 py-0.5 rounded-lg bg-decent-dark border border-decent-border text-emerald-400 font-bold">
+                  {lastShotSummary.peakPressure.toFixed(1)}b
+                </span>
+                {lastShotSummary.eyPercentage && (
+                  <span className="px-1.5 py-0.5 rounded-lg bg-decent-dark border border-decent-border text-cyan-400 font-bold hidden sm:inline-block">
+                    EY {lastShotSummary.eyPercentage.toFixed(1)}%
+                  </span>
                 )}
               </div>
-              <span className="text-[8.5px] font-mono text-emerald-400 mt-1 flex items-center space-x-0.5 font-bold">
-                <Smartphone className="w-2.5 h-2.5" />
-                <span>Scan PNG</span>
-              </span>
-            </div>
 
-            {/* Bean Data & Profile */}
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider flex items-center space-x-1">
-                  <CheckCircle2 className="w-3 h-3" />
-                  <span>Previous Shot</span>
-                </span>
-                <span className="text-decent-muted text-[10px]">·</span>
-                <span className="text-xs font-semibold text-white">
-                  {lastShotBean?.name || "Worka Sakaro"}
-                </span>
-                <span className="text-decent-muted text-xs">({lastShotBean?.roaster || "Sey Coffee"})</span>
-                <span className="text-decent-muted text-[10px]">·</span>
-                <span className="text-xs font-semibold text-cyan-300 px-2 py-0.5 rounded-md bg-cyan-950/50 border border-cyan-500/40 font-mono flex items-center space-x-1 shadow-sm">
-                  <Sparkles className="w-2.5 h-2.5 text-cyan-400" />
-                  <span>{lastShotProfileTitle || "Idan's Strega Plus"}</span>
-                </span>
-              </div>
-              <div className="text-[11px] text-decent-muted flex items-center space-x-2 mt-0.5">
-                <span className="text-amber-400 font-medium">
-                  {lastShotBean?.countryOfOrigin || "Ethiopia"} · {lastShotBean?.process || "Washed"}
-                </span>
-                <span>·</span>
-                <span className="font-mono text-white">
-                  18.0g → {lastShotSummary?.yieldGrams.toFixed(1) || "36.2"}g (1:2.0)
-                </span>
-              </div>
+              {onOpenSummaryModal && (
+                <button
+                  type="button"
+                  onClick={onOpenSummaryModal}
+                  className="p-1 rounded-xl bg-decent-card hover:bg-slate-800 border border-decent-border text-decent-muted hover:text-white transition-all cursor-pointer shadow-sm active:scale-95"
+                  title="Open detailed view & rating modal"
+                >
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
           </div>
-
-          {/* Core Extraction Metrics & Inspect Action */}
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-1.5 font-mono text-xs">
-              <span className="px-2 py-1 rounded-lg bg-decent-dark border border-decent-border text-white font-bold">
-                {lastShotSummary?.extractionTime.toFixed(1) || "27.4"}s
-              </span>
-              <span className="px-2 py-1 rounded-lg bg-decent-dark border border-decent-border text-amber-400 font-bold">
-                {lastShotSummary?.yieldGrams.toFixed(1) || "36.2"}g
-              </span>
-              <span className="px-2 py-1 rounded-lg bg-decent-dark border border-decent-border text-emerald-400 font-bold">
-                {lastShotSummary?.peakPressure.toFixed(1) || "9.1"} bar
-              </span>
-              <span className="px-2 py-1 rounded-lg bg-decent-dark border border-decent-border text-cyan-400 font-bold">
-                EY {lastShotSummary?.eyPercentage ? `${lastShotSummary.eyPercentage.toFixed(1)}%` : "20.8%"}
-              </span>
+        ) : (
+          <div className="flex items-center justify-between pb-2 border-b border-decent-border/50 shrink-0 w-full min-w-0">
+            <div className="flex items-center space-x-2 min-w-0">
+              <div className="w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+                <Sparkles className="w-3.5 h-3.5" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-bold text-white flex items-center space-x-1.5">
+                  <span>Cockpit Standby</span>
+                  <span className="text-decent-muted text-[10px]">·</span>
+                  <span className="text-[9.5px] px-1.5 py-0.2 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-mono font-semibold">
+                    Ready
+                  </span>
+                </div>
+                <div className="text-[10px] text-decent-muted truncate">
+                  Telemetry stream active · Ready for first extraction
+                </div>
+              </div>
             </div>
-
-            {onOpenSummaryModal && (
-              <button
-                type="button"
-                onClick={onOpenSummaryModal}
-                className="p-1.5 rounded-xl bg-decent-card hover:bg-slate-800 border border-decent-border hover:border-amber-400/50 text-decent-muted hover:text-white transition-all cursor-pointer shadow-sm active:scale-95"
-                title="Open detailed view & rating modal"
-              >
-                <ArrowUpRight className="w-4 h-4" />
-              </button>
-            )}
+            <div className="text-[10.5px] font-mono text-decent-muted shrink-0 ml-1">
+              Profile: <span className="text-amber-300 font-semibold">{lastShotProfileTitle || "Default Espresso"}</span>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Interactive Legend Bar with Click-to-Toggle Visibility */}
-        <div className="flex items-center justify-between py-1.5 px-2 bg-decent-dark/70 rounded-xl border border-decent-border/40 my-1 shrink-0">
-          <div className="flex items-center space-x-1.5 text-[10.5px] font-mono">
+        <div className="flex items-center justify-between py-1 px-1.5 lg:py-1.5 lg:px-2 bg-decent-dark/70 rounded-xl border border-decent-border/40 my-1 shrink-0 overflow-x-auto">
+          <div className="flex items-center space-x-1 sm:space-x-1.5 text-[9px] sm:text-[10px] lg:text-[10.5px] font-mono">
             {/* 1. Pressure Toggle (Green #10b981) */}
             <button
               type="button"
               onClick={() => toggleSeries("pressure")}
-              className={`flex items-center space-x-1 px-2 py-0.5 rounded-md border transition-all cursor-pointer ${
+              className={`flex items-center space-x-1 px-1.5 sm:px-2 py-0.5 rounded-md border transition-all cursor-pointer shrink-0 ${
                 visibility.pressure
                   ? "bg-emerald-500/20 border-emerald-500/60 text-emerald-400 font-bold shadow-sm"
                   : "bg-decent-surface border-decent-border/40 text-decent-muted opacity-45 line-through"
               }`}
             >
-              <div className={`w-2 h-2 rounded-full ${visibility.pressure ? "bg-emerald-500 shadow-[0_0_6px_#10b981]" : "bg-gray-500"}`} />
+              <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${visibility.pressure ? "bg-emerald-500 shadow-[0_0_6px_#10b981]" : "bg-gray-500"}`} />
               <span>Pressure (0-9b)</span>
-              {visibility.pressure ? <Eye className="w-3 h-3 ml-0.5 opacity-75" /> : <EyeOff className="w-3 h-3 ml-0.5" />}
+              {visibility.pressure ? <Eye className="w-2.5 h-2.5 sm:w-3 sm:h-3 ml-0.5 opacity-75" /> : <EyeOff className="w-2.5 h-2.5 sm:w-3 sm:h-3 ml-0.5" />}
             </button>
 
             {/* 2. Water Flow Toggle */}
             <button
               type="button"
               onClick={() => toggleSeries("waterFlow")}
-              className={`flex items-center space-x-1 px-2 py-0.5 rounded-md border transition-all cursor-pointer ${
+              className={`flex items-center space-x-1 px-1.5 sm:px-2 py-0.5 rounded-md border transition-all cursor-pointer shrink-0 ${
                 visibility.waterFlow
                   ? "bg-sky-500/20 border-sky-500/60 text-sky-400 font-bold shadow-sm"
                   : "bg-decent-surface border-decent-border/40 text-decent-muted opacity-45 line-through"
               }`}
             >
-              <div className={`w-2 h-2 rounded-full ${visibility.waterFlow ? "bg-sky-400 shadow-[0_0_6px_#38bdf8]" : "bg-gray-500"}`} />
+              <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${visibility.waterFlow ? "bg-sky-400 shadow-[0_0_6px_#38bdf8]" : "bg-gray-500"}`} />
               <span>Flow (ml/s)</span>
-              {visibility.waterFlow ? <Eye className="w-3 h-3 ml-0.5 opacity-75" /> : <EyeOff className="w-3 h-3 ml-0.5" />}
+              {visibility.waterFlow ? <Eye className="w-2.5 h-2.5 sm:w-3 sm:h-3 ml-0.5 opacity-75" /> : <EyeOff className="w-2.5 h-2.5 sm:w-3 sm:h-3 ml-0.5" />}
             </button>
 
             {/* 3. Weight Flow Toggle (Dark Espresso Brown #78350f) */}
             <button
               type="button"
               onClick={() => toggleSeries("weightFlow")}
-              className={`flex items-center space-x-1 px-2 py-0.5 rounded-md border transition-all cursor-pointer ${
+              className={`flex items-center space-x-1 px-1.5 sm:px-2 py-0.5 rounded-md border transition-all cursor-pointer shrink-0 ${
                 visibility.weightFlow
                   ? "bg-amber-950/40 border-amber-800/80 text-amber-500 font-bold shadow-sm"
                   : "bg-decent-surface border-decent-border/40 text-decent-muted opacity-45 line-through"
               }`}
             >
-              <div className={`w-2 h-2 rounded-full ${visibility.weightFlow ? "bg-[#78350f] shadow-[0_0_6px_#78350f]" : "bg-gray-500"}`} />
+              <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${visibility.weightFlow ? "bg-[#78350f] shadow-[0_0_6px_#78350f]" : "bg-gray-500"}`} />
               <span>Wt Flow (g/s)</span>
-              {visibility.weightFlow ? <Eye className="w-3 h-3 ml-0.5 opacity-75" /> : <EyeOff className="w-3 h-3 ml-0.5" />}
+              {visibility.weightFlow ? <Eye className="w-2.5 h-2.5 sm:w-3 sm:h-3 ml-0.5 opacity-75" /> : <EyeOff className="w-2.5 h-2.5 sm:w-3 sm:h-3 ml-0.5" />}
             </button>
 
             {/* 4. Weight Toggle (Purple) */}
             <button
               type="button"
               onClick={() => toggleSeries("weight")}
-              className={`flex items-center space-x-1 px-2 py-0.5 rounded-md border transition-all cursor-pointer ${
+              className={`flex items-center space-x-1 px-1.5 sm:px-2 py-0.5 rounded-md border transition-all cursor-pointer shrink-0 ${
                 visibility.weight
                   ? "bg-purple-500/20 border-purple-500/60 text-purple-400 font-bold shadow-sm"
                   : "bg-decent-surface border-decent-border/40 text-decent-muted opacity-45 line-through"
               }`}
             >
-              <div className={`w-2 h-2 rounded-full ${visibility.weight ? "bg-purple-500 shadow-[0_0_6px_#a855f7]" : "bg-gray-500"}`} />
+              <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${visibility.weight ? "bg-purple-500 shadow-[0_0_6px_#a855f7]" : "bg-gray-500"}`} />
               <span>Weight (g)</span>
-              {visibility.weight ? <Eye className="w-3 h-3 ml-0.5 opacity-75" /> : <EyeOff className="w-3 h-3 ml-0.5" />}
+              {visibility.weight ? <Eye className="w-2.5 h-2.5 sm:w-3 sm:h-3 ml-0.5 opacity-75" /> : <EyeOff className="w-2.5 h-2.5 sm:w-3 sm:h-3 ml-0.5" />}
             </button>
 
             {/* 5. dR/dt (Derivative of Resistance) Toggle */}
             <button
               type="button"
               onClick={() => toggleSeries("dRdt")}
-              className={`flex items-center space-x-1 px-2 py-0.5 rounded-md border transition-all cursor-pointer ${
+              className={`flex items-center space-x-1 px-1.5 sm:px-2 py-0.5 rounded-md border transition-all cursor-pointer shrink-0 ${
                 visibility.dRdt
                   ? "bg-rose-500/20 border-rose-500/60 text-rose-400 font-bold shadow-sm"
                   : "bg-decent-surface border-decent-border/40 text-decent-muted opacity-45 line-through"
               }`}
               title="Toggle First-order rate of change of puck resistance (dR/dt)"
             >
-              <div className={`w-2 h-2 rounded-full ${visibility.dRdt ? "bg-rose-500 shadow-[0_0_6px_#f43f5e]" : "bg-gray-500"}`} />
+              <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${visibility.dRdt ? "bg-rose-500 shadow-[0_0_6px_#f43f5e]" : "bg-gray-500"}`} />
               <span>dR/dt</span>
-              {visibility.dRdt ? <Eye className="w-3 h-3 ml-0.5 opacity-75" /> : <EyeOff className="w-3 h-3 ml-0.5" />}
+              {visibility.dRdt ? <Eye className="w-2.5 h-2.5 sm:w-3 sm:h-3 ml-0.5 opacity-75" /> : <EyeOff className="w-2.5 h-2.5 sm:w-3 sm:h-3 ml-0.5" />}
             </button>
 
             {/* 6. Channel Flags Toggle */}
             <button
               type="button"
               onClick={() => toggleSeries("channelFlags")}
-              className={`flex items-center space-x-1 px-2 py-0.5 rounded-md border transition-all cursor-pointer ${
+              className={`flex items-center space-x-1 px-1.5 sm:px-2 py-0.5 rounded-md border transition-all cursor-pointer shrink-0 ${
                 visibility.channelFlags
                   ? "bg-red-500/25 border-red-500/70 text-red-400 font-bold shadow-sm"
                   : "bg-decent-surface border-decent-border/40 text-decent-muted opacity-45 line-through"
               }`}
               title="Toggle Channeling suspect warning signs"
             >
-              <AlertTriangle className={`w-3.5 h-3.5 ${visibility.channelFlags ? "text-red-400 drop-shadow-[0_0_4px_#ef4444]" : "text-gray-500"}`} />
+              <AlertTriangle className={`w-2.5 h-2.5 sm:w-3 sm:h-3 ${visibility.channelFlags ? "text-red-400 drop-shadow-[0_0_4px_#ef4444]" : "text-gray-500"}`} />
               <span>
                 Flags{visibility.channelFlags ? ` (${channelSensitivity === "sensitive" ? "High" : channelSensitivity === "moderate" ? "Med" : "Low"})` : ""}
               </span>
-              {visibility.channelFlags ? <Eye className="w-3 h-3 ml-0.5 opacity-75" /> : <EyeOff className="w-3 h-3 ml-0.5" />}
+              {visibility.channelFlags ? <Eye className="w-2.5 h-2.5 sm:w-3 sm:h-3 ml-0.5 opacity-75" /> : <EyeOff className="w-2.5 h-2.5 sm:w-3 sm:h-3 ml-0.5" />}
             </button>
           </div>
 
-          <span className="text-[10px] text-decent-muted font-mono">
+          <span className="text-[10px] text-decent-muted font-mono hidden md:inline">
             {hoveredPoint ? "Scrubbing Active" : "Touch / hover to inspect"}
           </span>
         </div>

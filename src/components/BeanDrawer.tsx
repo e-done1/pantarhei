@@ -37,7 +37,7 @@ interface BeanDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   beans: PantaBean[];
-  activeBeanId: string;
+  activeBeanId?: string;
   onSelectBean: (bean: PantaBean) => void;
   onSaveBean: (newBean: PantaBean) => void;
 }
@@ -175,7 +175,7 @@ export const BeanDrawer: React.FC<BeanDrawerProps> = ({
   const handleOpenAddForm = () => {
     setEditingBeanId(null);
     setFormName("");
-    setFormRoaster(uniqueRoasters[0] || "Sey Coffee");
+    setFormRoaster(uniqueRoasters[0] || "");
     setFormCountry("Ethiopia");
     setFormRegion("");
     setFormFarm("");

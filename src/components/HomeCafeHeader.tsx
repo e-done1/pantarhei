@@ -13,7 +13,10 @@ export const HomeCafeHeader: React.FC<HomeCafeHeaderProps> = ({ config, onOpenSe
     return null;
   }
 
-  const fit = calculateHeaderFit(config);
+  const isCompactHeight = typeof window !== "undefined" && window.innerHeight < 650;
+  const fit = calculateHeaderFit(config, {
+    maxHeight: isCompactHeight ? 44 : undefined,
+  });
 
   return (
     <header

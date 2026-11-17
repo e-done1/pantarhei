@@ -393,7 +393,14 @@ export function loadBeansFromStorage(fallback: PantaBean[] = []): PantaBean[] {
     const raw = localStorage.getItem(BEANS_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) {
+        return parsed.filter(
+          (b: PantaBean) =>
+            b.id !== "bean-worka" &&
+            b.id !== "bean-kenya" &&
+            b.name !== "Worka Sakaro"
+        );
+      }
     }
   } catch {}
   return fallback;

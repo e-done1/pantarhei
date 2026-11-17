@@ -51,8 +51,8 @@ export const FluidBackground: React.FC<FluidBackgroundProps> = ({
     const touchPerturbations: { x: number; y: number; strength: number }[] = [];
 
     const resize = () => {
-      // Confined to the middle and right panes (from 380px to full width)
-      const leftOffset = 380;
+      // Confined to the middle and right panes (responsive to left pane width)
+      const leftOffset = window.innerWidth >= 1280 ? 370 : window.innerWidth >= 1024 ? 330 : 280;
       const w = Math.max(200, window.innerWidth - leftOffset);
       const h = window.innerHeight;
       canvas.width = w * window.devicePixelRatio;
@@ -262,7 +262,7 @@ export const FluidBackground: React.FC<FluidBackgroundProps> = ({
   return (
     <div
       ref={containerRef}
-      className="absolute top-0 bottom-0 right-0 left-[390px] pointer-events-auto overflow-hidden -z-0"
+      className="absolute top-0 bottom-0 right-0 left-[270px] sm:left-[290px] lg:left-[330px] xl:left-[370px] pointer-events-auto overflow-hidden -z-0"
     >
       <canvas ref={canvasRef} className="w-full h-full block" />
     </div>
