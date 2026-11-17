@@ -420,8 +420,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     await clearScreensaverImages();
     setCustomImagesCount(0);
     setImagePreviews(DEFAULT_OFFLINE_SCREENSAVER_IMAGES);
-    updateScreensaver({ imageFolder: "Default Specialty Coffee Collection", imageCount: 0 });
-    setFolderFeedback("Reset to default offline specialty coffee collection.");
+    updateScreensaver({ imageFolder: "Monochromatic Collection by Jeremy Clark", imageCount: 0 });
+    setFolderFeedback("Reset to default monochromatic collection by Jeremy Clark.");
     setTimeout(() => setFolderFeedback(null), 3000);
   };
 
@@ -1461,7 +1461,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                           <span className="text-[10.5px] text-decent-muted">
                             {customImagesCount > 0
                               ? `Loaded ${customImagesCount} custom images from "${screensaver.imageFolder}"`
-                              : "Using default offline specialty coffee collection"}
+                              : "Using default monochromatic collection (16 wallpapers by Jeremy Clark)"}
                           </span>
                         </div>
                       </div>

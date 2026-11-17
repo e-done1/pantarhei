@@ -68,15 +68,16 @@ test("Screensaver Config: Custom options merge cleanly with defaults", () => {
   assert.equal(custom.enabled, true); // preserved from defaults
 });
 
-test("Screensaver Image Pool: Offline fallback images provide complete zero-network reliability", async () => {
+test("Screensaver Image Pool: Default monochromatic collection provides complete zero-network reliability", async () => {
   assert.ok(Array.isArray(DEFAULT_OFFLINE_SCREENSAVER_IMAGES));
-  assert.equal(DEFAULT_OFFLINE_SCREENSAVER_IMAGES.length, 4, "Provides 4 high-res offline specialty coffee artworks");
+  assert.equal(DEFAULT_OFFLINE_SCREENSAVER_IMAGES.length, 16, "Provides 16 monochromatic specialty coffee screensaver wallpapers contributed by Jeremy Clark");
   DEFAULT_OFFLINE_SCREENSAVER_IMAGES.forEach((uri) => {
-    assert.ok(uri.startsWith("data:image/svg+xml;utf8,"), "Default artwork is embedded vector SVG with zero network dependence");
+    assert.ok(uri.startsWith("assets/screensaver/"), "Default artwork references local screensaver assets");
+    assert.ok(uri.endsWith(".jpg"), "Default wallpapers are standard JPEG image files");
   });
 
   const pool = await loadScreensaverImages();
-  assert.ok(Array.isArray(pool) && pool.length >= 4, "Screensaver pool loads default offline images when no custom folder is set");
+  assert.ok(Array.isArray(pool) && pool.length >= 16, "Screensaver pool loads default monochromatic collection when no custom folder is set");
 });
 
 test("Decaid Plugins: Manifest includes key ecosystem integrations", () => {

@@ -103,8 +103,8 @@ PantaRhei is a responsive, data-intensive web skin designed for Decaid on Decent
 
 ### 10. Customizable Ambient Screensaver & Floating Clock
 - **Idle Activation Delay**: Configurable inactivity timer (1, 2, 5, 10, 15, or 30 minutes) before the screensaver engages.
-- **Local Image Folder Selection**: Dedicated folder picker allowing baristas to choose any local folder containing images (e.g. tablet photo gallery, custom roast and cafe photography). Automatically scans, previews, and caches the image pool for persistent slideshow playback.
-- **Offline Default Artwork Pool**: Embedded high-resolution specialty coffee and terroir artwork available out of the box with zero network dependencies when no custom folder is selected.
+- **Default Monochromatic Collection (Special Thanks)**: Includes 16 bundled monochromatic specialty coffee and Decent espresso wallpapers formatted for tablet displays. *Special thanks to **Jeremy Clark** for generously contributing these default screensaver images.*
+- **Local Image Folder Selection**: Dedicated folder picker allowing baristas to choose any local folder containing images (e.g. tablet photo gallery, custom roast and cafe photography). Automatically scans, previews, and caches the image pool in IndexedDB for persistent slideshow playback.
 - **Dimming & Visual Presentation**: Adjustable screen dimming (10% to 100%) and image fit styling (`contain_blur` with ambient backdrop glow, or full `cover`).
 - **Anti-Burn-In Protection**: Dynamic clock drifting across display quadrants with adjustable drift speeds (slow, medium, dynamic) to protect tablet and OLED panels from static image burn-in.
 - **Multi-Zone Clock Color Customization**: Complete color personalization with dedicated hex color pickers for every section of the floating clock:
