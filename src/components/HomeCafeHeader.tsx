@@ -3,7 +3,7 @@ import type { CafeHeaderConfig } from "../types/header.ts";
 import type { MaintenanceStatus } from "../types/maintenance.ts";
 import { calculateHeaderFit } from "../services/headerFit.ts";
 import { DigitalClock } from "./DigitalClock.tsx";
-import { Paintbrush, Sparkles, Wrench, Play, WifiOff } from "lucide-react";
+import { Paintbrush, Wrench, Play } from "lucide-react";
 
 interface HomeCafeHeaderProps {
   config: CafeHeaderConfig;
@@ -44,7 +44,7 @@ export const HomeCafeHeader: React.FC<HomeCafeHeaderProps> = ({
 
   return (
     <header
-      className="w-full flex items-center justify-between transition-all duration-300 border-b border-decent-border/40 bg-decent-surface/40 backdrop-blur-sm px-3 lg:px-5 relative select-none shrink-0"
+      className="w-full flex items-center justify-between transition-all duration-300 border-b border-slate-700/80 bg-slate-950 px-3 lg:px-5 relative select-none shrink-0 shadow-lg"
       style={{
         height: `${headerHeight}px`,
         maxHeight: `${Math.max(52, fit.maxAllowedHeight)}px`,
@@ -99,7 +99,7 @@ export const HomeCafeHeader: React.FC<HomeCafeHeaderProps> = ({
           <button
             type="button"
             onClick={() => onNavigateToMaintenance?.("cleaning")}
-            className="px-2.5 py-1 rounded-xl bg-gradient-to-r from-rose-500/25 via-amber-500/20 to-rose-500/25 hover:from-rose-500/35 hover:to-amber-500/35 border border-rose-400/60 hover:border-rose-300 text-rose-300 hover:text-rose-100 text-[11px] sm:text-xs font-bold flex items-center space-x-1.5 transition-all cursor-pointer shadow-md active:scale-95 animate-pulse"
+            className="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border-2 border-rose-500 text-rose-300 hover:text-rose-100 text-xs font-bold flex items-center space-x-1.5 transition-all cursor-pointer shadow-md active:scale-95"
             title={maintenanceStatus.tooltipText || "Group head cleaning overdue. Click to run cleaning routine."}
           >
             <Wrench className="w-3.5 h-3.5 text-rose-400 shrink-0" />
@@ -113,7 +113,7 @@ export const HomeCafeHeader: React.FC<HomeCafeHeaderProps> = ({
           <button
             type="button"
             onClick={() => onNavigateToMaintenance?.("descale")}
-            className="px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-500/25 via-rose-500/20 to-amber-500/25 hover:from-amber-500/35 hover:to-rose-500/35 border border-amber-400/60 hover:border-amber-300 text-amber-300 hover:text-amber-100 text-[11px] sm:text-xs font-bold flex items-center space-x-1.5 transition-all cursor-pointer shadow-md active:scale-95 animate-pulse"
+            className="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border-2 border-amber-500 text-amber-300 hover:text-amber-100 text-xs font-bold flex items-center space-x-1.5 transition-all cursor-pointer shadow-md active:scale-95"
             title={maintenanceStatus.tooltipText || "Machine descaling overdue. Click to run descaling routine."}
           >
             <Wrench className="w-3.5 h-3.5 text-amber-400 shrink-0" />
@@ -122,17 +122,16 @@ export const HomeCafeHeader: React.FC<HomeCafeHeaderProps> = ({
           </button>
         )}
 
-        {/* Update Available Indicator Button */}
+        {/* Update Available Indicator Button (High Contrast, No Blinking) */}
         {hasUpdateAvailable && (
           <button
             type="button"
             onClick={onOpenUpdates}
-            className="px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-500/20 via-sky-500/20 to-amber-500/20 hover:from-amber-500/30 hover:to-sky-500/30 border border-amber-400/60 hover:border-amber-300 text-amber-300 hover:text-amber-100 text-[11px] sm:text-xs font-bold flex items-center space-x-1.5 transition-all cursor-pointer shadow-md active:scale-95 animate-pulse"
+            className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border-2 border-amber-400 text-amber-300 hover:text-white text-xs font-bold flex items-center space-x-1.5 transition-all cursor-pointer shadow-md active:scale-95"
             title="Software or firmware updates are available. Click to open updates."
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            <span className="hidden sm:inline">Update Available</span>
-            <span className="sm:hidden">Update</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0 shadow-[0_0_8px_#f59e0b]" />
+            <span className="font-extrabold tracking-wide">Update Available</span>
           </button>
         )}
 
@@ -141,25 +140,24 @@ export const HomeCafeHeader: React.FC<HomeCafeHeaderProps> = ({
           <button
             type="button"
             onClick={onStartAction}
-            className="px-3 py-1 rounded-xl bg-gradient-to-r from-emerald-600/90 to-teal-600/90 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-[11px] sm:text-xs flex items-center space-x-1.5 shadow-md active:scale-95 transition-all border border-emerald-400/50 cursor-pointer"
+            className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black text-xs flex items-center space-x-1.5 shadow-md active:scale-95 transition-all border border-emerald-300 cursor-pointer"
             title={isSimulatorMode ? "Start simulated extraction (Simulator Mode)" : "Start Extraction (Brew)"}
           >
-            <Play className="w-3 h-3 fill-current" />
+            <Play className="w-3.5 h-3.5 fill-current text-slate-950" />
             <span>{isSimulatorMode ? "Simulate Shot" : "Go!"}</span>
           </button>
         )}
 
-        {/* Machine Pairing / Connection Status Indicator */}
+        {/* Machine Pairing / Connection Status Indicator (High Contrast: White on Slate-900) */}
         {!isMachineConnected && !isSimulatorMode && (
           <button
             type="button"
             onClick={onOpenPairing}
-            className="px-2.5 py-1 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 hover:text-amber-100 text-[11px] sm:text-xs font-medium flex items-center space-x-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
+            className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border-2 border-amber-500 text-white text-xs font-bold flex items-center space-x-2 transition-all cursor-pointer shadow-md active:scale-95"
             title="Machine disconnected. Click to open connection and pair."
           >
-            <WifiOff className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            <span className="hidden md:inline">Disconnected · Tap to Pair</span>
-            <span className="md:hidden">Pair DE1</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0 shadow-[0_0_8px_#f59e0b]" />
+            <span className="text-white font-extrabold tracking-wide">Disconnected · Tap to Pair</span>
           </button>
         )}
 
@@ -167,11 +165,11 @@ export const HomeCafeHeader: React.FC<HomeCafeHeaderProps> = ({
           <button
             type="button"
             onClick={onOpenPairing}
-            className="px-2 py-0.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/35 text-sky-300 text-[10px] font-mono flex items-center space-x-1 cursor-pointer transition-all"
+            className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-sky-400 text-sky-300 text-xs font-mono flex items-center space-x-1.5 cursor-pointer transition-all"
             title="Running in local simulator mode. Click to open connection settings."
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>
-            <span>Simulator</span>
+            <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+            <span className="font-bold">Simulator</span>
           </button>
         )}
 

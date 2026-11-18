@@ -967,22 +967,22 @@ export const CenterStatusPane: React.FC<CenterStatusPaneProps> = ({
   }, [hoveredPoint, channelingEvents]);
 
   return (
-    <div className="flex-1 min-w-0 h-full flex flex-col justify-between items-center py-2 lg:py-3 px-2 lg:px-4 select-none z-10 bg-transparent overflow-hidden">
+    <div className="flex-1 min-w-0 h-full min-h-0 flex flex-col justify-between items-center py-1 sm:py-2 px-1.5 sm:px-3 select-none z-10 bg-transparent overflow-hidden">
       {/* 1. Top Unified Line: Boilers, PantaRhei Emblem, and Water Level */}
-      <div className="w-full flex items-center justify-between pb-1.5 lg:pb-2 shrink-0 gap-1 overflow-x-hidden">
+      <div className="w-full flex items-center justify-between pb-1 shrink-0 gap-1 overflow-x-hidden">
         {/* Left: Boiler Temperatures */}
         <div className="flex items-center space-x-1 sm:space-x-1.5 lg:space-x-2">
-          <div className="flex items-center space-x-1 lg:space-x-1.5 px-1.5 sm:px-2 lg:px-3 py-0.5 lg:py-1 rounded-full bg-decent-surface/80 border border-decent-border/60 backdrop-blur-sm shadow-sm">
+          <div className="flex items-center space-x-1 lg:space-x-1.5 px-2 py-0.5 lg:py-1 rounded-full bg-slate-900 border border-slate-700/80 shadow-sm">
             <Thermometer className="w-2.5 h-2.5 lg:w-3.5 lg:h-3.5 text-rose-400" />
-            <span className="text-[9px] sm:text-[10px] lg:text-[11px] font-semibold text-decent-muted">Group:</span>
+            <span className="text-[9px] sm:text-[10px] lg:text-[11px] font-semibold text-slate-300">Group:</span>
             <span className="text-[9px] sm:text-[10px] lg:text-[11px] font-bold font-mono text-white">
               {machine.groupTemperature.toFixed(1)}°C
             </span>
           </div>
 
-          <div className="flex items-center space-x-1 lg:space-x-1.5 px-1.5 sm:px-2 lg:px-3 py-0.5 lg:py-1 rounded-full bg-decent-surface/80 border border-decent-border/60 backdrop-blur-sm shadow-sm">
+          <div className="flex items-center space-x-1 lg:space-x-1.5 px-2 py-0.5 lg:py-1 rounded-full bg-slate-900 border border-slate-700/80 shadow-sm">
             <Gauge className="w-2.5 h-2.5 lg:w-3.5 lg:h-3.5 text-amber-400" />
-            <span className="text-[9px] sm:text-[10px] lg:text-[11px] font-semibold text-decent-muted">Steam:</span>
+            <span className="text-[9px] sm:text-[10px] lg:text-[11px] font-semibold text-slate-300">Steam:</span>
             <span className="text-[9px] sm:text-[10px] lg:text-[11px] font-bold font-mono text-white">
               {machine.steamTemperature.toFixed(0)}°C
             </span>
@@ -990,7 +990,7 @@ export const CenterStatusPane: React.FC<CenterStatusPaneProps> = ({
         </div>
 
         {/* Center: PantaRhei Emblem */}
-        <div className="flex items-center space-x-1 sm:space-x-1.5 lg:space-x-2 px-2 sm:px-2.5 lg:px-3.5 py-0.5 lg:py-1 rounded-full bg-decent-surface/60 border border-decent-border/50 backdrop-blur-sm shadow-inner shrink-0">
+        <div className="flex items-center space-x-1 sm:space-x-1.5 lg:space-x-2 px-2.5 py-0.5 lg:py-1 rounded-full bg-slate-900 border border-slate-700/80 shadow-inner shrink-0">
           <Sparkles className="w-2.5 h-2.5 lg:w-3.5 lg:h-3.5 text-amber-400" />
           <span className="text-[10px] sm:text-[11px] lg:text-xs font-bold tracking-wider text-white">PantaRhei</span>
           <span className="hidden xl:inline text-decent-muted text-[10px]">·</span>
@@ -1001,14 +1001,14 @@ export const CenterStatusPane: React.FC<CenterStatusPaneProps> = ({
 
         {/* Right: Water Level in Milliliters */}
         <div
-          className={`flex items-center space-x-1 lg:space-x-1.5 px-1.5 sm:px-2 lg:px-3 py-0.5 lg:py-1 rounded-full backdrop-blur-sm border transition-all shrink-0 ${
+          className={`flex items-center space-x-1 lg:space-x-1.5 px-2 py-0.5 lg:py-1 rounded-full border transition-all shrink-0 ${
             isWaterLow
-              ? "bg-red-950/60 border-red-500/80 text-red-300 animate-pulse"
-              : "bg-decent-surface/80 border-decent-border/60 text-sky-400 shadow-sm"
+              ? "bg-red-950/80 border-red-500/80 text-red-300 animate-pulse"
+              : "bg-slate-900 border-slate-700/80 text-sky-400 shadow-sm"
           }`}
         >
           <div className={`w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full ${isWaterLow ? "bg-red-500" : "bg-sky-400"}`} />
-          <span className="text-[9px] sm:text-[10px] lg:text-[11px] font-semibold uppercase tracking-wider text-decent-muted">
+          <span className="text-[9px] sm:text-[10px] lg:text-[11px] font-semibold uppercase tracking-wider text-slate-300">
             Water:
           </span>
           <span className="text-[9px] sm:text-[10px] lg:text-[11px] font-bold font-mono text-white">
@@ -1018,10 +1018,10 @@ export const CenterStatusPane: React.FC<CenterStatusPaneProps> = ({
       </div>
 
       {/* 2. Main Full-Height Previous Shot & Large Telemetry Graph Card */}
-      <div className="flex-1 w-full min-w-0 flex flex-col justify-between rounded-2xl lg:rounded-3xl bg-decent-surface/85 border border-decent-border/70 backdrop-blur-md shadow-2xl p-2.5 lg:p-4 my-0.5 lg:my-1 overflow-hidden relative">
+      <div className="flex-1 w-full min-w-0 min-h-0 flex flex-col justify-between rounded-2xl bg-slate-900/95 border border-slate-700/80 shadow-2xl p-2 lg:p-3 my-0.5 overflow-hidden relative">
         {/* Top Section of Card: Previous Shot or Standby State */}
         {lastShotSummary && lastShotHistory.length > 0 ? (
-          <div className="flex items-center justify-between pb-2 border-b border-decent-border/50 shrink-0 min-w-0">
+          <div className="flex items-center justify-between pb-1.5 border-b border-slate-700/60 shrink-0 min-w-0">
             <div className="flex items-center space-x-2.5 min-w-0">
               {/* QR Code */}
               <div className="flex flex-col items-center shrink-0">
@@ -1242,8 +1242,8 @@ export const CenterStatusPane: React.FC<CenterStatusPaneProps> = ({
           </span>
         </div>
 
-        {/* 3. Expanded Full-Size Telemetry Graph Canvas (Dominates the Middle Pane) */}
-        <div className="flex-1 w-full min-h-[300px] relative rounded-2xl overflow-hidden shadow-inner mt-1 touch-none">
+        {/* 3. Expanded Full-Size Telemetry Graph Canvas (Dominates the Middle Pane, Adapts Dynamically) */}
+        <div className="flex-1 w-full min-h-0 relative rounded-xl overflow-hidden shadow-inner mt-0.5 touch-none">
           <canvas
             ref={graphCanvasRef}
             className="w-full h-full block cursor-crosshair"
@@ -1259,68 +1259,68 @@ export const CenterStatusPane: React.FC<CenterStatusPaneProps> = ({
 
           {/* Vertical Non-Numeric Sensitivity Slider (Appears when Flags toggle is ON) */}
           {visibility.channelFlags && (
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 z-20 flex flex-col items-center bg-slate-950/90 border border-slate-700/80 backdrop-blur-md rounded-2xl p-1.5 shadow-2xl transition-all duration-300 animate-in fade-in slide-in-from-right-3 select-none">
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 z-20 flex flex-col items-center bg-slate-950 border border-slate-700 rounded-xl p-1 shadow-2xl transition-all duration-300 select-none">
               {/* Header with mini warning icon */}
-              <div className="flex flex-col items-center mb-1 pb-1 border-b border-white/10" title="Channeling Sensitivity">
+              <div className="flex flex-col items-center mb-0.5 pb-0.5 border-b border-white/10" title="Channeling Sensitivity">
                 <AlertTriangle className="w-3 h-3 text-red-400" />
-                <span className="text-[7.5px] uppercase font-bold text-decent-muted tracking-tighter mt-0.5">
+                <span className="text-[7.5px] uppercase font-bold text-slate-300 tracking-tighter mt-0.5">
                   Sens
                 </span>
               </div>
 
               {/* 3-Step Vertical Non-Numeric Track */}
-              <div className="flex flex-col space-y-1 my-0.5">
+              <div className="flex flex-col space-y-0.5 my-0.5">
                 {/* 1. Sensitive (High) */}
                 <button
                   type="button"
                   onClick={() => handleSensitivityChange("sensitive")}
-                  className={`w-7 h-7 rounded-xl flex flex-col items-center justify-center transition-all cursor-pointer ${
+                  className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex flex-col items-center justify-center transition-all cursor-pointer ${
                     channelSensitivity === "sensitive"
-                      ? "bg-amber-500/35 border border-amber-400 text-amber-300 font-bold shadow-[0_0_8px_rgba(251,191,36,0.4)] scale-105"
-                      : "hover:bg-slate-800 text-decent-muted hover:text-white border border-transparent"
+                      ? "bg-amber-400 text-slate-950 font-black shadow-md border border-amber-300 scale-105"
+                      : "hover:bg-slate-800 text-slate-300 hover:text-white border border-transparent"
                   }`}
                   title="Sensitive: Flags subtle micro-fissures and minor flow surges"
                 >
-                  <span className="text-[8px] font-bold font-mono">HIGH</span>
+                  <span className="text-[8px] sm:text-[9px] font-bold font-mono">HIGH</span>
                 </button>
 
                 {/* Vertical track line */}
-                <div className="w-0.5 h-1.5 bg-white/20 self-center rounded-full" />
+                <div className="w-0.5 h-1 bg-white/20 self-center rounded-full" />
 
                 {/* 2. Moderate (Med - Default) */}
                 <button
                   type="button"
                   onClick={() => handleSensitivityChange("moderate")}
-                  className={`w-7 h-7 rounded-xl flex flex-col items-center justify-center transition-all cursor-pointer ${
+                  className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex flex-col items-center justify-center transition-all cursor-pointer ${
                     channelSensitivity === "moderate"
-                      ? "bg-sky-500/35 border border-sky-400 text-sky-300 font-bold shadow-[0_0_8px_rgba(56,189,248,0.4)] scale-105"
-                      : "hover:bg-slate-800 text-decent-muted hover:text-white border border-transparent"
+                      ? "bg-sky-400 text-slate-950 font-black shadow-md border border-sky-300 scale-105"
+                      : "hover:bg-slate-800 text-slate-300 hover:text-white border border-transparent"
                   }`}
                   title="Moderate: Flags standard structural fissures and notable surges"
                 >
-                  <span className="text-[8px] font-bold font-mono">MED</span>
+                  <span className="text-[8px] sm:text-[9px] font-bold font-mono">MED</span>
                 </button>
 
                 {/* Vertical track line */}
-                <div className="w-0.5 h-1.5 bg-white/20 self-center rounded-full" />
+                <div className="w-0.5 h-1 bg-white/20 self-center rounded-full" />
 
                 {/* 3. Low (Macro / Blowouts only) */}
                 <button
                   type="button"
                   onClick={() => handleSensitivityChange("low")}
-                  className={`w-7 h-7 rounded-xl flex flex-col items-center justify-center transition-all cursor-pointer ${
+                  className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex flex-col items-center justify-center transition-all cursor-pointer ${
                     channelSensitivity === "low"
-                      ? "bg-purple-500/35 border border-purple-400 text-purple-300 font-bold shadow-[0_0_8px_rgba(168,85,247,0.4)] scale-105"
-                      : "hover:bg-slate-800 text-decent-muted hover:text-white border border-transparent"
+                      ? "bg-purple-400 text-slate-950 font-black shadow-md border border-purple-300 scale-105"
+                      : "hover:bg-slate-800 text-slate-300 hover:text-white border border-transparent"
                   }`}
                   title="Low: Flags only major crater blowouts and puck collapse"
                 >
-                  <span className="text-[8px] font-bold font-mono">LOW</span>
+                  <span className="text-[8px] sm:text-[9px] font-bold font-mono">LOW</span>
                 </button>
               </div>
 
               {/* Active mode indicator */}
-              <div className="mt-1 pt-1 border-t border-white/10 text-[7px] font-mono text-center uppercase tracking-tighter text-amber-400 font-bold">
+              <div className="mt-0.5 pt-0.5 border-t border-white/10 text-[7px] font-mono text-center uppercase tracking-tighter text-amber-400 font-bold">
                 {channelSensitivity === "sensitive" ? "Sens." : channelSensitivity === "moderate" ? "Mod." : "Low"}
               </div>
             </div>

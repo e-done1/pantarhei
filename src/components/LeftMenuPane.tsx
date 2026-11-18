@@ -184,59 +184,59 @@ export const LeftMenuPane: React.FC<LeftMenuPaneProps> = ({
   };
 
   return (
-    <aside className="w-[270px] sm:w-[290px] lg:w-[330px] xl:w-[370px] shrink-0 h-full flex flex-col bg-decent-surface/95 border-r border-decent-border/60 backdrop-blur-md p-2.5 lg:p-4 select-none z-20 shadow-xl overflow-hidden">
+    <aside className="w-[270px] sm:w-[290px] lg:w-[330px] xl:w-[370px] shrink-0 h-full flex flex-col bg-slate-950 border-r border-slate-700/80 p-2 lg:p-3.5 select-none z-20 shadow-xl overflow-hidden">
       {/* 1. Top 4 Operational Tabs */}
       <div className="shrink-0 mb-2">
-        <div className="grid grid-cols-[1fr_1fr_1fr_1.2fr] gap-1 p-0.5 lg:p-1 bg-decent-dark/80 rounded-xl border border-decent-border/50">
+        <div className="grid grid-cols-[1fr_1fr_1fr_1.2fr] gap-1 p-1 bg-slate-900 rounded-xl border border-slate-700/80 shadow-inner">
           <button
             type="button"
             onClick={() => onTabChange("coffee")}
-            className={`flex items-center justify-center py-1.5 lg:py-2 px-0.5 lg:px-1 rounded-lg text-[11px] lg:text-xs font-semibold transition-all duration-200 ${
+            className={`flex items-center justify-center py-2 px-1 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
               activeTab === "coffee"
-                ? "bg-amber-600/30 text-amber-300 border border-amber-500/50 shadow-sm"
-                : "text-decent-muted hover:text-white"
+                ? "bg-amber-400 text-slate-950 font-black shadow-md border border-amber-300"
+                : "text-slate-200 hover:text-white hover:bg-slate-800/60 font-semibold"
             }`}
           >
-            <Coffee className="w-3.5 h-3.5 mr-1 shrink-0" />
+            <Coffee className={`w-4 h-4 mr-1 shrink-0 ${activeTab === "coffee" ? "text-slate-950 stroke-[2.5]" : "text-amber-400"}`} />
             <span>Coffee</span>
           </button>
 
           <button
             type="button"
             onClick={() => onTabChange("steam")}
-            className={`flex items-center justify-center py-1.5 lg:py-2 px-0.5 lg:px-1 rounded-lg text-[11px] lg:text-xs font-semibold transition-all duration-200 ${
+            className={`flex items-center justify-center py-2 px-1 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
               activeTab === "steam"
-                ? "bg-amber-500/30 text-amber-300 border border-amber-400/50 shadow-sm"
-                : "text-decent-muted hover:text-white"
+                ? "bg-amber-400 text-slate-950 font-black shadow-md border border-amber-300"
+                : "text-slate-200 hover:text-white hover:bg-slate-800/60 font-semibold"
             }`}
           >
-            <Wind className="w-3.5 h-3.5 mr-1 shrink-0" />
+            <Wind className={`w-4 h-4 mr-1 shrink-0 ${activeTab === "steam" ? "text-slate-950 stroke-[2.5]" : "text-amber-400"}`} />
             <span>Steam</span>
           </button>
 
           <button
             type="button"
             onClick={() => onTabChange("water")}
-            className={`flex items-center justify-center py-1.5 lg:py-2 px-0.5 lg:px-1 rounded-lg text-[11px] lg:text-xs font-semibold transition-all duration-200 ${
+            className={`flex items-center justify-center py-2 px-1 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
               activeTab === "water"
-                ? "bg-sky-500/30 text-sky-300 border border-sky-400/50 shadow-sm"
-                : "text-decent-muted hover:text-white"
+                ? "bg-sky-400 text-slate-950 font-black shadow-md border border-sky-300"
+                : "text-slate-200 hover:text-white hover:bg-slate-800/60 font-semibold"
             }`}
           >
-            <Droplets className="w-3.5 h-3.5 mr-1 shrink-0" />
+            <Droplets className={`w-4 h-4 mr-1 shrink-0 ${activeTab === "water" ? "text-slate-950 stroke-[2.5]" : "text-sky-400"}`} />
             <span>Water</span>
           </button>
 
           <button
             type="button"
             onClick={() => onTabChange("maintenance")}
-            className={`flex items-center justify-center py-1.5 lg:py-2 px-0.5 lg:px-1 rounded-lg text-[11px] lg:text-xs font-semibold transition-all duration-200 ${
+            className={`flex items-center justify-center py-2 px-1 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
               activeTab === "maintenance"
-                ? "bg-emerald-500/30 text-emerald-300 border border-emerald-400/50 shadow-sm"
-                : "text-decent-muted hover:text-white"
+                ? "bg-emerald-400 text-slate-950 font-black shadow-md border border-emerald-300"
+                : "text-slate-200 hover:text-white hover:bg-slate-800/60 font-semibold"
             }`}
           >
-            <Wrench className="w-3.5 h-3.5 mr-1 shrink-0" />
+            <Wrench className={`w-4 h-4 mr-1 shrink-0 ${activeTab === "maintenance" ? "text-slate-950 stroke-[2.5]" : "text-emerald-400"}`} />
             <span>Clean</span>
           </button>
         </div>
@@ -851,37 +851,37 @@ export const LeftMenuPane: React.FC<LeftMenuPaneProps> = ({
       </div>
 
       {/* 3. Bottom Navigation Shortcuts */}
-      <div className="shrink-0 mt-auto pt-2 lg:pt-2.5 border-t border-decent-border/50 grid grid-cols-4 gap-1.5">
+      <div className="shrink-0 mt-auto pt-2 lg:pt-2.5 border-t border-slate-700/80 grid grid-cols-4 gap-1.5">
         <button
           type="button"
           onClick={onOpenBeanDrawer}
-          className="flex flex-col items-center justify-center py-1.5 lg:py-2 rounded-xl bg-decent-card/60 hover:bg-decent-card border border-decent-border/40 text-decent-muted hover:text-white text-[10px] lg:text-[11px] font-medium transition-all cursor-pointer active:scale-95"
+          className="flex flex-col items-center justify-center py-2 lg:py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 hover:text-white text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-sm"
         >
-          <FolderArchive className="w-3.5 h-3.5 lg:w-4 lg:h-4 mb-0.5" />
+          <FolderArchive className="w-4 h-4 mb-0.5 text-amber-400 shrink-0" />
           <span>Beans</span>
         </button>
         <button
           type="button"
           onClick={onOpenProfileDrawer}
-          className="flex flex-col items-center justify-center py-1.5 lg:py-2 rounded-xl bg-decent-card/60 hover:bg-decent-card border border-decent-border/40 text-decent-muted hover:text-white text-[10px] lg:text-[11px] font-medium transition-all cursor-pointer active:scale-95"
+          className="flex flex-col items-center justify-center py-2 lg:py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 hover:text-white text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-sm"
         >
-          <BookOpen className="w-3.5 h-3.5 lg:w-4 lg:h-4 mb-0.5" />
+          <BookOpen className="w-4 h-4 mb-0.5 text-sky-400 shrink-0" />
           <span>Profiles</span>
         </button>
         <button
           type="button"
           onClick={onOpenHistory}
-          className="flex flex-col items-center justify-center py-1.5 lg:py-2 rounded-xl bg-decent-card/60 hover:bg-decent-card border border-decent-border/40 text-decent-muted hover:text-white text-[10px] lg:text-[11px] font-medium transition-all cursor-pointer active:scale-95"
+          className="flex flex-col items-center justify-center py-2 lg:py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 hover:text-white text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-sm"
         >
-          <History className="w-3.5 h-3.5 lg:w-4 lg:h-4 mb-0.5" />
+          <History className="w-4 h-4 mb-0.5 text-emerald-400 shrink-0" />
           <span>History</span>
         </button>
         <button
           type="button"
           onClick={onOpenSettings}
-          className="flex flex-col items-center justify-center py-1.5 lg:py-2 rounded-xl bg-decent-card/60 hover:bg-decent-card border border-decent-border/40 text-decent-muted hover:text-white text-[10px] lg:text-[11px] font-medium transition-all cursor-pointer active:scale-95"
+          className="flex flex-col items-center justify-center py-2 lg:py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 hover:text-white text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-sm"
         >
-          <Sliders className="w-3.5 h-3.5 lg:w-4 lg:h-4 mb-0.5" />
+          <Sliders className="w-4 h-4 mb-0.5 text-purple-400 shrink-0" />
           <span>Settings</span>
         </button>
       </div>

@@ -767,7 +767,7 @@ export function App() {
           )}
 
           {/* Main 2-Pane Cockpit Body: Recipe & Controls (Left), Expanded Live Telemetry & Graph (Right) */}
-          <main className="flex-1 w-full flex items-stretch overflow-hidden">
+          <main className="flex-1 w-full min-h-0 flex items-stretch overflow-hidden">
             {/* Left Pane: 4 Dedicated Tabs (Coffee, Steam, Water, Maintenance) */}
             <LeftMenuPane
               activeTab={activeTab}

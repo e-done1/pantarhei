@@ -100,7 +100,7 @@ export const DigitalClock: React.FC<DigitalClockProps> = ({
 
   if (compact) {
     return (
-      <div className="flex flex-col items-start justify-center px-2 sm:px-2.5 py-0.5 rounded-xl bg-decent-surface/70 border border-decent-border/50 backdrop-blur-md shadow-sm select-none">
+      <div className="flex flex-col items-start justify-center px-2 sm:px-2.5 py-0.5 rounded-xl bg-slate-900 border border-slate-700 shadow-sm select-none">
         <span
           className="text-[9px] font-semibold tracking-wider uppercase leading-none"
           style={{ color: palette.date }}
