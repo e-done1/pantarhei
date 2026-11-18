@@ -641,20 +641,85 @@ export class DecaidClient {
   }
 
   // Hardware Command Actions
-  public async selectProfile(profile: ProfileItem): Promise<void> {
+  public async selectProfile(
+    profile: ProfileItem,
+    context?: {
+      dose?: number;
+      targetYield?: number;
+      coffeeName?: string;
+      coffeeRoaster?: string;
+      grinderModel?: string;
+      grinderSetting?: string;
+    }
+  ): Promise<boolean> {
     simulator.setProfile(profile);
+
+    // Format profile for Decaid OpenAPI schema
+    const v2Profile = serializeToDecaidV2(profile);
+
+    const targetYield =
+      context?.targetYield != null
+        ? Number(context.targetYield)
+        : profile.target_weight != null
+        ? Number(profile.target_weight)
+        : 36.0;
+
+    const targetDose =
+      context?.dose != null
+        ? Number(context.dose)
+        : profile.target_dose != null
+        ? Number(profile.target_dose)
+        : undefined;
+
+    const workflowPayload: Record<string, any> = {
+      name: profile.title,
+      profile: {
+        ...v2Profile,
+        target_weight: isNaN(targetYield) ? 36.0 : targetYield,
+        target_volume: Number(profile.target_volume) || 0.0,
+        tank_temperature: Number(profile.target_temperature) || 0.0,
+      },
+      context: {
+        targetYield: isNaN(targetYield) ? 36.0 : targetYield,
+        ...(targetDose && !isNaN(targetDose) ? { targetDoseWeight: targetDose } : {}),
+        ...(context?.coffeeName ? { coffeeName: context.coffeeName } : {}),
+        ...(context?.coffeeRoaster ? { coffeeRoaster: context.coffeeRoaster } : {}),
+        ...(context?.grinderModel ? { grinderModel: context.grinderModel } : {}),
+        ...(context?.grinderSetting ? { grinderSetting: context.grinderSetting } : {}),
+      },
+    };
+
+    let success = false;
+
+    // 1. Send PUT /api/v1/workflow to Decaid Gateway (recommended official endpoint)
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/workflow`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(workflowPayload),
+      });
+      if (res.ok) {
+        success = true;
+        console.log(`[DecaidClient] Active workflow updated to profile "${profile.title}"`);
+      }
+    } catch (e) {
+      console.warn("[DecaidClient] PUT /api/v1/workflow failed:", e);
+    }
+
+    // 2. If connected to physical machine, also attempt direct machine register upload
     if (this.isLiveMachineConnected) {
       try {
-        const v2Json = serializeToDecaidV2(profile);
-        await fetch(`${this.baseUrl}/api/v1/profiles/active`, {
-          method: "PUT",
+        await fetch(`${this.baseUrl}/api/v1/machine/profile`, {
+          method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(v2Json),
+          body: JSON.stringify(workflowPayload.profile),
         });
       } catch (e) {
-        console.warn("Decaid live select profile failed:", e);
+        // Machine profile write queue error or handled by workflow
       }
     }
+
+    return success;
   }
 
   public isULSafetyRestricted(): boolean {

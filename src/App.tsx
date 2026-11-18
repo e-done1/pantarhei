@@ -900,6 +900,43 @@ export function App() {
                     try {
                       localStorage.setItem("pantarhei_active_bean_id", selected.id);
                     } catch {}
+
+                    // Automatically load bean's preferred profile and communicate to Decaid
+                    const customProfs = loadCustomProfilesFromStorage();
+                    const targetProfId = selected.preferredProfileId || selected.preferredProfileTitle;
+                    if (targetProfId) {
+                      const matchedProf = customProfs.find(
+                        (p) =>
+                          p.id === targetProfId ||
+                          p.title.toLowerCase() === targetProfId.toLowerCase()
+                      );
+                      if (matchedProf) {
+                        setActiveProfileTitle(matchedProf.title);
+                        setActiveProfile(matchedProf);
+                        decaid.selectProfile(matchedProf, {
+                          dose: selected.targetDose || coffeeConfig.dose,
+                          targetYield: selected.targetYield || coffeeConfig.targetYield,
+                          coffeeName: selected.name,
+                          coffeeRoaster: selected.roaster,
+                          grinderModel: activeEquipment?.grinder,
+                        });
+                        setCoffeeConfig((prev) => ({
+                          ...prev,
+                          profileId: matchedProf.id || matchedProf.title,
+                          targetYield: Number(matchedProf.target_weight) || prev.targetYield,
+                          dose: Number(matchedProf.target_dose) || prev.dose,
+                        }));
+                      }
+                    } else if (activeProfile) {
+                      // Update Decaid workflow context with new bean metadata
+                      decaid.selectProfile(activeProfile, {
+                        dose: selected.targetDose || coffeeConfig.dose,
+                        targetYield: selected.targetYield || coffeeConfig.targetYield,
+                        coffeeName: selected.name,
+                        coffeeRoaster: selected.roaster,
+                        grinderModel: activeEquipment?.grinder,
+                      });
+                    }
                     setMainPaneView("graph");
                   }}
                   onSaveBean={(newBean) => {
@@ -921,12 +958,20 @@ export function App() {
                   onSelectProfile={(p) => {
                     setActiveProfileTitle(p.title);
                     setActiveProfile(p);
-                    decaid.selectProfile(p);
+                    const targetDose = Number(p.target_dose) || coffeeConfig.dose;
+                    const targetYield = Number(p.target_weight) || coffeeConfig.targetYield;
+                    decaid.selectProfile(p, {
+                      dose: targetDose,
+                      targetYield: targetYield,
+                      coffeeName: activeBean?.name,
+                      coffeeRoaster: activeBean?.roaster,
+                      grinderModel: activeEquipment?.grinder,
+                    });
                     setCoffeeConfig((prev) => ({
                       ...prev,
                       profileId: p.id || p.title,
-                      targetYield: Number(p.target_weight) || prev.targetYield,
-                      dose: Number(p.target_dose) || prev.dose,
+                      targetYield: targetYield || prev.targetYield,
+                      dose: targetDose || prev.dose,
                     }));
                     try {
                       localStorage.setItem("pantarhei_active_profile_title", p.title);
@@ -995,6 +1040,23 @@ export function App() {
                     if (selectedShot.equipment) {
                       setActiveEquipment(selectedShot.equipment);
                       saveActiveEquipment(selectedShot.equipment);
+                    }
+
+                    // Communicate profile & shot recipe to Decaid
+                    const customProfs = loadCustomProfilesFromStorage();
+                    const matchedProf = customProfs.find(
+                      (p) => p.title.toLowerCase() === selectedShot.profileTitle.toLowerCase()
+                    );
+                    if (matchedProf) {
+                      setActiveProfile(matchedProf);
+                      decaid.selectProfile(matchedProf, {
+                        dose: selectedShot.actualDose,
+                        targetYield: selectedShot.targetYield,
+                        coffeeName: selectedShot.beanName,
+                        coffeeRoaster: selectedShot.roaster,
+                        grinderModel: selectedShot.equipment?.grinder,
+                        grinderSetting: selectedShot.grindSetting,
+                      });
                     }
                     setMainPaneView("graph");
                   }}
