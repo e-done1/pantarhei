@@ -1988,7 +1988,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   className="px-3 py-1 rounded-lg bg-decent-dark border border-decent-border text-slate-300 hover:text-white flex items-center space-x-1 cursor-pointer disabled:opacity-50"
                 >
                   <RefreshCw className={`w-3 h-3 ${isScanningMachines ? "animate-spin text-amber-400" : ""}`} />
-                  <span>Scan Machines</span>
+                  <span>{isScanningMachines ? "Checking..." : "Refresh Status"}</span>
                 </button>
               </div>
 
@@ -2203,7 +2203,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   className="px-2.5 py-1 rounded-lg bg-decent-dark border border-decent-border text-xs text-slate-300 hover:text-white flex items-center space-x-1 cursor-pointer disabled:opacity-50"
                 >
                   <RefreshCw className={`w-3 h-3 ${isScanningScales ? "animate-spin text-sky-400" : ""}`} />
-                  <span>Scan Scales</span>
+                  <span>{isScanningScales ? "Checking Decaid..." : "Check Scale Status"}</span>
                 </button>
               </div>
 
@@ -2211,8 +2211,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div className="p-3 rounded-xl bg-decent-dark border border-decent-border/60 space-y-2">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-sm font-bold text-white">{pairedScale.name}</div>
-                      <div className="text-[10px] text-decent-muted font-mono">{pairedScale.address}</div>
+                      <div className="text-sm font-bold text-white flex items-center space-x-2">
+                        <span>{pairedScale.name}</span>
+                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 font-mono">
+                          CONNECTED
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-decent-muted font-mono mt-0.5">{pairedScale.address}</div>
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className="text-xs font-mono text-emerald-400 flex items-center space-x-1">
@@ -2237,8 +2242,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   </div>
                 </div>
               ) : (
-                <div className="p-4 rounded-xl bg-decent-dark/60 border border-decent-border/60 text-center py-3 text-decent-muted">
-                  No scale is currently paired. Pair a Bluetooth scale below for live gravimetric control.
+                <div className="p-4 rounded-xl bg-decent-dark/60 border border-decent-border/60 text-center py-3.5 text-decent-muted text-xs leading-relaxed">
+                  No Bluetooth scale is currently connected. Turn on your scale and pair it in <span className="text-sky-300 font-semibold">Decaid Settings → Devices → Scale</span>.
                 </div>
               )}
 

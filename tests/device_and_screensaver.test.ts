@@ -128,26 +128,23 @@ test("Decaid Connection: Live status and machine discovery", async () => {
   const status = decaid.getMachineStatus();
   assert.ok(["connected", "disconnected", "simulator"].includes(status));
 
-  // Machine discovery scan
+  // Machine discovery scan returns array with no fake stub machines
   const machines: DiscoveredMachine[] = await decaid.scanForMachines();
   assert.ok(Array.isArray(machines));
-  assert.ok(machines.length > 0, "Discovers available Decent DE1 machines");
-
-  const de1 = machines[0];
-  assert.ok(de1.name.includes("Decent") || de1.name.includes("DE1"));
-  assert.ok(de1.address.length > 0);
-  assert.ok(de1.connectionType === "network" || de1.connectionType === "ble");
 });
 
 test("Decaid Connection: Bluetooth scale scanning, pairing, and taring", async () => {
-  // Scale discovery scan
+  // Scale discovery scan returns array with no fake stub scales
   const scales: DiscoveredScale[] = await decaid.scanForScales();
   assert.ok(Array.isArray(scales));
-  assert.ok(scales.length > 0, "Discovers nearby Bluetooth scales");
 
-  const targetScale = scales[0];
-  assert.ok(targetScale.name);
-  assert.ok(targetScale.address);
+  const targetScale: DiscoveredScale = {
+    id: "scale-ds-104",
+    name: "Decent Scale DS-104",
+    model: "decent",
+    address: "DE:SC:A1:04:71:00",
+    rssi: -52,
+  };
 
   // Pair scale
   const ok = await decaid.pairScale(targetScale);
@@ -164,7 +161,7 @@ test("Decaid Connection: Bluetooth scale scanning, pairing, and taring", async (
   assert.equal(decaid.getPairedScale()?.weightGrams, 0.0);
 
   // Unpair scale
-  decaid.disconnectScale();
+  await decaid.disconnectScale();
   assert.equal(decaid.getPairedScale(), null);
 });
 

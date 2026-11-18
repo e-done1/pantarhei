@@ -36,7 +36,7 @@ import {
   saveMaintenanceConfig,
   getMaintenanceStatus,
 } from "./types/maintenance.ts";
-import type { SystemVersionInfo } from "./types/device.ts";
+import type { SystemVersionInfo, MachineConnectionStatus } from "./types/device.ts";
 import {
   loadEquipmentInventory,
   saveEquipmentInventory,
@@ -311,6 +311,9 @@ export function App() {
     }
   });
 
+  // Machine Connection Status (reactive from Decaid Gateway)
+  const [machineStatus, setMachineStatus] = useState<MachineConnectionStatus>(() => decaid.getMachineStatus());
+
   // Screensaver Configuration
   const [screensaverConfig, setScreensaverConfig] = useState<ScreensaverConfig>(() => loadScreensaverConfigFromStorage());
   const [ulNotice, setUlNotice] = useState<string | null>(null);
@@ -387,11 +390,12 @@ export function App() {
     setIsSettingsOpen(true);
   };
 
-  // Subscribe to live/simulated Decaid telemetry
+  // Subscribe to live/simulated Decaid telemetry and device connection events
   useEffect(() => {
-    if (!decaid.isLiveConnected()) {
-      decaid.enableSimulatorMode();
-    }
+    const unsubDevice = decaid.addDeviceListener(() => {
+      setMachineStatus(decaid.getMachineStatus());
+    });
+
     const unsubscribe = decaid.subscribe((point, mach, sc) => {
       setCurrentPoint(point);
       setMachine(mach);
@@ -403,7 +407,10 @@ export function App() {
       }
     });
 
-    return unsubscribe;
+    return () => {
+      unsubDevice();
+      unsubscribe();
+    };
   }, []);
 
   // Monitor shot completion
@@ -835,8 +842,8 @@ export function App() {
             onOpenUpdates={() => handleOpenSettingsWithTab("pairing")}
             maintenanceStatus={maintenanceStatus}
             onNavigateToMaintenance={handleNavigateToMaintenanceContext}
-            isMachineConnected={isMachineActive}
-            isSimulatorMode={decaid.getMachineStatus() === "simulator"}
+            isMachineConnected={machineStatus === "connected"}
+            isSimulatorMode={machineStatus === "simulator"}
             onOpenPairing={() => setIsConnectModalOpen(true)}
             onStartAction={handleStartAction}
             isExtracting={isExtracting}

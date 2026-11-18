@@ -71,17 +71,17 @@ export class DecaidClient {
   // Machine state
   private machineStatus: MachineConnectionStatus = "disconnected";
   private machineInfo: DE1MachineInfo = {
-    model: "Decent DE1Pro",
-    serialNumber: "DE1-PRO-0842",
-    firmwareVersion: "1.42",
-    bleVersion: "2.1",
-    softwareVersion: "2.1.0",
-    state: "ready",
-    headTemp: 93.0,
+    model: "Decent DE1",
+    serialNumber: "",
+    firmwareVersion: "",
+    bleVersion: "",
+    softwareVersion: "",
+    state: "disconnected",
+    headTemp: 0,
     targetHeadTemp: 93.0,
-    steamTemp: 150.0,
-    waterLevelMl: 1250,
-    isWarmedUp: true,
+    steamTemp: 0,
+    waterLevelMl: 0,
+    isWarmedUp: false,
   };
 
   // Decaid & DE1 System Version & Update Channel State
@@ -101,18 +101,10 @@ export class DecaidClient {
     statusMessage: "Firmware v1.44 & Decaid software v2.1.4 available",
   };
 
-  // Bluetooth scale pairing state
-  private scaleStatus: ScaleConnectionStatus = "connected";
-  private pairedScale: PairedScaleInfo | null = {
-    id: "scale-ds104",
-    name: "Decent Scale DS-104",
-    model: "decent",
-    address: "DE:SC:A1:04:71:00",
-    batteryPercentage: 92,
-    weightGrams: 0.0,
-    rssi: -54,
-    isConnected: true,
-  };
+  // Bluetooth scale pairing state (populated exclusively from Decaid live gateway)
+  private scaleStatus: ScaleConnectionStatus = "disconnected";
+  private pairedScale: PairedScaleInfo | null = null;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     const isBrowser = typeof window !== "undefined";
@@ -125,7 +117,12 @@ export class DecaidClient {
       this.systemVersion.targetChannel = savedChannel;
     }
 
-    this.host = savedHost || (isBrowser && window.location.hostname ? window.location.hostname : "localhost");
+    // Default to 127.0.0.1 for rock-solid loopback in Android WebView Chromium (avoids localhost DNS/IPv6 issues)
+    this.host =
+      savedHost ||
+      (isBrowser && window.location.hostname && window.location.hostname !== "" && window.location.hostname !== "localhost"
+        ? window.location.hostname
+        : "127.0.0.1");
     this.port = savedPort ? parseInt(savedPort, 10) : 8080;
     this.baseUrl = `http://${this.host}:${this.port}`;
 
@@ -202,6 +199,18 @@ export class DecaidClient {
 
       if (res.ok) {
         const data = await res.json();
+        const rawState = String(data.state || "").toLowerCase();
+        const isMachineDisconnected = rawState === "disconnected" || data.connected === false;
+
+        if (isMachineDisconnected) {
+          this.isLiveMachineConnected = false;
+          this.machineStatus = "disconnected";
+          this.machineInfo.state = "disconnected";
+          this.notifyDeviceListeners();
+          this.scheduleAutoReconnect();
+          return false;
+        }
+
         this.isLiveMachineConnected = true;
         this.machineStatus = "connected";
         if (data.serialNumber) this.machineInfo.serialNumber = data.serialNumber;
@@ -210,6 +219,7 @@ export class DecaidClient {
 
         this.setupMachineWebSocket();
         this.setupScaleWebSocket();
+        await this.syncScaleInfo();
         this.notifyDeviceListeners();
         return true;
       }
@@ -220,10 +230,15 @@ export class DecaidClient {
     this.isLiveMachineConnected = false;
     this.machineStatus = "disconnected";
     this.notifyDeviceListeners();
+    this.scheduleAutoReconnect();
     return false;
   }
 
   public disconnectLiveMachine(): void {
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
     if (this.wsMachine) {
       try {
         this.wsMachine.close();
@@ -242,6 +257,10 @@ export class DecaidClient {
   }
 
   public enableSimulatorMode(): void {
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
     this.isLiveMachineConnected = false;
     this.machineStatus = "simulator";
     this.notifyDeviceListeners();
@@ -251,6 +270,48 @@ export class DecaidClient {
     this.connectLiveMachine().catch(() => {
       // Offline fallback
     });
+  }
+
+  private scheduleAutoReconnect(): void {
+    if (typeof window === "undefined") return;
+    if (this.machineStatus === "simulator") return;
+    if (this.reconnectTimer) return;
+
+    this.reconnectTimer = setTimeout(async () => {
+      this.reconnectTimer = null;
+      if (!this.isLiveMachineConnected && this.machineStatus !== "simulator") {
+        await this.connectLiveMachine();
+      }
+    }, 4000);
+  }
+
+  private async syncScaleInfo(): Promise<void> {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/scale/info`, {
+        signal: AbortSignal.timeout(2000),
+      });
+      if (res.ok) {
+        const info = await res.json();
+        if (info && info.connected !== false && info.name) {
+          this.pairedScale = {
+            id: info.id || "decaid-scale",
+            name: info.name,
+            model: info.model || "decent",
+            address: info.address || "BLE",
+            batteryPercentage: typeof info.battery === "number" ? info.battery : 100,
+            weightGrams: typeof info.weight === "number" ? info.weight : 0.0,
+            isConnected: true,
+          };
+          this.scaleStatus = "connected";
+          return;
+        }
+      }
+    } catch {}
+
+    if (this.lastScaleSnapshot.weight === 0 && !this.lastScaleSnapshot.weightFlow) {
+      this.pairedScale = null;
+      this.scaleStatus = "disconnected";
+    }
   }
 
   private setupMachineWebSocket(): void {
@@ -272,6 +333,15 @@ export class DecaidClient {
         try {
           const snapshot = JSON.parse(event.data);
           const rawState = String(snapshot.state || "idle").toLowerCase();
+
+          if (rawState === "disconnected" || snapshot.connected === false) {
+            this.isLiveMachineConnected = false;
+            this.machineStatus = "disconnected";
+            this.machineInfo.state = "disconnected";
+            this.notifyDeviceListeners();
+            this.scheduleAutoReconnect();
+            return;
+          }
 
           // Normalize Decaid machine states
           let normalizedState: "idle" | "espresso" | "steam" | "water" | "rinse" | "heating" | "sleeping" = "idle";
@@ -420,6 +490,7 @@ export class DecaidClient {
           this.isLiveMachineConnected = false;
           this.machineStatus = "disconnected";
           this.notifyDeviceListeners();
+          this.scheduleAutoReconnect();
         }
       };
 
@@ -427,6 +498,7 @@ export class DecaidClient {
         this.isLiveMachineConnected = false;
         this.machineStatus = "disconnected";
         this.notifyDeviceListeners();
+        this.scheduleAutoReconnect();
       };
     } catch {
       this.isLiveMachineConnected = false;
@@ -446,9 +518,32 @@ export class DecaidClient {
       this.wsScale.onmessage = (event) => {
         try {
           const snapshot = JSON.parse(event.data);
+          if (snapshot.connected === false || snapshot.state === "disconnected") {
+            this.pairedScale = null;
+            this.scaleStatus = "disconnected";
+            this.notifyDeviceListeners();
+            return;
+          }
+
           if (typeof snapshot.weight === "number") {
             this.lastScaleSnapshot.weight = snapshot.weight;
-            if (this.pairedScale) this.pairedScale.weightGrams = snapshot.weight;
+            this.scaleStatus = "connected";
+            if (this.pairedScale) {
+              this.pairedScale.weightGrams = snapshot.weight;
+              if (typeof snapshot.battery === "number") {
+                this.pairedScale.batteryPercentage = snapshot.battery;
+              }
+            } else {
+              this.pairedScale = {
+                id: snapshot.id || "decaid-scale",
+                name: snapshot.name || "Bluetooth Scale",
+                model: snapshot.model || "decent",
+                address: snapshot.address || "BLE",
+                batteryPercentage: typeof snapshot.battery === "number" ? snapshot.battery : 100,
+                weightGrams: snapshot.weight,
+                isConnected: true,
+              };
+            }
           }
           if (typeof snapshot.flow === "number" || typeof snapshot.weightFlow === "number") {
             this.lastScaleSnapshot.weightFlow = snapshot.weightFlow ?? snapshot.flow ?? 0;
@@ -475,9 +570,8 @@ export class DecaidClient {
     }
   }
 
-  // Device Discovery Scanning
+  // Device Discovery Scanning (Solely real devices from Decaid; no mock/stub machines)
   public async scanForMachines(): Promise<DiscoveredMachine[]> {
-    // Queries Decaid API or returns local network/BLE candidate endpoints
     try {
       if (this.isLiveMachineConnected) {
         const res = await fetch(`${this.baseUrl}/api/v1/devices/scan`, { signal: AbortSignal.timeout(4000) });
@@ -488,27 +582,23 @@ export class DecaidClient {
       }
     } catch {}
 
-    // Verified local discovery presets
-    return [
-      {
-        id: "de1-ble-1",
-        name: "DE1-PRO-0842",
-        model: "Decent DE1Pro",
-        address: "DE:10:00:84:2A:11",
-        rssi: -56,
-        connectionType: "ble",
-      },
-      {
-        id: "de1-net-local",
-        name: "Decaid Tablet Bridge",
-        model: "Decaid WebUI",
-        address: `${this.host}:${this.port}`,
-        connectionType: "network",
-      },
-    ];
+    // If connected to a live Decaid gateway and machine info is present, return the active connection
+    if (this.isLiveMachineConnected && this.machineInfo.serialNumber) {
+      return [
+        {
+          id: `de1-${this.machineInfo.serialNumber}`,
+          name: this.machineInfo.model || "Decent DE1",
+          model: this.machineInfo.model || "Decent DE1",
+          address: `${this.host}:${this.port}`,
+          connectionType: "network",
+        },
+      ];
+    }
+
+    return [];
   }
 
-  // Bluetooth Scale Operations
+  // Bluetooth Scale Operations (Solely real devices from Decaid; no mock/stub scales)
   public async scanForScales(): Promise<DiscoveredScale[]> {
     this.scaleStatus = "scanning";
     this.notifyDeviceListeners();
@@ -525,41 +615,32 @@ export class DecaidClient {
       }
     } catch {}
 
-    // Standard high-performance BLE scales catalog
-    const discovered: DiscoveredScale[] = [
-      {
-        id: "scale-ds-104",
-        name: "Decent Scale DS-104",
-        model: "decent",
-        address: "DE:SC:A1:04:71:00",
-        rssi: -52,
-      },
-      {
-        id: "scale-acaia-lunar",
-        name: "Acaia Lunar 2021",
-        model: "acaia",
-        address: "AC:A1:A0:55:12:08",
-        rssi: -65,
-      },
-      {
-        id: "scale-felicita-arc",
-        name: "Felicita Arc",
-        model: "felicita",
-        address: "FE:L1:CA:88:90:14",
-        rssi: -71,
-      },
-      {
-        id: "scale-bookoo-themis",
-        name: "Bookoo Themis Ultra",
-        model: "bookoo",
-        address: "B0:0C:00:33:99:A1",
-        rssi: -78,
-      },
-    ];
+    // Check if Decaid reports an active scale
+    try {
+      if (this.isLiveMachineConnected) {
+        const res = await fetch(`${this.baseUrl}/api/v1/scale/info`, { signal: AbortSignal.timeout(2000) });
+        if (res.ok) {
+          const info = await res.json();
+          if (info && info.name && info.connected !== false) {
+            this.scaleStatus = "connected";
+            this.notifyDeviceListeners();
+            return [
+              {
+                id: info.id || "decaid-scale",
+                name: info.name,
+                model: info.model || "decent",
+                address: info.address || "BLE",
+                rssi: info.rssi ?? -55,
+              },
+            ];
+          }
+        }
+      }
+    } catch {}
 
     this.scaleStatus = this.pairedScale ? "connected" : "disconnected";
     this.notifyDeviceListeners();
-    return discovered;
+    return [];
   }
 
   public async pairScale(scale: DiscoveredScale): Promise<boolean> {
@@ -581,7 +662,7 @@ export class DecaidClient {
       name: scale.name,
       model: scale.model,
       address: scale.address,
-      batteryPercentage: 90,
+      batteryPercentage: 100,
       weightGrams: 0.0,
       rssi: scale.rssi,
       isConnected: true,

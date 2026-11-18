@@ -363,7 +363,7 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
         {step === 1 && (
           <div className="flex-1 overflow-y-auto space-y-3.5 py-1 pr-1 text-xs">
             <div className="p-3 rounded-2xl bg-amber-950/30 border border-amber-500/40 text-[11px] text-amber-200/90 leading-relaxed">
-              Connect to your Decent DE1 espresso machine via the local Decaid Bridge (default: <span className="font-mono font-semibold text-white">localhost:8080</span>) or scan for Bluetooth / Network machines below.
+              Hardware Bluetooth Low Energy (BLE) pairing with your DE1 is managed natively by Decaid (<span className="font-semibold text-white">Decaid Settings → Devices</span>). Panta Rhei interfaces with Decaid's local Gateway (<span className="font-mono font-semibold text-white">127.0.0.1:8080</span>) to stream live telemetry and send commands.
             </div>
 
             {connectionError && (
@@ -376,14 +376,54 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
               </div>
             )}
 
+            {/* Current Machine Status Card */}
+            {machineStatus === "connected" ? (
+              <div className="p-4 rounded-2xl bg-emerald-950/30 border border-emerald-500/50 flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+                    <Coffee className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-white flex items-center space-x-2">
+                      <span>{decaid.getMachineInfo().model || "Decent DE1"}</span>
+                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 font-mono">
+                        CONNECTED
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-decent-muted mt-0.5 font-mono">
+                      Serial: {decaid.getMachineInfo().serialNumber || "Live"} · Firmware: v{decaid.getMachineInfo().firmwareVersion || "1.42"} · State: {decaid.getMachineInfo().state}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setStep(2)}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center space-x-1 transition-all cursor-pointer shadow-md"
+                >
+                  <span>Next: Scale</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-amber-500/30 flex items-start space-x-3">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0 mt-0.5">
+                  <Bluetooth className="w-4 h-4" />
+                </div>
+                <div className="flex-1 text-[11px] text-slate-300 leading-relaxed">
+                  <div className="font-bold text-white text-xs mb-0.5">Machine Not Connected in Decaid</div>
+                  If Decaid has not yet paired with your DE1, switch to the Decaid native screen and tap <span className="text-amber-300 font-semibold">Settings → Devices</span> to connect to your DE1 over Bluetooth. Panta Rhei will automatically detect the connection as soon as Decaid connects.
+                </div>
+              </div>
+            )}
+
             {/* Network Bridge Connect Form */}
             <div className="p-4 rounded-2xl bg-decent-card border border-decent-border/60 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-white flex items-center space-x-1.5">
                   <Wifi className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Decaid Bridge Address</span>
+                  <span>Decaid Gateway Connection</span>
                 </span>
-                <span className="text-[10px] text-decent-muted font-mono">Port: 8080</span>
+                <span className="text-[10px] text-decent-muted font-mono">Default: 127.0.0.1:8080</span>
               </div>
 
               <div className="grid grid-cols-[1fr_80px_110px] gap-2 items-center">
@@ -393,7 +433,7 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
                     type="text"
                     value={hostInput}
                     onChange={(e) => setHostInput(e.target.value)}
-                    placeholder="localhost or 192.168.1.X"
+                    placeholder="127.0.0.1 or tablet IP"
                     className="w-full px-3 py-1.5 rounded-xl bg-decent-dark border border-decent-border text-white text-xs font-mono focus:outline-none focus:border-amber-400"
                   />
                 </div>
@@ -418,18 +458,18 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
                     ) : (
                       <Check className="w-3.5 h-3.5" />
                     )}
-                    <span>{machineStatus === "connecting" ? "Connecting..." : "Connect"}</span>
+                    <span>{machineStatus === "connecting" ? "Checking..." : "Connect"}</span>
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Discover DE1 Machines */}
+            {/* Check Active Devices */}
             <div className="p-4 rounded-2xl bg-decent-card border border-decent-border/60 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-white flex items-center space-x-1.5">
                   <Bluetooth className="w-3.5 h-3.5 text-sky-400" />
-                  <span>Discover DE1 Machines (Network & BLE)</span>
+                  <span>Decaid Gateway Devices</span>
                 </span>
                 <button
                   type="button"
@@ -438,7 +478,7 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
                   className="px-2.5 py-1 rounded-lg bg-decent-dark border border-decent-border text-xs text-slate-300 hover:text-white flex items-center space-x-1 cursor-pointer transition-all disabled:opacity-50"
                 >
                   <RefreshCw className={`w-3 h-3 ${isScanningMachines ? "animate-spin text-amber-400" : ""}`} />
-                  <span>{isScanningMachines ? "Scanning..." : "Scan DE1"}</span>
+                  <span>{isScanningMachines ? "Checking..." : "Refresh"}</span>
                 </button>
               </div>
 
@@ -463,14 +503,14 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
                         onClick={() => handleSelectDiscoveredMachine(m)}
                         className="px-3 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[11px] font-bold cursor-pointer transition-all"
                       >
-                        Pair & Connect
+                        Select
                       </button>
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="text-center py-2 text-[11px] text-decent-muted italic">
-                  {isScanningMachines ? "Scanning for active DE1 machines..." : "Click 'Scan DE1' to auto-detect nearby machines."}
+                  {isScanningMachines ? "Checking Decaid for connected DE1 hardware..." : "Hardware pairing is managed by Decaid. Once connected in Decaid, it will appear here."}
                 </div>
               )}
             </div>
@@ -481,7 +521,7 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
         {step === 2 && (
           <div className="flex-1 overflow-y-auto space-y-3.5 py-1 pr-1 text-xs">
             <div className="p-3 rounded-2xl bg-sky-950/30 border border-sky-500/40 text-[11px] text-sky-200/90 leading-relaxed">
-              Pair a Bluetooth scale to unlock real-time gravimetric flow curves and automated stop at target yield. If you don't use a Bluetooth scale, tap <span className="font-semibold text-white">"Skip (No Scale)"</span> to continue.
+              Bluetooth scales pair directly with the native Decaid Android app (<span className="font-semibold text-white">Decaid Settings → Devices → Scale</span>). Decaid streams live weight and gravimetric flow to Panta Rhei automatically.
             </div>
 
             {pairedScale ? (
@@ -494,7 +534,7 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
                     <div className="text-xs font-bold text-white flex items-center space-x-2">
                       <span>{pairedScale.name}</span>
                       <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 font-mono">
-                        CONNECTED
+                        CONNECTED VIA DECAID
                       </span>
                     </div>
                     <div className="text-[11px] text-decent-muted mt-0.5 font-mono">
@@ -502,43 +542,51 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
                     </div>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleDisconnectScale}
-                  className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-semibold cursor-pointer transition-all"
-                >
-                  Disconnect
-                </button>
+                <div className="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => decaid.tareScale()}
+                    className="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer shadow-sm"
+                  >
+                    Tare (0.0g)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDisconnectScale}
+                    className="px-2.5 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-semibold cursor-pointer transition-all"
+                  >
+                    Disconnect
+                  </button>
+                </div>
               </div>
             ) : (
-              <div className="p-4 rounded-2xl bg-decent-dark/60 border border-decent-border/60 text-center py-3.5 space-y-1.5">
-                <Scale className="w-7 h-7 text-decent-muted mx-auto" />
-                <div className="text-xs font-bold text-white">No Bluetooth Scale Paired</div>
-                <p className="text-[11px] text-decent-muted max-w-sm mx-auto">
-                  Click 'Scan Scales' below to pair, or tap 'Skip (No Scale)' to proceed.
+              <div className="p-4 rounded-2xl bg-decent-dark/60 border border-decent-border/60 text-center py-4 space-y-2">
+                <Scale className="w-8 h-8 text-decent-muted mx-auto" />
+                <div className="text-xs font-bold text-white">No Bluetooth Scale Connected in Decaid</div>
+                <p className="text-[11px] text-decent-muted max-w-sm mx-auto leading-relaxed">
+                  Turn on your scale and pair it in <span className="text-sky-300 font-semibold">Decaid Settings → Devices → Scale</span>. Panta Rhei will automatically display weight as soon as Decaid connects.
                 </p>
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={handleScanScales}
+                    disabled={isScanningScales}
+                    className="px-3 py-1.5 rounded-xl bg-sky-600/30 hover:bg-sky-600/40 border border-sky-500/40 text-sky-200 text-xs font-semibold inline-flex items-center space-x-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${isScanningScales ? "animate-spin text-sky-300" : ""}`} />
+                    <span>{isScanningScales ? "Checking Decaid Scale..." : "Check Scale Status"}</span>
+                  </button>
+                </div>
               </div>
             )}
 
-            {/* Scan for Bluetooth Scales */}
-            <div className="p-4 rounded-2xl bg-decent-card border border-decent-border/60 space-y-3">
-              <div className="flex items-center justify-between">
+            {/* Discovered Scale Results (if any reported by Decaid API) */}
+            {discoveredScales.length > 0 && (
+              <div className="p-4 rounded-2xl bg-decent-card border border-decent-border/60 space-y-3">
                 <span className="text-xs font-bold text-white flex items-center space-x-1.5">
                   <Bluetooth className="w-3.5 h-3.5 text-sky-400" />
-                  <span>Discover Nearby Scales</span>
+                  <span>Decaid Scale Discovered</span>
                 </span>
-                <button
-                  type="button"
-                  onClick={handleScanScales}
-                  disabled={isScanningScales}
-                  className="px-2.5 py-1 rounded-lg bg-decent-dark border border-decent-border text-xs text-slate-300 hover:text-white flex items-center space-x-1 cursor-pointer transition-all disabled:opacity-50"
-                >
-                  <RefreshCw className={`w-3 h-3 ${isScanningScales ? "animate-spin text-sky-400" : ""}`} />
-                  <span>{isScanningScales ? "Scanning..." : "Scan Scales"}</span>
-                </button>
-              </div>
-
-              {discoveredScales.length > 0 ? (
                 <div className="space-y-1.5">
                   {discoveredScales.map((s) => (
                     <div
@@ -551,7 +599,7 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
                         </div>
                         <div>
                           <div className="text-xs font-bold text-white">{s.name}</div>
-                          <div className="text-[10px] text-decent-muted font-mono">{s.address} · {s.rssi} dBm</div>
+                          <div className="text-[10px] text-decent-muted font-mono">{s.address}</div>
                         </div>
                       </div>
                       <button
@@ -559,22 +607,38 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
                         onClick={() => handlePairScale(s)}
                         className="px-2.5 py-1 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 text-[11px] font-bold cursor-pointer transition-all"
                       >
-                        Pair Scale
+                        Select Scale
                       </button>
                     </div>
                   ))}
                 </div>
-              ) : (
-                <div className="text-center py-2 text-[11px] text-decent-muted italic">
-                  {isScanningScales ? "Searching for active Bluetooth scales..." : "Click 'Scan Scales' to detect nearby scales."}
-                </div>
-              )}
+              </div>
+            )}
+
+            {/* Navigation buttons */}
+            <div className="flex items-center justify-between pt-2">
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="px-3 py-1.5 rounded-xl bg-decent-dark hover:bg-decent-surface border border-decent-border text-decent-muted hover:text-white text-xs font-semibold flex items-center space-x-1 cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Back</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setStep(3)}
+                className="px-4 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold flex items-center space-x-1 transition-all cursor-pointer shadow-md"
+              >
+                <span>{pairedScale ? "Continue to Data Sync" : "Skip (No Scale)"}</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
             </div>
 
             {/* Supported Models Badges */}
-            <div>
+            <div className="pt-2">
               <span className="text-[10px] text-decent-muted uppercase tracking-wider block mb-1">
-                Supported Scale Protocols
+                Supported Scale Protocols in Decaid
               </span>
               <div className="flex flex-wrap gap-1">
                 {SUPPORTED_SCALE_MODELS.map((m) => (

@@ -151,6 +151,19 @@ export const HomeCafeHeader: React.FC<HomeCafeHeaderProps> = ({
         )}
 
         {/* Machine Pairing / Connection Status Indicator (High Contrast: White on Slate-900) */}
+        {isMachineConnected && !isSimulatorMode && (
+          <button
+            type="button"
+            onClick={onOpenPairing}
+            className="px-2.5 sm:px-3 py-1 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-emerald-500/50 text-emerald-300 text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
+            title="Decent DE1 Connected. Tap to view status."
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 shadow-[0_0_6px_#10b981]" />
+            <span className="hidden md:inline font-bold">DE1 Connected</span>
+            <span className="md:hidden font-bold">DE1</span>
+          </button>
+        )}
+
         {!isMachineConnected && !isSimulatorMode && (
           <button
             type="button"
