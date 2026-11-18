@@ -615,28 +615,8 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
               </div>
             )}
 
-            {/* Navigation buttons */}
-            <div className="flex items-center justify-between pt-2">
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                className="px-3 py-1.5 rounded-xl bg-decent-dark hover:bg-decent-surface border border-decent-border text-decent-muted hover:text-white text-xs font-semibold flex items-center space-x-1 cursor-pointer"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Back</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setStep(3)}
-                className="px-4 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold flex items-center space-x-1 transition-all cursor-pointer shadow-md"
-              >
-                <span>{pairedScale ? "Continue to Data Sync" : "Skip (No Scale)"}</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-
             {/* Supported Models Badges */}
-            <div className="pt-2">
+            <div className="pt-1">
               <span className="text-[10px] text-decent-muted uppercase tracking-wider block mb-1">
                 Supported Scale Protocols in Decaid
               </span>

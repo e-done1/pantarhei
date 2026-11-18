@@ -121,7 +121,17 @@ PantaRhei is a responsive, data-intensive web skin designed for Decaid on Decent
 - **Strict 68px Vertical Height Clamping**: Guaranteed space protection ensuring the header stripe never exceeds 68px, preventing vertical scrollbars on standard 1340×800 DE1 landscape tablet screens.
 - **Intelligent Auto-Downscaling**: Automatically recalculates and scales typography (from 72px down to safe bounds) when lengthy names or subtitles are entered, alerting the barista with real-time fit status.
 
-### 12. Built-in Decaid Simulator Fallback
+### 12. Hardware Connection Architecture & 3-Step Setup Wizard
+- **Native Decaid BLE Ownership**: Android grants exclusive Bluetooth Low Energy (BLE) peripheral access to Decaid (`net.tadel.reaprime`). Pairing the Decent DE1 machine and Bluetooth scale is handled exclusively within Decaid's native device manager (`Decaid Settings → Devices`).
+- **High-Performance Gateway Client**: Panta Rhei operates as a web UI client connecting directly to Decaid's local Gateway service over HTTP (`http://127.0.0.1:8080/api/v1/`) and WebSocket (`ws://127.0.0.1:8080/ws/v1/`). There is zero BLE collision or "double connection" risk because the skin communicates through Decaid rather than opening raw GATT sockets.
+- **Dynamic Connection Detection & Auto-Reconnect**: Panta Rhei continuously monitors Decaid's machine state and scale stream. If Decaid reconnects to the DE1 or scale, the skin automatically detects the link and updates the cockpit status badge (`[● DE1 Connected]`) without requiring page refreshes.
+- **Target Yield Stop-at-Weight Sync**: Adjusting target yield or selecting a recipe in Panta Rhei immediately synchronizes `context.targetYield` via `PUT /api/v1/workflow` in Decaid, establishing a single source of truth for automated gravimetric cutoffs during extraction.
+- **3-Step Welcome & Setup Wizard**:
+  - **Step 1: DE1 Machine & Gateway**: Validates local gateway reachability (`127.0.0.1:8080`), reports real live machine metadata (model, serial, firmware version, and heating/ready state), and provides clear guidance if Decaid is not yet paired.
+  - **Step 2: Bluetooth Scale Status**: Live gravimetric weight feed, battery percentage, and one-tap tare (`0.0g`) for supported scales (Decent Scale, Acaia Lunar, Felicita Arc, Bookoo Themis, Skale II, DiFluid Microbalance, Hiroia Jimmy), with an easy "Skip (No Scale)" bypass for non-gravimetric setups.
+  - **Step 3: One-Tap Decaid Data Sync**: Single-action importer pulling your complete profile library (`/api/v1/profiles`), past extraction history (`/api/v1/shots`), coffee beans (`/api/v1/beans`), and equipment inventory (`/api/v1/grinders`, etc.) from Decaid into Panta Rhei.
+
+### 13. Built-in Decaid Simulator Fallback
 - **Hardware-Free Testing & Development**: Full offline simulation engine producing realistic DE1 pressure, flow, gravimetric scale weight, resistance, and channeling telemetry, enabling skin evaluation, feature development, and demonstration without physical machine connection.
 
 ---
