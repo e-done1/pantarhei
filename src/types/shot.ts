@@ -136,6 +136,12 @@ export function searchShotHistory(
         shot.grindSetting,
         shot.basket || "",
         shot.baristaNotes || "",
+        shot.equipment?.grinder || "",
+        shot.equipment?.burrs || "",
+        shot.equipment?.basket || "",
+        shot.equipment?.scale || "",
+        ...(shot.equipment?.tampers || []),
+        ...(shot.equipment?.distributors || []),
         ...(shot.tags || []),
       ]
         .join(" ")

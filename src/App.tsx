@@ -51,7 +51,7 @@ import {
   saveShotHistoryToStorage,
   createShotRecord,
 } from "./types/shot.ts";
-import { mergeShots } from "./types/backup.ts";
+import { mergeShots, mergeBeans } from "./types/backup.ts";
 
 
 
@@ -518,12 +518,57 @@ export function App() {
     } catch {}
   };
 
-  const handleImportMigratedData = (data: { profiles: ProfileItem[]; shots: ShotRecord[] }) => {
-    if (data.shots.length > 0) {
+  const handleImportMigratedData = (data: {
+    profiles: ProfileItem[];
+    shots: ShotRecord[];
+    beans?: PantaBean[];
+    equipment?: Partial<EquipmentInventory>;
+    activeEquipment?: Partial<ActiveEquipmentSelection>;
+  }) => {
+    if (data.shots && data.shots.length > 0) {
       setShots((prev) => {
         const merged = mergeShots(prev, data.shots, "merge_deduplicate");
         saveShotHistoryToStorage(merged);
         return merged;
+      });
+    }
+    if (data.beans && data.beans.length > 0) {
+      setBeans((prev) => {
+        const merged = mergeBeans(prev, data.beans!, "merge_deduplicate");
+        saveBeansToStorage(merged);
+        if (!activeBean && merged.length > 0) {
+          setActiveBean(merged[0]);
+        }
+        return merged;
+      });
+    }
+    if (data.equipment) {
+      setEquipmentInventory((prev) => {
+        const updated: EquipmentInventory = {
+          ...prev,
+          grinders: Array.from(new Set([...prev.grinders, ...(data.equipment?.grinders || [])])),
+          burrs: Array.from(new Set([...prev.burrs, ...(data.equipment?.burrs || [])])),
+          baskets: Array.from(new Set([...prev.baskets, ...(data.equipment?.baskets || [])])),
+          scales: Array.from(new Set([...prev.scales, ...(data.equipment?.scales || [])])),
+          tampers: Array.from(new Set([...prev.tampers, ...(data.equipment?.tampers || [])])),
+          distributors: Array.from(new Set([...prev.distributors, ...(data.equipment?.distributors || [])])),
+        };
+        saveEquipmentInventory(updated);
+        return updated;
+      });
+    }
+    if (data.activeEquipment) {
+      setActiveEquipment((prev) => {
+        const updated: ActiveEquipmentSelection = {
+          ...prev,
+          grinder: data.activeEquipment?.grinder || prev.grinder,
+          burrs: data.activeEquipment?.burrs || prev.burrs,
+          basket: data.activeEquipment?.basket || prev.basket,
+          tampers: data.activeEquipment?.tampers && data.activeEquipment.tampers.length > 0 ? data.activeEquipment.tampers : prev.tampers,
+          distributors: data.activeEquipment?.distributors && data.activeEquipment.distributors.length > 0 ? data.activeEquipment.distributors : prev.distributors,
+        };
+        saveActiveEquipment(updated);
+        return updated;
       });
     }
   };

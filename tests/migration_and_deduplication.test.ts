@@ -6,6 +6,10 @@ import {
   deduplicateProfiles,
   deduplicateShots,
   normalizeProfileTitle,
+  parseCoffeeDetails,
+  parseEquipmentDetails,
+  parseDecaidProfile,
+  parseDecaidShot,
   type ProfileWithFolder,
 } from "../src/services/legacyMigration.ts";
 import type { ProfileItem } from "../src/types/profile.ts";
@@ -267,4 +271,117 @@ test("Migration: deduplicateShots filters duplicate shots by timestamp and ID", 
   assert.equal(result.uniqueShots.length, 1, "Only the 1 unique new shot is accepted");
   assert.equal(result.uniqueShots[0].id, "shot-300");
   assert.equal(result.skippedExistingCount, 2, "2 existing duplicate shots skipped");
+});
+
+test("Migration: parseCoffeeDetails extracts terroir, varietal, country and clean name", () => {
+  const c1 = parseCoffeeDetails(
+    "Benti Nenka, Hambela Wamena, Natural, Heirloom, Guji, Ethiopia, 1,900 - 2,300 masl",
+    "Peony"
+  );
+  assert.equal(c1.name, "Benti Nenka, Hambela Wamena");
+  assert.equal(c1.roaster, "Peony");
+  assert.equal(c1.countryOfOrigin, "Ethiopia");
+  assert.equal(c1.region, "Guji");
+  assert.equal(c1.process, "Natural");
+  assert.deepEqual(c1.varietal, ["Heirloom"]);
+  assert.equal(c1.altitude, "1,900 - 2,300 masl");
+
+  const c2 = parseCoffeeDetails(
+    "AA Kerugoya, Washed SL28, SL34, Ruiru11, Batian, Inoi, Kenya 1,400 - 1,600 masl",
+    "Peony"
+  );
+  assert.equal(c2.name, "AA Kerugoya");
+  assert.equal(c2.roaster, "Peony");
+  assert.equal(c2.countryOfOrigin, "Kenya");
+  assert.equal(c2.region, "Inoi");
+  assert.equal(c2.process, "Washed");
+  assert.deepEqual(c2.varietal, ["SL28", "SL34", "Ruiru11", "Batian"]);
+  assert.equal(c2.altitude, "1,400 - 1,600 masl");
+});
+
+test("Migration: parseEquipmentDetails extracts grinder, burrs, basket, tampers and distributors", () => {
+  const eq = parseEquipmentDetails(
+    "Laom P100 with 98mm HU burrs",
+    "1.6 grind, 6.5 mm spacers on leveler + Bravo Tamper + HE basket"
+  );
+  assert.equal(eq.grinder, "Lagom P100", "Normalized typo Laom to Lagom");
+  assert.equal(eq.burrs, "98mm HU");
+  assert.equal(eq.grindSetting, "1.6");
+  assert.equal(eq.basket, "HE Basket");
+  assert.deepEqual(eq.tampers, ["Bravo Tamper"]);
+  assert.deepEqual(eq.distributors, ["6.5 mm spacers on leveler"]);
+});
+
+test("Migration: parseDecaidProfile parses nested Decaid /api/v1/profiles payload", () => {
+  const rawItem = {
+    id: "profile:07041d13386060b1a9cc",
+    profile: {
+      version: "2",
+      title: "Peony/FlowHUNB1.6",
+      notes: "Peony Flow profile for Nordic roasts",
+      author: "Decent",
+      beverage_type: "espresso",
+      target_weight: 34.0,
+      steps: [
+        { name: "Fill", pump: "flow", flow: 8.0, seconds: 2.0, temperature: 87.0 },
+        { name: "Flow", pump: "flow", flow: 1.6, seconds: 20.0, temperature: 84.0 },
+      ],
+    },
+  };
+
+  const parsed = parseDecaidProfile(rawItem);
+  assert.ok(parsed);
+  assert.equal(parsed.title, "Peony/FlowHUNB1.6");
+  assert.equal(parsed.author, "Decent");
+  assert.equal(parsed.target_weight, 34.0);
+  assert.equal(parsed.steps?.length, 2);
+  assert.equal(parsed.steps?.[0].flow, "8");
+});
+
+test("Migration: parseDecaidShot parses Decaid Gateway shot item with context & annotations", () => {
+  const rawShotItem = {
+    id: "de1app-1794947129",
+    timestamp: "2026-11-17T20:25:29Z",
+    workflow: {
+      id: "wf-1",
+      name: "Peony/FlowHUNB1.8",
+      context: {
+        coffeeName: "Benti Nenka, Hambela Wamena, Natural, Heirloom, Guji, Ethiopia, 1,900 - 2,300 masl",
+        coffeeRoaster: "Peony",
+        grinderModel: "Laom P100 with 98mm HU burrs",
+        grinderSetting: "1.6 grind, 6.5 mm spacers on leveler + Bravo Tamper + HE basket",
+        targetDoseWeight: 18.6,
+        targetYield: 34.0,
+        baristaName: "Idan",
+      },
+    },
+    annotations: {
+      actualDoseWeight: 18.6,
+      actualYield: 34.2,
+      drinkTds: 0.0,
+      drinkEy: 0.0,
+      enjoyment: 8.5,
+    },
+  };
+
+  const shot = parseDecaidShot(rawShotItem);
+  assert.ok(shot);
+  assert.equal(shot.id, "de1app-1794947129");
+  assert.equal(shot.beanName, "Benti Nenka, Hambela Wamena");
+  assert.equal(shot.roaster, "Peony");
+  assert.equal(shot.countryOfOrigin, "Ethiopia");
+  assert.equal(shot.process, "Natural");
+  assert.equal(shot.actualDose, 18.6);
+  assert.equal(shot.actualYield, 34.2);
+  assert.equal(shot.grindSetting, "1.6");
+  assert.equal(shot.basket, "HE Basket");
+  assert.equal(shot.equipment?.grinder, "Lagom P100");
+  assert.equal(shot.equipment?.burrs, "98mm HU");
+  assert.deepEqual(shot.equipment?.tampers, ["Bravo Tamper"]);
+  assert.deepEqual(shot.equipment?.distributors, ["6.5 mm spacers on leveler"]);
+  assert.ok(shot.tags.includes("Ethiopia"));
+  assert.ok(shot.tags.includes("Lagom P100"));
+  assert.ok(shot.tags.includes("HE Basket"));
+  assert.ok(shot.tags.includes("Bravo Tamper"));
+  assert.ok(shot.baristaNotes.includes("Barista: Idan"));
 });

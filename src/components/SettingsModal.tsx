@@ -29,8 +29,18 @@ import {
 } from "../types/profile.ts";
 import type { PantaBean } from "../types/bean.ts";
 import {
+  loadBeansFromStorage,
   saveBeansToStorage,
 } from "../types/bean.ts";
+import {
+  loadEquipmentInventory,
+  saveEquipmentInventory,
+  loadActiveEquipment,
+  saveActiveEquipment,
+  getFreezerSlowdownFactor,
+  type EquipmentInventory,
+  type FreezerEquipmentItem,
+} from "../types/equipment.ts";
 import type { ShotRecord } from "../types/shot.ts";
 import { saveShotHistoryToStorage } from "../types/shot.ts";
 import type {
@@ -45,11 +55,10 @@ import type {
   ImportPreviewResult,
   ImportStrategy,
 } from "../types/backup.ts";
-import { previewBackupImport, mergeProfiles, mergeShots } from "../types/backup.ts";
+import { previewBackupImport, mergeProfiles, mergeShots, mergeBeans } from "../types/backup.ts";
 import {
-  processMigrationFiles,
   syncFromDecaidGateway,
-  type MigrationBatchResult,
+  type DecaidGatewaySyncResult,
 } from "../services/legacyMigration.ts";
 import {
   buildBackupEnvelope,
@@ -109,12 +118,9 @@ import {
   Plus,
   Cpu,
   FolderOpen,
-  History,
   Snowflake,
   Trash2,
 } from "lucide-react";
-import type { EquipmentInventory, FreezerEquipmentItem } from "../types/equipment.ts";
-import { loadEquipmentInventory, saveEquipmentInventory, getFreezerSlowdownFactor } from "../types/equipment.ts";
 import {
   saveScreensaverImages,
   loadScreensaverImages,
@@ -492,16 +498,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [importToast, setImportToast] = useState<{ success: boolean; message: string } | null>(null);
   const [isImportFileError, setIsImportFileError] = useState<string | null>(null);
 
-  // Folder & Gateway Migration State
-  const migrationHistoryInputRef = useRef<HTMLInputElement>(null);
-  const migrationProfilesInputRef = useRef<HTMLInputElement>(null);
-  const migrationAllFolderInputRef = useRef<HTMLInputElement>(null);
-
-  const [migrationBatch, setMigrationBatch] = useState<MigrationBatchResult | null>(null);
-  const [isProcessingMigrationFiles, setIsProcessingMigrationFiles] = useState(false);
+  // Decaid Gateway Direct Import State
   const [isSyncingMigrationGateway, setIsSyncingMigrationGateway] = useState(false);
+  const [decaidSyncResult, setDecaidSyncResult] = useState<DecaidGatewaySyncResult | null>(null);
   const [migrationToast, setMigrationToast] = useState<{ type: "success" | "error" | "info"; message: string } | null>(null);
-  const [isMigrationDone, setIsMigrationDone] = useState(false);
 
   // Sync with live decaid device updates
   useEffect(() => {
@@ -940,103 +940,75 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     }
   };
 
-  const handleProcessFolderFiles = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    setIsProcessingMigrationFiles(true);
-    setMigrationToast(null);
-    setIsMigrationDone(false);
-    try {
-      const allProfiles = [...currentCustomProfiles];
-      const result = await processMigrationFiles(files, allProfiles, shots);
-      setMigrationBatch(result);
-      if (result.importedProfiles.length > 0 || result.importedShots.length > 0) {
-        setMigrationToast({
-          type: "info",
-          message: `Parsed ${result.profileStats.totalParsed} profiles (${result.profileStats.uniqueAdded} unique, ${result.profileStats.profiles2OverridesCount} profiles2 overrides) and ${result.shotStats.totalParsed} shots. Click "Apply to Library" to finish.`,
-        });
-      } else {
-        setMigrationToast({
-          type: "info",
-          message: "All discovered profiles and shots already exist in your library (no duplicates added).",
-        });
-      }
-    } catch (err: any) {
-      setMigrationToast({
-        type: "error",
-        message: `Error processing files: ${err.message || "Unknown error"}`,
-      });
-    } finally {
-      setIsProcessingMigrationFiles(false);
-    }
-  };
-
   const handleSyncMigrationGateway = async () => {
     setIsSyncingMigrationGateway(true);
     setMigrationToast(null);
-    setIsMigrationDone(false);
     try {
       const gatewayUrl = `http://${decaid.getHost()}:${decaid.getPort()}`;
-      const data = await syncFromDecaidGateway(gatewayUrl);
-      const allProfiles = [...currentCustomProfiles];
-      const mergedShots = mergeShots(shots, data.shots, "merge_deduplicate");
-      const newShots = mergedShots.filter((s) => !shots.some((es) => es.id === s.id));
-      const mergedProfs = mergeProfiles(allProfiles, data.profiles, "merge_deduplicate");
-      const newProfs = mergedProfs.filter((p) => !allProfiles.some((ep) => ep.title === p.title));
+      const data = await syncFromDecaidGateway(gatewayUrl, 100);
 
-      const result: MigrationBatchResult = {
-        importedProfiles: newProfs,
-        importedShots: newShots,
-        profileStats: {
-          totalParsed: data.profiles.length,
-          uniqueAdded: newProfs.length,
-          duplicateCount: data.profiles.length - newProfs.length,
-          profiles2OverridesCount: 0,
-        },
-        shotStats: {
-          totalParsed: data.shots.length,
-          uniqueAdded: newShots.length,
-          duplicateCount: data.shots.length - newShots.length,
-        },
-      };
-      setMigrationBatch(result);
-      if (newProfs.length > 0 || newShots.length > 0) {
-        setMigrationToast({
-          type: "info",
-          message: `Decaid Gateway: Found ${newProfs.length} new profiles and ${newShots.length} historical shots.`,
-        });
-      } else {
-        setMigrationToast({
-          type: "success",
-          message: "Decaid Gateway queried: All profiles and shots are already in your library.",
+      // 1. Merge and save profiles
+      if (data.profiles.length > 0) {
+        const existing = loadCustomProfilesFromStorage();
+        const mergedProfs = mergeProfiles([...currentCustomProfiles, ...existing], data.profiles, "merge_deduplicate");
+        saveCustomProfilesToStorage(mergedProfs);
+      }
+
+      // 2. Merge and save shots
+      if (data.shots.length > 0) {
+        const mergedShots = mergeShots(shots, data.shots, "merge_deduplicate");
+        saveShotHistoryToStorage(mergedShots);
+        if (onShotsChange) onShotsChange(mergedShots);
+      }
+
+      // 3. Merge and save beans
+      if (data.beans.length > 0) {
+        const currentBeans = loadBeansFromStorage();
+        const mergedBeans = mergeBeans(currentBeans, data.beans, "merge_deduplicate");
+        saveBeansToStorage(mergedBeans);
+      }
+
+      // 4. Merge and save equipment inventory
+      if (data.equipment) {
+        const currentInv = loadEquipmentInventory();
+        const updatedInv: EquipmentInventory = {
+          ...currentInv,
+          grinders: Array.from(new Set([...currentInv.grinders, ...data.equipment.grinders])),
+          burrs: Array.from(new Set([...currentInv.burrs, ...data.equipment.burrs])),
+          baskets: Array.from(new Set([...currentInv.baskets, ...data.equipment.baskets])),
+          scales: Array.from(new Set([...currentInv.scales, ...data.equipment.scales])),
+          tampers: Array.from(new Set([...currentInv.tampers, ...data.equipment.tampers])),
+          distributors: Array.from(new Set([...currentInv.distributors, ...data.equipment.distributors])),
+        };
+        saveEquipmentInventory(updatedInv);
+      }
+
+      // 5. Update active equipment if found
+      if (data.activeEquipment) {
+        const currentActive = loadActiveEquipment();
+        saveActiveEquipment({
+          ...currentActive,
+          grinder: data.activeEquipment.grinder || currentActive.grinder,
+          burrs: data.activeEquipment.burrs || currentActive.burrs,
+          basket: data.activeEquipment.basket || currentActive.basket,
+          tampers: data.activeEquipment.tampers && data.activeEquipment.tampers.length > 0 ? data.activeEquipment.tampers : currentActive.tampers,
+          distributors: data.activeEquipment.distributors && data.activeEquipment.distributors.length > 0 ? data.activeEquipment.distributors : currentActive.distributors,
         });
       }
+
+      setDecaidSyncResult(data);
+      setMigrationToast({
+        type: "success",
+        message: `Successfully imported ${data.profiles.length} profiles, ${data.shots.length} shots, ${data.beans.length} coffees, and equipment from Decaid Gateway!`,
+      });
     } catch (err: any) {
       setMigrationToast({
         type: "error",
-        message: `Gateway sync failed: ${err.message || "Could not reach gateway"}`,
+        message: `Gateway sync failed: ${err.message || "Could not reach Decaid"}`,
       });
     } finally {
       setIsSyncingMigrationGateway(false);
     }
-  };
-
-  const handleApplyMigrationBatch = () => {
-    if (!migrationBatch) return;
-    if (migrationBatch.importedProfiles.length > 0) {
-      const existing = loadCustomProfilesFromStorage();
-      const merged = mergeProfiles(existing, migrationBatch.importedProfiles, "merge_deduplicate");
-      saveCustomProfilesToStorage(merged);
-    }
-    if (migrationBatch.importedShots.length > 0) {
-      const merged = mergeShots(shots, migrationBatch.importedShots, "merge_deduplicate");
-      saveShotHistoryToStorage(merged);
-      if (onShotsChange) onShotsChange(merged);
-    }
-    setIsMigrationDone(true);
-    setMigrationToast({
-      type: "success",
-      message: `Successfully added ${migrationBatch.importedProfiles.length} profiles and ${migrationBatch.importedShots.length} shots to your library!`,
-    });
   };
 
   return (
@@ -3207,90 +3179,36 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               )}
             </div>
 
-            {/* 3.5. Sync Past History & Profiles from de1app and Decaid Folders */}
+            {/* 3.5. Import History & Profiles from Decaid Gateway */}
             <div className="p-4 rounded-2xl bg-decent-card border border-decent-border/80 space-y-3">
-              {/* Hidden File Inputs */}
-              <input
-                ref={migrationHistoryInputRef}
-                type="file"
-                // @ts-ignore
-                webkitdirectory=""
-                directory=""
-                multiple
-                className="hidden"
-                onChange={(e) => handleProcessFolderFiles(e.target.files)}
-              />
-              <input
-                ref={migrationProfilesInputRef}
-                type="file"
-                // @ts-ignore
-                webkitdirectory=""
-                directory=""
-                multiple
-                className="hidden"
-                onChange={(e) => handleProcessFolderFiles(e.target.files)}
-              />
-              <input
-                ref={migrationAllFolderInputRef}
-                type="file"
-                // @ts-ignore
-                webkitdirectory=""
-                directory=""
-                multiple
-                className="hidden"
-                onChange={(e) => handleProcessFolderFiles(e.target.files)}
-              />
-
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <FolderOpen className="w-4 h-4 text-purple-400" />
+                  <RefreshCw className="w-4 h-4 text-sky-400" />
                   <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-                    Sync Past History & Profiles (de1app / Decaid Folders)
+                    Import History & Profiles from Decaid
                   </h4>
                 </div>
-                <span className="text-[10px] text-purple-300 bg-purple-500/20 px-2 py-0.5 rounded-full font-mono font-semibold">
-                  profiles2/ Precedence Active
+                <span className="text-[10px] text-sky-300 bg-sky-500/20 px-2 py-0.5 rounded-full font-mono font-semibold">
+                  REST Gateway Sync
                 </span>
               </div>
 
-              <p className="text-[11px] text-decent-muted">
-                Import past shots (<span className="font-mono text-amber-300">history/</span>) and custom profiles (<span className="font-mono text-purple-300">profiles/</span> & <span className="font-mono text-purple-300">profiles2/</span>) from your previous setup. If profiles exist in both folders, <span className="font-mono text-amber-300 font-semibold">profiles2/</span> takes precedence and duplicates are omitted.
+              <p className="text-[11px] text-decent-muted leading-relaxed">
+                Directly import your past espresso shots, custom profiles, coffees, and hardware equipment (grinders, burrs, baskets, tampers) from the Decaid Gateway. All data is automatically indexed, tagged, and deduplicated.
               </p>
 
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => migrationHistoryInputRef.current?.click()}
-                  disabled={isProcessingMigrationFiles}
-                  className="p-2.5 rounded-xl bg-decent-dark hover:bg-slate-800 border border-decent-border text-white text-xs font-semibold flex items-center justify-center space-x-1.5 cursor-pointer transition-all active:scale-95 shadow-sm"
-                >
-                  <History className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Browse History Folder</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => migrationProfilesInputRef.current?.click()}
-                  disabled={isProcessingMigrationFiles}
-                  className="p-2.5 rounded-xl bg-decent-dark hover:bg-slate-800 border border-decent-border text-white text-xs font-semibold flex items-center justify-center space-x-1.5 cursor-pointer transition-all active:scale-95 shadow-sm"
-                >
-                  <Layers className="w-3.5 h-3.5 text-purple-400" />
-                  <span>Browse Profiles Folder</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleSyncMigrationGateway}
-                  disabled={isSyncingMigrationGateway}
-                  className="p-2.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 border border-sky-500/40 text-sky-300 text-xs font-bold flex items-center justify-center space-x-1.5 cursor-pointer transition-all active:scale-95 shadow-sm"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${isSyncingMigrationGateway ? "animate-spin" : ""}`} />
-                  <span>{isSyncingMigrationGateway ? "Syncing..." : "Sync via Decaid Gateway"}</span>
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={handleSyncMigrationGateway}
+                disabled={isSyncingMigrationGateway}
+                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-sky-600 via-indigo-600 to-purple-600 hover:from-sky-500 hover:to-purple-500 text-white font-bold text-xs flex items-center justify-center space-x-2 cursor-pointer transition-all active:scale-98 shadow-md disabled:opacity-60"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isSyncingMigrationGateway ? "animate-spin" : ""}`} />
+                <span>{isSyncingMigrationGateway ? "Importing from Decaid..." : "Import History & Profiles from Decaid Gateway"}</span>
+              </button>
 
               {migrationToast && (
-                <div className={`p-2.5 rounded-xl text-xs flex items-center space-x-2 ${
+                <div className={`p-2.5 rounded-xl text-xs flex items-center space-x-2 animate-in fade-in duration-150 ${
                   migrationToast.type === "success"
                     ? "bg-emerald-950/40 text-emerald-300 border border-emerald-500/60"
                     : migrationToast.type === "error"
@@ -3308,37 +3226,42 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </div>
               )}
 
-              {migrationBatch && (
-                <div className="p-3 rounded-xl bg-decent-dark/90 border border-decent-border space-y-2.5 animate-in fade-in duration-150">
-                  <div className="grid grid-cols-2 gap-2 text-center text-xs">
+              {decaidSyncResult && (
+                <div className="p-3 rounded-xl bg-decent-dark/90 border border-decent-border space-y-2 animate-in fade-in duration-150">
+                  <div className="grid grid-cols-4 gap-2 text-center text-xs">
                     <div className="p-2 rounded-lg bg-decent-surface border border-decent-border/60">
-                      <div className="text-[10px] text-decent-muted">Profiles to Add</div>
-                      <div className="text-sm font-bold text-white font-mono">{migrationBatch.profileStats.uniqueAdded}</div>
-                      <div className="text-[9.5px] text-emerald-400">
-                        {migrationBatch.profileStats.duplicateCount} duplicates eliminated ({migrationBatch.profileStats.profiles2OverridesCount} profiles2 overrides)
+                      <div className="text-[10px] text-decent-muted">Profiles</div>
+                      <div className="text-sm font-bold text-white font-mono">{decaidSyncResult.profiles.length}</div>
+                    </div>
+                    <div className="p-2 rounded-lg bg-decent-surface border border-decent-border/60">
+                      <div className="text-[10px] text-decent-muted">Shots</div>
+                      <div className="text-sm font-bold text-white font-mono">{decaidSyncResult.shots.length}</div>
+                    </div>
+                    <div className="p-2 rounded-lg bg-decent-surface border border-decent-border/60">
+                      <div className="text-[10px] text-decent-muted">Coffees</div>
+                      <div className="text-sm font-bold text-white font-mono">{decaidSyncResult.beans.length}</div>
+                    </div>
+                    <div className="p-2 rounded-lg bg-decent-surface border border-decent-border/60">
+                      <div className="text-[10px] text-decent-muted">Gear Items</div>
+                      <div className="text-sm font-bold text-white font-mono">
+                        {decaidSyncResult.equipment.grinders.length +
+                          decaidSyncResult.equipment.burrs.length +
+                          decaidSyncResult.equipment.baskets.length +
+                          decaidSyncResult.equipment.tampers.length +
+                          decaidSyncResult.equipment.distributors.length}
                       </div>
                     </div>
-                    <div className="p-2 rounded-lg bg-decent-surface border border-decent-border/60">
-                      <div className="text-[10px] text-decent-muted">Shots to Add</div>
-                      <div className="text-sm font-bold text-white font-mono">{migrationBatch.shotStats.uniqueAdded}</div>
-                      <div className="text-[9.5px] text-slate-400">{migrationBatch.shotStats.duplicateCount} duplicate shots skipped</div>
-                    </div>
                   </div>
-
-                  {!isMigrationDone ? (
-                    <button
-                      type="button"
-                      onClick={handleApplyMigrationBatch}
-                      disabled={migrationBatch.importedProfiles.length === 0 && migrationBatch.importedShots.length === 0}
-                      className="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center space-x-1.5 shadow-md active:scale-95 transition-all cursor-pointer disabled:opacity-50"
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                      <span>Apply to Library</span>
-                    </button>
-                  ) : (
-                    <div className="p-2 rounded-xl bg-emerald-950/40 text-emerald-300 border border-emerald-500/50 text-xs font-bold text-center flex items-center justify-center space-x-1.5">
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>Applied to Library Successfully</span>
+                  {decaidSyncResult.activeEquipment?.grinder && (
+                    <div className="text-[10.5px] text-slate-300">
+                      <span className="text-amber-400 font-semibold">Active Gear: </span>
+                      {[
+                        decaidSyncResult.activeEquipment.grinder,
+                        decaidSyncResult.activeEquipment.burrs ? `(${decaidSyncResult.activeEquipment.burrs})` : "",
+                        decaidSyncResult.activeEquipment.basket,
+                        ...(decaidSyncResult.activeEquipment.tampers || []),
+                        ...(decaidSyncResult.activeEquipment.distributors || []),
+                      ].filter(Boolean).join(" · ")}
                     </div>
                   )}
                 </div>

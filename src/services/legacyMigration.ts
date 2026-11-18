@@ -14,6 +14,8 @@
 import type { ProfileItem, ProfileStep } from "../types/profile.ts";
 import type { ShotRecord } from "../types/shot.ts";
 import type { ActiveEquipmentSelection } from "../types/equipment.ts";
+import type { PantaBean } from "../types/bean.ts";
+import { createNewBeanEntry } from "../types/bean.ts";
 import type { TelemetryPoint } from "./telemetrySimulator.ts";
 import { normalizeShotKey } from "../types/backup.ts";
 
@@ -30,6 +32,23 @@ export interface ShotDeduplicationResult {
   skippedExistingCount: number;
 }
 
+export interface DecaidDiscoveredEquipment {
+  grinders: string[];
+  burrs: string[];
+  baskets: string[];
+  scales: string[];
+  tampers: string[];
+  distributors: string[];
+}
+
+export interface DecaidGatewaySyncResult {
+  profiles: ProfileItem[];
+  shots: ShotRecord[];
+  beans: PantaBean[];
+  equipment: DecaidDiscoveredEquipment;
+  activeEquipment?: Partial<ActiveEquipmentSelection>;
+}
+
 export interface MigrationBatchResult {
   importedProfiles: ProfileItem[];
   importedShots: ShotRecord[];
@@ -43,6 +62,168 @@ export interface MigrationBatchResult {
     totalParsed: number;
     uniqueAdded: number;
     duplicateCount: number;
+  };
+  beans?: PantaBean[];
+  equipment?: DecaidDiscoveredEquipment;
+}
+
+// -------------------------------------------------------------
+// Terroir & Equipment Context Parsers
+// -------------------------------------------------------------
+
+export interface ParsedCoffeeDetails {
+  name: string;
+  roaster: string;
+  countryOfOrigin: string;
+  region?: string;
+  process: string;
+  varietal?: string[];
+  altitude?: string;
+}
+
+export function parseCoffeeDetails(coffeeName?: string, roaster?: string): ParsedCoffeeDetails {
+  if (!coffeeName || !coffeeName.trim()) {
+    return {
+      name: "Imported Coffee",
+      roaster: (roaster && roaster.trim()) || "Unknown Roaster",
+      countryOfOrigin: "Single Origin",
+      process: "Washed",
+    };
+  }
+  const raw = coffeeName.trim();
+
+  // Known coffee origin countries
+  const countries = [
+    "Ethiopia", "Kenya", "Colombia", "Panama", "Guatemala", "Costa Rica",
+    "Brazil", "Rwanda", "Burundi", "Honduras", "El Salvador", "Indonesia",
+    "Yemen", "Ecuador", "Peru", "Mexico", "Tanzania", "Uganda"
+  ];
+  const country = countries.find((c) => new RegExp(`\\b${c}\\b`, "i").test(raw)) || "Single Origin";
+
+  // Known processing methods
+  const processes = [
+    "Anaerobic Natural", "Anaerobic Washed", "Thermal Shock", "Double Fermentation",
+    "Washed", "Natural", "Honey", "Wet Hulled"
+  ];
+  let process = "Washed";
+  for (const p of processes) {
+    if (new RegExp(`\\b${p}\\b`, "i").test(raw)) {
+      process = p;
+      break;
+    }
+  }
+
+  // Altitude extraction (e.g. "1,900 - 2,300 masl", "2100m")
+  const altMatch = raw.match(/([0-9,.\s-]+)\s*(?:masl|m\.a\.s\.l|m\b)/i);
+  const altitude = altMatch ? altMatch[0].replace(/^[^0-9]+/, "").trim() : undefined;
+
+  // Varietals extraction
+  const varietalKeywords = [
+    "Heirloom", "SL28", "SL34", "Ruiru11", "Batian", "Geisha", "Gesha",
+    "Pink Bourbon", "Red Bourbon", "Yellow Bourbon", "Bourbon", "Caturra",
+    "Castillo", "Typica", "Pacamara", "Catuai", "Kurume", "Dega", "Sidra",
+    "Wush Wush", "Java"
+  ];
+  const foundVarietals = varietalKeywords.filter((v) => new RegExp(`\\b${v}\\b`, "i").test(raw));
+
+  // Region / Area extraction
+  const regionKeywords = [
+    "Guji", "Yirgacheffe", "Sidama", "Nyeri", "Kirinyaga", "Inoi",
+    "Hambela Wamena", "Hambela", "Huila", "Cauca", "Antioquia", "Boquete", "Tarrazu"
+  ];
+  const foundRegion = regionKeywords.find((r) => new RegExp(`\\b${r}\\b`, "i").test(raw));
+
+  // Clean Lot Name (first segments before process/country/varietals)
+  const segments = raw.split(/,\s*/);
+  let name = segments[0] || "Imported Coffee";
+  if (
+    segments.length > 1 &&
+    !processes.some((p) => segments[1].toLowerCase().includes(p.toLowerCase())) &&
+    !countries.some((c) => segments[1].toLowerCase().includes(c.toLowerCase())) &&
+    !varietalKeywords.some((v) => segments[1].toLowerCase().includes(v.toLowerCase()))
+  ) {
+    name = `${segments[0]}, ${segments[1]}`;
+  }
+
+  return {
+    name: name.trim(),
+    roaster: (roaster && roaster.trim()) || "Unknown Roaster",
+    countryOfOrigin: country,
+    region: foundRegion,
+    process,
+    varietal: foundVarietals.length > 0 ? foundVarietals : undefined,
+    altitude,
+  };
+}
+
+export interface ParsedEquipmentDetails {
+  grinder?: string;
+  burrs?: string;
+  basket?: string;
+  scale?: string;
+  grindSetting: string;
+  tampers: string[];
+  distributors: string[];
+}
+
+export function parseEquipmentDetails(
+  grinderModel?: string,
+  grinderSetting?: string,
+  scaleModel?: string
+): ParsedEquipmentDetails {
+  let grinder = grinderModel ? grinderModel.trim() : undefined;
+  let burrs: string | undefined = undefined;
+  let grind = "2.0";
+  let basket: string | undefined = undefined;
+  const tampers: string[] = [];
+  const distributors: string[] = [];
+
+  if (grinder) {
+    // Normalize known typos like "Laom" -> "Lagom"
+    grinder = grinder.replace(/\bLaom\b/gi, "Lagom");
+    const burrMatch = grinder.match(/with\s+(.+)$/i);
+    if (burrMatch) {
+      burrs = burrMatch[1].replace(/burrs?$/i, "").trim();
+      grinder = grinder.replace(/\s+with\s+.+$/i, "").trim();
+    }
+  }
+
+  if (grinderSetting) {
+    const s = grinderSetting.trim();
+
+    // 1. Extract numeric grind setting (leading number or number followed by grind/setting)
+    const grindMatch = s.match(/^\s*([0-9]+(?:\.[0-9]+)?)/i) || s.match(/([0-9]+(?:\.[0-9]+)?)\s*(?:grind|setting)?/i);
+    if (grindMatch) grind = grindMatch[1];
+
+    // 2. Extract leveler / distributor (e.g. "6.5 mm spacers on leveler")
+    const levelerMatch = s.match(/([^,+]+leveler[^,+]*|[^,+]*spacers[^,+]*)/i);
+    if (levelerMatch) {
+      distributors.push(levelerMatch[1].trim());
+    }
+
+    // 3. Extract tamper (e.g. "Bravo Tamper", "Decent Tamper")
+    const tamperMatch = s.match(/([^,+]+tamper[^,+]*)/i);
+    if (tamperMatch) {
+      tampers.push(tamperMatch[1].trim());
+    }
+
+    // 4. Extract basket (e.g. "HE basket", "IMS 18g", "Wafo Spirit")
+    const basketMatch = s.match(/([^,+]+basket[^,+]*|\b(?:HE|VST|IMS|Wafo|Decent\s+[CN]B)\b[^,+]*)/i);
+    if (basketMatch) {
+      let bStr = basketMatch[1].trim();
+      if (/^HE\s*basket$/i.test(bStr)) bStr = "HE Basket";
+      basket = bStr;
+    }
+  }
+
+  return {
+    grinder,
+    burrs,
+    basket: basket || (grinder ? "HE Basket" : undefined),
+    scale: scaleModel || undefined,
+    grindSetting: grind,
+    tampers,
+    distributors,
   };
 }
 
@@ -107,6 +288,184 @@ export function extractTopLevelBracedItems(block: string): string[] {
 // TCL / JSON Profile Parser
 // -------------------------------------------------------------
 
+// -------------------------------------------------------------
+// Decaid v2 JSON & Gateway Object Parsers
+// -------------------------------------------------------------
+
+export function parseDecaidProfile(item: any): ProfileItem | null {
+  if (!item) return null;
+  const p = item.profile || item;
+  if (!p || (!p.title && !p.name)) return null;
+
+  const title = String(p.title || p.name || "Imported Profile").trim();
+  const notes = String(p.notes || "").trim();
+  const author = String(p.author || "Decent").trim();
+  const beverage_type = p.beverage_type || "espresso";
+  const target_temperature = Number(p.tank_temperature || p.target_temperature || 93.0);
+  const target_weight = Number(p.target_weight || p.final_desired_shot_weight || 36.0);
+  const target_volume = Number(p.target_volume || 0);
+
+  const steps: ProfileStep[] = Array.isArray(p.steps)
+    ? p.steps.map((st: any) => ({
+        name: st.name || "Extraction Step",
+        pump: st.pump === "flow" ? "flow" : "pressure",
+        transition: st.transition === "smooth" ? "smooth" : "fast",
+        sensor: st.sensor === "water" ? "water" : "coffee",
+        pressure: String(st.pressure ?? 0),
+        flow: String(st.flow ?? 0),
+        temperature: String(st.temperature ?? target_temperature),
+        seconds: String(st.seconds ?? 10),
+        volume: String(st.volume ?? 0),
+        weight: String(st.weight ?? 0),
+        exit: st.exit || undefined,
+        limiter: st.limiter || undefined,
+      }))
+    : [];
+
+  return {
+    id: item.id || `profile-${normalizeProfileTitle(title)}-${Date.now()}`,
+    title,
+    author,
+    category: beverage_type === "filter" ? "filter" : "custom",
+    beverage_type,
+    notes,
+    target_temperature,
+    target_weight,
+    target_volume,
+    steps: steps.length > 0 ? steps : undefined,
+    isCustom: true,
+    createdAt: item.createdAt || new Date().toISOString(),
+    updatedAt: item.updatedAt || new Date().toISOString(),
+  };
+}
+
+export function parseDecaidShot(item: any): ShotRecord | null {
+  if (!item) return null;
+
+  // 1. Direct PantaRhei ShotRecord format
+  const isDirectShotRecord = item.beanName !== undefined && item.profileTitle !== undefined;
+  if (isDirectShotRecord) {
+    return {
+      id: item.id || `shot-${item.timestamp || Date.now()}`,
+      timestamp: item.timestamp || Date.now(),
+      dateFormatted: item.dateFormatted || new Date(item.timestamp || Date.now()).toLocaleDateString(),
+      beanId: item.beanId || "bean-imported",
+      beanName: item.beanName || "Imported Coffee",
+      roaster: item.roaster || "Unknown Roaster",
+      countryOfOrigin: item.countryOfOrigin,
+      process: item.process,
+      roastDate: item.roastDate,
+      profileTitle: item.profileTitle || "Imported Profile",
+      profileId: item.profileId,
+      targetDose: item.targetDose || item.actualDose || 18.0,
+      targetYield: item.targetYield || item.actualYield || 36.0,
+      grindSetting: String(item.grindSetting || "4.0"),
+      basket: item.basket || "CB",
+      waterTemperature: item.waterTemperature || 93.0,
+      equipment: item.equipment,
+      actualDose: item.actualDose || 18.0,
+      actualYield: item.actualYield || 36.0,
+      ratio: item.ratio || (item.actualYield && item.actualDose ? Math.round((item.actualYield / item.actualDose) * 100) / 100 : 2.0),
+      durationSeconds: item.durationSeconds || 28.0,
+      peakPressure: item.peakPressure || 9.0,
+      avgPressure: item.avgPressure || 6.5,
+      avgFlow: item.avgFlow || 2.0,
+      tds: item.tds,
+      ey: item.ey,
+      channelDetected: Boolean(item.channelDetected),
+      channelCount: item.channelCount || 0,
+      rating: item.rating || 8.0,
+      tags: Array.isArray(item.tags) ? item.tags : ["Imported"],
+      baristaNotes: item.baristaNotes || "",
+      telemetry: Array.isArray(item.telemetry) ? item.telemetry : [],
+    };
+  }
+
+  // 2. Decaid Gateway Shot structure: { id, timestamp, workflow: { name, profile, context }, annotations: { ... } }
+  const ctx = item.workflow?.context || {};
+  const annotations = item.annotations || {};
+
+  const rawTimestamp = item.timestamp ? Date.parse(item.timestamp) : Date.now();
+  const timestamp = isNaN(rawTimestamp) ? Date.now() : rawTimestamp;
+  const dateFormatted = new Date(timestamp).toLocaleDateString([], {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const coffee = parseCoffeeDetails(ctx.coffeeName, ctx.coffeeRoaster);
+  const eq = parseEquipmentDetails(ctx.grinderModel, ctx.grinderSetting);
+
+  const targetDose = Number(ctx.targetDoseWeight || annotations.actualDoseWeight || 18.0);
+  const targetYield = Number(ctx.targetYield || annotations.actualYield || 36.0);
+  const actualDose = Number(annotations.actualDoseWeight || ctx.targetDoseWeight || 18.0);
+  const actualYield = Number(annotations.actualYield || ctx.targetYield || 36.0);
+  const ratio = actualDose > 0 ? Math.round((actualYield / actualDose) * 100) / 100 : 2.0;
+
+  const profileTitle = item.workflow?.name || item.workflow?.profile?.title || "Decent Profile";
+  const profileId = item.workflow?.id;
+
+  const tags: string[] = [
+    "Imported from Decaid",
+    coffee.countryOfOrigin,
+    coffee.process,
+    coffee.roaster,
+    eq.grinder,
+    eq.burrs,
+    eq.basket,
+    ...eq.tampers,
+  ].filter(Boolean) as string[];
+
+  const baristaNotesParts: string[] = [];
+  if (ctx.baristaName) baristaNotesParts.push(`Barista: ${ctx.baristaName}`);
+  if (ctx.drinkerName) baristaNotesParts.push(`Drinker: ${ctx.drinkerName}`);
+  if (ctx.grinderSetting) baristaNotesParts.push(`Prep: ${ctx.grinderSetting}`);
+
+  return {
+    id: item.id || `decaid-${timestamp}`,
+    timestamp,
+    dateFormatted,
+    beanId: `bean-${normalizeProfileTitle(coffee.name)}`,
+    beanName: coffee.name,
+    roaster: coffee.roaster,
+    countryOfOrigin: coffee.countryOfOrigin,
+    process: coffee.process,
+    profileTitle,
+    profileId,
+    targetDose,
+    targetYield,
+    grindSetting: eq.grindSetting,
+    basket: eq.basket || "CB",
+    waterTemperature: 93.0,
+    equipment: {
+      grinder: eq.grinder,
+      burrs: eq.burrs,
+      basket: eq.basket,
+      scale: eq.scale,
+      tampers: eq.tampers,
+      distributors: eq.distributors,
+      wdt: [],
+      rdt: [],
+    },
+    actualDose,
+    actualYield,
+    ratio,
+    durationSeconds: 28.0,
+    peakPressure: 9.0,
+    avgPressure: 6.5,
+    avgFlow: 2.0,
+    channelDetected: false,
+    channelCount: 0,
+    rating: annotations.enjoyment ? Number(annotations.enjoyment) : 8.5,
+    tds: annotations.drinkTds ? Number(annotations.drinkTds) : undefined,
+    ey: annotations.drinkEy ? Number(annotations.drinkEy) : undefined,
+    tags,
+    baristaNotes: baristaNotesParts.join(" · "),
+    telemetry: [],
+  };
+}
+
 /**
  * Parses a profile from a .tcl or .json string
  */
@@ -122,23 +481,12 @@ export function parseTclProfile(
   if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
     try {
       const parsed = JSON.parse(trimmed);
-      if (parsed && (parsed.title || parsed.profile_title || parsed.steps)) {
-        const title = parsed.title || parsed.profile_title || filename?.replace(/\.(json|tcl)$/i, "") || "Imported Profile";
-        return {
-          id: parsed.id || `profile-${normalizeProfileTitle(title)}-${Date.now()}`,
-          title: String(title).trim(),
-          author: String(parsed.author || "Imported").trim(),
-          category: parsed.category || "custom",
-          beverage_type: parsed.beverage_type || "espresso",
-          notes: parsed.notes || parsed.profile_notes || "",
-          target_temperature: parsed.tank_temperature || parsed.target_temperature || 93.0,
-          target_weight: parsed.target_weight || parsed.final_desired_shot_weight || 36.0,
-          target_volume: parsed.target_volume || parsed.final_desired_shot_volume || 0,
-          steps: Array.isArray(parsed.steps) ? parsed.steps : [],
-          isCustom: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
+      const decaidProf = parseDecaidProfile(parsed);
+      if (decaidProf) {
+        if (filename && decaidProf.title === "Imported Profile") {
+          decaidProf.title = filename.replace(/\.(json|tcl)$/i, "");
+        }
+        return decaidProf;
       }
     } catch {}
   }
@@ -243,42 +591,8 @@ export function parseShotFile(content: string, filename?: string): ShotRecord | 
   if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
     try {
       const parsed = JSON.parse(trimmed);
-      if (parsed && (parsed.id || parsed.timestamp || parsed.telemetry)) {
-        return {
-          id: parsed.id || `shot-${parsed.timestamp || Date.now()}`,
-          timestamp: parsed.timestamp || Date.now(),
-          dateFormatted: parsed.dateFormatted || new Date(parsed.timestamp || Date.now()).toLocaleDateString(),
-          beanId: parsed.beanId || "bean-imported",
-          beanName: parsed.beanName || "Imported Coffee",
-          roaster: parsed.roaster || "Unknown Roaster",
-          countryOfOrigin: parsed.countryOfOrigin,
-          process: parsed.process,
-          roastDate: parsed.roastDate,
-          profileTitle: parsed.profileTitle || "Imported Profile",
-          profileId: parsed.profileId,
-          targetDose: parsed.targetDose || parsed.actualDose || 18.0,
-          targetYield: parsed.targetYield || parsed.actualYield || 36.0,
-          grindSetting: String(parsed.grindSetting || "4.0"),
-          basket: parsed.basket || "CB",
-          waterTemperature: parsed.waterTemperature || 93.0,
-          equipment: parsed.equipment,
-          actualDose: parsed.actualDose || 18.0,
-          actualYield: parsed.actualYield || 36.0,
-          ratio: parsed.ratio || (parsed.actualYield && parsed.actualDose ? Math.round((parsed.actualYield / parsed.actualDose) * 100) / 100 : 2.0),
-          durationSeconds: parsed.durationSeconds || 28.0,
-          peakPressure: parsed.peakPressure || 9.0,
-          avgPressure: parsed.avgPressure || 6.5,
-          avgFlow: parsed.avgFlow || 2.0,
-          tds: parsed.tds,
-          ey: parsed.ey,
-          channelDetected: Boolean(parsed.channelDetected),
-          channelCount: parsed.channelCount || 0,
-          rating: parsed.rating || 8.0,
-          tags: Array.isArray(parsed.tags) ? parsed.tags : ["Imported"],
-          baristaNotes: parsed.baristaNotes || "",
-          telemetry: Array.isArray(parsed.telemetry) ? parsed.telemetry : [],
-        };
-      }
+      const decaidShot = parseDecaidShot(parsed);
+      if (decaidShot) return decaidShot;
     } catch {}
   }
 
@@ -593,50 +907,128 @@ export function deduplicateShots(
 // -------------------------------------------------------------
 
 export async function syncFromDecaidGateway(
-  baseUrl: string = "http://localhost:8080"
-): Promise<{ profiles: ProfileItem[]; shots: ShotRecord[] }> {
-  const result: { profiles: ProfileItem[]; shots: ShotRecord[] } = {
+  baseUrl: string = "http://localhost:8080",
+  limit: number = 100
+): Promise<DecaidGatewaySyncResult> {
+  const result: DecaidGatewaySyncResult = {
     profiles: [],
     shots: [],
+    beans: [],
+    equipment: {
+      grinders: [],
+      burrs: [],
+      baskets: [],
+      scales: [],
+      tampers: [],
+      distributors: [],
+    },
   };
+
+  const discoveredBeansMap = new Map<string, PantaBean>();
+  const grindersSet = new Set<string>();
+  const burrsSet = new Set<string>();
+  const basketsSet = new Set<string>();
+  const scalesSet = new Set<string>();
+  const tampersSet = new Set<string>();
+  const distributorsSet = new Set<string>();
 
   try {
     // 1. Fetch profiles from Decaid
     const profRes = await fetch(`${baseUrl}/api/v1/profiles`, {
       headers: { "Content-Type": "application/json" },
-      signal: AbortSignal.timeout(4000),
+      signal: AbortSignal.timeout(5000),
     });
     if (profRes.ok) {
       const data = await profRes.json();
-      if (Array.isArray(data)) {
-        for (const item of data) {
-          const parsed = parseTclProfile(JSON.stringify(item));
-          if (parsed) result.profiles.push(parsed);
-        }
+      const items = Array.isArray(data) ? data : Array.isArray(data?.items) ? data.items : [];
+      for (const item of items) {
+        const parsed = parseDecaidProfile(item);
+        if (parsed) result.profiles.push(parsed);
       }
     }
   } catch (err) {
-    console.warn("[PantaRhei] Decaid Gateway profiles endpoint unreachable, using local:", err);
+    console.warn("[PantaRhei] Decaid Gateway profiles endpoint unreachable:", err);
   }
 
   try {
     // 2. Fetch historical shots from Decaid
-    const shotRes = await fetch(`${baseUrl}/api/v1/shots`, {
+    const shotRes = await fetch(`${baseUrl}/api/v1/shots?limit=${limit}`, {
       headers: { "Content-Type": "application/json" },
-      signal: AbortSignal.timeout(4000),
+      signal: AbortSignal.timeout(6000),
     });
     if (shotRes.ok) {
       const data = await shotRes.json();
-      if (Array.isArray(data)) {
-        for (const item of data) {
-          const parsed = parseShotFile(JSON.stringify(item));
-          if (parsed) result.shots.push(parsed);
+      const items = Array.isArray(data) ? data : Array.isArray(data?.items) ? data.items : [];
+      for (const item of items) {
+        const shot = parseDecaidShot(item);
+        if (!shot) continue;
+        result.shots.push(shot);
+
+        // Discovered Equipment Indexing
+        if (shot.equipment) {
+          if (shot.equipment.grinder) grindersSet.add(shot.equipment.grinder);
+          if (shot.equipment.burrs) burrsSet.add(shot.equipment.burrs);
+          if (shot.equipment.basket) basketsSet.add(shot.equipment.basket);
+          if (shot.equipment.scale) scalesSet.add(shot.equipment.scale);
+          for (const t of shot.equipment.tampers || []) tampersSet.add(t);
+          for (const d of shot.equipment.distributors || []) distributorsSet.add(d);
+        }
+
+        // Discovered Beans & Terroir Indexing
+        const ctx = item.workflow?.context || {};
+        const coffee = parseCoffeeDetails(ctx.coffeeName, ctx.coffeeRoaster);
+        const beanKey = `${normalizeProfileTitle(coffee.name)}-${normalizeProfileTitle(coffee.roaster)}`;
+        if (coffee.name && !discoveredBeansMap.has(beanKey)) {
+          const newBean = createNewBeanEntry({
+            name: coffee.name,
+            roaster: coffee.roaster,
+            countryOfOrigin: coffee.countryOfOrigin,
+            region: coffee.region,
+            process: coffee.process,
+            varietal: coffee.varietal,
+            altitude: coffee.altitude,
+            totalGrams: 250,
+            remainingGrams: 250,
+            targetDose: shot.targetDose,
+            targetYield: shot.targetYield,
+            targetGrind: shot.grindSetting,
+            preferredProfileId: shot.profileTitle,
+            preferredBasket: shot.basket,
+          });
+          discoveredBeansMap.set(beanKey, newBean);
+        }
+      }
+
+      // If shots were found, set active equipment from the latest shot
+      if (result.shots.length > 0) {
+        const latestShot = result.shots[0];
+        if (latestShot.equipment) {
+          result.activeEquipment = {
+            grinder: latestShot.equipment.grinder,
+            burrs: latestShot.equipment.burrs,
+            basket: latestShot.equipment.basket,
+            scale: latestShot.equipment.scale,
+            tampers: latestShot.equipment.tampers || [],
+            distributors: latestShot.equipment.distributors || [],
+            wdt: [],
+            rdt: [],
+          };
         }
       }
     }
   } catch (err) {
-    console.warn("[PantaRhei] Decaid Gateway shots endpoint unreachable, using local:", err);
+    console.warn("[PantaRhei] Decaid Gateway shots endpoint unreachable:", err);
   }
+
+  result.beans = Array.from(discoveredBeansMap.values());
+  result.equipment = {
+    grinders: Array.from(grindersSet),
+    burrs: Array.from(burrsSet),
+    baskets: Array.from(basketsSet),
+    scales: Array.from(scalesSet),
+    tampers: Array.from(tampersSet),
+    distributors: Array.from(distributorsSet),
+  };
 
   return result;
 }

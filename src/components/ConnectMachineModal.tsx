@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { decaid } from "../services/decaidConnection.ts";
 import type {
   MachineConnectionStatus,
@@ -9,17 +9,25 @@ import type {
 import { SUPPORTED_SCALE_MODELS } from "../types/device.ts";
 import type { ProfileItem } from "../types/profile.ts";
 import type { ShotRecord } from "../types/shot.ts";
+import type { PantaBean } from "../types/bean.ts";
+import type { EquipmentInventory, ActiveEquipmentSelection } from "../types/equipment.ts";
 import {
-  processMigrationFiles,
   syncFromDecaidGateway,
-  type MigrationBatchResult,
+  type DecaidGatewaySyncResult,
 } from "../services/legacyMigration.ts";
 import {
   loadCustomProfilesFromStorage,
   saveCustomProfilesToStorage,
 } from "../types/profile.ts";
 import { saveShotHistoryToStorage } from "../types/shot.ts";
-import { mergeProfiles, mergeShots } from "../types/backup.ts";
+import { loadBeansFromStorage, saveBeansToStorage } from "../types/bean.ts";
+import {
+  loadEquipmentInventory,
+  saveEquipmentInventory,
+  loadActiveEquipment,
+  saveActiveEquipment,
+} from "../types/equipment.ts";
+import { mergeProfiles, mergeShots, mergeBeans } from "../types/backup.ts";
 import {
   Coffee,
   Scale,
@@ -30,19 +38,24 @@ import {
   X,
   AlertTriangle,
   Play,
-  FolderOpen,
   CheckCircle2,
   ArrowRight,
-  ShieldCheck,
-  Layers,
-  History,
+  ArrowLeft,
+  Sparkles,
+  SkipForward,
 } from "lucide-react";
 
 interface ConnectMachineModalProps {
   isOpen: boolean;
   onClose: () => void;
   onContinueSimulator: () => void;
-  onImportData?: (data: { profiles: ProfileItem[]; shots: ShotRecord[] }) => void;
+  onImportData?: (data: {
+    profiles: ProfileItem[];
+    shots: ShotRecord[];
+    beans?: PantaBean[];
+    equipment?: Partial<EquipmentInventory>;
+    activeEquipment?: Partial<ActiveEquipmentSelection>;
+  }) => void;
   existingProfiles?: ProfileItem[];
   existingShots?: ShotRecord[];
 }
@@ -55,35 +68,32 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
   existingProfiles = [],
   existingShots = [],
 }) => {
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [machineStatus, setMachineStatus] = useState<MachineConnectionStatus>(() => decaid.getMachineStatus());
   const [pairedScale, setPairedScale] = useState<PairedScaleInfo | null>(() => decaid.getPairedScale());
 
   const [hostInput, setHostInput] = useState<string>(() => decaid.getHost());
   const [portInput, setPortInput] = useState<number>(() => decaid.getPort());
 
-  // Scanning state
+  // Machine discovery state
   const [isScanningMachines, setIsScanningMachines] = useState(false);
   const [discoveredMachines, setDiscoveredMachines] = useState<DiscoveredMachine[]>([]);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+
+  // Scale discovery state
   const [isScanningScales, setIsScanningScales] = useState(false);
   const [discoveredScales, setDiscoveredScales] = useState<DiscoveredScale[]>([]);
 
-  const [activeTab, setActiveTab] = useState<"machine" | "scale" | "sync">("machine");
-  const [dontShowAgain, setDontShowAgain] = useState(false);
-  const [connectionError, setConnectionError] = useState<string | null>(null);
-
-  // Folder & Gateway Migration State
-  const historyInputRef = useRef<HTMLInputElement>(null);
-  const profilesInputRef = useRef<HTMLInputElement>(null);
-  const allFolderInputRef = useRef<HTMLInputElement>(null);
-
-  const [isProcessingFiles, setIsProcessingFiles] = useState(false);
+  // Gateway Sync State
   const [isSyncingGateway, setIsSyncingGateway] = useState(false);
-  const [migrationResult, setMigrationResult] = useState<MigrationBatchResult | null>(null);
-  const [isMigrationApplied, setIsMigrationApplied] = useState(false);
+  const [syncResult, setSyncResult] = useState<DecaidGatewaySyncResult | null>(null);
+  const [isSyncApplied, setIsSyncApplied] = useState(false);
   const [syncFeedback, setSyncFeedback] = useState<{
     type: "success" | "error" | "info";
     message: string;
   } | null>(null);
+
+  const [dontShowAgain, setDontShowAgain] = useState(false);
 
   // Sync reactive device changes
   useEffect(() => {
@@ -102,7 +112,7 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
     if (!ok) {
       setConnectionError(`Could not reach Decaid at ${hostInput}:${portInput}. Ensure Decaid is running with REST API enabled.`);
     } else {
-      setActiveTab("scale");
+      setStep(2);
     }
   };
 
@@ -123,10 +133,10 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
       setHostInput(h || "localhost");
       if (p) setPortInput(parseInt(p, 10));
       await decaid.connectLiveMachine(h, p ? parseInt(p, 10) : 8080);
-      setActiveTab("scale");
+      setStep(2);
     } else {
       await decaid.connectLiveMachine();
-      setActiveTab("scale");
+      setStep(2);
     }
   };
 
@@ -142,7 +152,7 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
 
   const handlePairScale = async (scale: DiscoveredScale) => {
     await decaid.pairScale(scale);
-    setActiveTab("sync");
+    setStep(3);
   };
 
   const handleDisconnectScale = () => {
@@ -162,90 +172,84 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
   };
 
   // -------------------------------------------------------------
-  // File & Gateway Migration Handlers
+  // Decaid Automated Single-Action Gateway Import
   // -------------------------------------------------------------
-
-  const handleProcessUploadedFiles = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    setIsProcessingFiles(true);
-    setSyncFeedback(null);
-    setIsMigrationApplied(false);
-
-    try {
-      const currentCustom = loadCustomProfilesFromStorage();
-      const allProfiles = [...existingProfiles, ...currentCustom];
-      const result = await processMigrationFiles(files, allProfiles, existingShots);
-      setMigrationResult(result);
-
-      if (result.importedProfiles.length > 0 || result.importedShots.length > 0) {
-        setSyncFeedback({
-          type: "info",
-          message: `Parsed ${result.profileStats.totalParsed} profiles (${result.profileStats.uniqueAdded} unique, ${result.profileStats.profiles2OverridesCount} profiles2 overrides) and ${result.shotStats.totalParsed} shots. Click "Apply to Library" to finish.`,
-        });
-      } else {
-        setSyncFeedback({
-          type: "info",
-          message: "Files processed. All discovered records already exist in your library (no duplicates added).",
-        });
-      }
-    } catch (err: any) {
-      setSyncFeedback({
-        type: "error",
-        message: `Failed to process files: ${err.message || "Unknown error"}`,
-      });
-    } finally {
-      setIsProcessingFiles(false);
-    }
-  };
 
   const handleSyncFromGateway = async () => {
     setIsSyncingGateway(true);
     setSyncFeedback(null);
-    setIsMigrationApplied(false);
+    setIsSyncApplied(false);
 
     try {
       const gatewayUrl = `http://${hostInput}:${portInput}`;
-      const data = await syncFromDecaidGateway(gatewayUrl);
+      const data = await syncFromDecaidGateway(gatewayUrl, 100);
 
-      const currentCustom = loadCustomProfilesFromStorage();
-      const allProfiles = [...existingProfiles, ...currentCustom];
+      // Save profiles
+      if (data.profiles.length > 0) {
+        const currentCustom = loadCustomProfilesFromStorage();
+        const mergedProfs = mergeProfiles([...existingProfiles, ...currentCustom], data.profiles, "merge_deduplicate");
+        saveCustomProfilesToStorage(mergedProfs);
+      }
 
-      // Direct merge
-      const mergedShots = mergeShots(existingShots, data.shots, "merge_deduplicate");
-      const newShots = mergedShots.filter((s) => !existingShots.some((es) => es.id === s.id));
+      // Save shots
+      if (data.shots.length > 0) {
+        const mergedShots = mergeShots(existingShots, data.shots, "merge_deduplicate");
+        saveShotHistoryToStorage(mergedShots);
+      }
 
-      const mergedProfs = mergeProfiles(allProfiles, data.profiles, "merge_deduplicate");
-      const newProfs = mergedProfs.filter((p) => !allProfiles.some((ep) => ep.title === p.title));
+      // Save beans
+      if (data.beans.length > 0) {
+        const currentBeans = loadBeansFromStorage();
+        const mergedBeansList = mergeBeans(currentBeans, data.beans, "merge_deduplicate");
+        saveBeansToStorage(mergedBeansList);
+      }
 
-      const result: MigrationBatchResult = {
-        importedProfiles: newProfs,
-        importedShots: newShots,
-        profileStats: {
-          totalParsed: data.profiles.length,
-          uniqueAdded: newProfs.length,
-          duplicateCount: data.profiles.length - newProfs.length,
-          profiles2OverridesCount: 0,
-        },
-        shotStats: {
-          totalParsed: data.shots.length,
-          uniqueAdded: newShots.length,
-          duplicateCount: data.shots.length - newShots.length,
-        },
-      };
+      // Save equipment inventory
+      if (data.equipment) {
+        const currentInv = loadEquipmentInventory();
+        const updatedInv: EquipmentInventory = {
+          ...currentInv,
+          grinders: Array.from(new Set([...currentInv.grinders, ...data.equipment.grinders])),
+          burrs: Array.from(new Set([...currentInv.burrs, ...data.equipment.burrs])),
+          baskets: Array.from(new Set([...currentInv.baskets, ...data.equipment.baskets])),
+          scales: Array.from(new Set([...currentInv.scales, ...data.equipment.scales])),
+          tampers: Array.from(new Set([...currentInv.tampers, ...data.equipment.tampers])),
+          distributors: Array.from(new Set([...currentInv.distributors, ...data.equipment.distributors])),
+        };
+        saveEquipmentInventory(updatedInv);
+      }
 
-      setMigrationResult(result);
-
-      if (newProfs.length > 0 || newShots.length > 0) {
-        setSyncFeedback({
-          type: "info",
-          message: `Found ${newProfs.length} new profiles and ${newShots.length} historical shots on Decaid Gateway.`,
-        });
-      } else {
-        setSyncFeedback({
-          type: "success",
-          message: "Decaid Gateway queried: Your PantaRhei library is already fully up to date.",
+      // Update active equipment if found
+      if (data.activeEquipment) {
+        const currentActive = loadActiveEquipment();
+        saveActiveEquipment({
+          ...currentActive,
+          grinder: data.activeEquipment.grinder || currentActive.grinder,
+          burrs: data.activeEquipment.burrs || currentActive.burrs,
+          basket: data.activeEquipment.basket || currentActive.basket,
+          tampers: data.activeEquipment.tampers && data.activeEquipment.tampers.length > 0 ? data.activeEquipment.tampers : currentActive.tampers,
+          distributors: data.activeEquipment.distributors && data.activeEquipment.distributors.length > 0 ? data.activeEquipment.distributors : currentActive.distributors,
         });
       }
+
+      setSyncResult(data);
+      setIsSyncApplied(true);
+
+      // Notify parent app
+      if (onImportData) {
+        onImportData({
+          profiles: data.profiles,
+          shots: data.shots,
+          beans: data.beans,
+          equipment: data.equipment,
+          activeEquipment: data.activeEquipment,
+        });
+      }
+
+      setSyncFeedback({
+        type: "success",
+        message: `Successfully imported ${data.profiles.length} profiles, ${data.shots.length} shots, ${data.beans.length} coffees, and active gear from Decaid!`,
+      });
     } catch (err: any) {
       setSyncFeedback({
         type: "error",
@@ -256,49 +260,33 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
     }
   };
 
-  const handleApplyMigration = () => {
-    if (!migrationResult) return;
-
-    // Apply profiles
-    if (migrationResult.importedProfiles.length > 0) {
-      const existing = loadCustomProfilesFromStorage();
-      const merged = mergeProfiles(existing, migrationResult.importedProfiles, "merge_deduplicate");
-      saveCustomProfilesToStorage(merged);
-    }
-
-    // Apply shots
-    if (migrationResult.importedShots.length > 0) {
-      const merged = mergeShots(existingShots, migrationResult.importedShots, "merge_deduplicate");
-      saveShotHistoryToStorage(merged);
-    }
-
-    // Notify parent if provided
-    if (onImportData) {
-      onImportData({
-        profiles: migrationResult.importedProfiles,
-        shots: migrationResult.importedShots,
-      });
-    }
-
-    setIsMigrationApplied(true);
-    setSyncFeedback({
-      type: "success",
-      message: `Successfully added ${migrationResult.importedProfiles.length} profiles and ${migrationResult.importedShots.length} shots to your library!`,
-    });
-  };
-
   const handleFinishOnboarding = () => {
     if (typeof window !== "undefined") {
       try {
         localStorage.setItem("pantarhei_onboarding_completed", "true");
+        if (dontShowAgain) {
+          localStorage.setItem("pantarhei_dont_show_startup_connect", "true");
+        }
+      } catch {}
+    }
+    onClose();
+  };
+
+  const handleSkipSyncAndFinish = () => {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("pantarhei_onboarding_completed", "true");
+        if (dontShowAgain) {
+          localStorage.setItem("pantarhei_dont_show_startup_connect", "true");
+        }
       } catch {}
     }
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 select-none animate-in fade-in duration-200">
-      <div className="w-[720px] max-h-[94vh] rounded-3xl bg-decent-surface border border-decent-border shadow-2xl flex flex-col p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-3 select-none animate-in fade-in duration-200">
+      <div className="w-[680px] max-w-[96vw] max-h-[94vh] rounded-3xl bg-decent-surface border border-decent-border shadow-2xl flex flex-col p-5">
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-decent-border/60">
           <div className="flex items-center space-x-2.5">
@@ -307,19 +295,19 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
             </div>
             <div>
               <h2 className="text-base font-bold text-white flex items-center space-x-2">
-                <span>PantaRhei Setup & Migration</span>
+                <span>PantaRhei Welcome & Setup</span>
                 {machineStatus === "connected" ? (
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-mono">
-                    CONNECTED
+                    DE1 CONNECTED
                   </span>
                 ) : (
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40 font-mono">
-                    DISCONNECTED
+                    DE1 DISCONNECTED
                   </span>
                 )}
               </h2>
               <p className="text-xs text-decent-muted mt-0.5">
-                Pair your DE1 machine, connect Bluetooth scales, and sync past history & profiles from de1app.
+                Quick 3-step setup: connect your machine, pair a scale, and import past data.
               </p>
             </div>
           </div>
@@ -332,26 +320,27 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
           </button>
         </div>
 
-        {/* 3-Step Wizard Navigation Tabs */}
+        {/* 3-Step Walkthrough Breadcrumbs */}
         <div className="grid grid-cols-3 gap-1.5 p-1 bg-decent-dark/80 rounded-xl border border-decent-border/60 my-3 shrink-0">
           <button
             type="button"
-            onClick={() => setActiveTab("machine")}
+            onClick={() => setStep(1)}
             className={`py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
-              activeTab === "machine"
+              step === 1
                 ? "bg-amber-500/30 text-amber-300 border border-amber-500/50 shadow-sm"
                 : "text-decent-muted hover:text-white"
             }`}
           >
             <Coffee className="w-3.5 h-3.5 mr-1" />
             <span>1. DE1 Machine</span>
+            {machineStatus === "connected" && <span className="w-2 h-2 rounded-full bg-emerald-400 ml-1" />}
           </button>
 
           <button
             type="button"
-            onClick={() => setActiveTab("scale")}
+            onClick={() => setStep(2)}
             className={`py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
-              activeTab === "scale"
+              step === 2
                 ? "bg-sky-500/30 text-sky-300 border border-sky-500/50 shadow-sm"
                 : "text-decent-muted hover:text-white"
             }`}
@@ -363,22 +352,26 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
 
           <button
             type="button"
-            onClick={() => setActiveTab("sync")}
+            onClick={() => setStep(3)}
             className={`py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
-              activeTab === "sync"
+              step === 3
                 ? "bg-purple-500/30 text-purple-300 border border-purple-500/50 shadow-sm"
                 : "text-decent-muted hover:text-white"
             }`}
           >
-            <FolderOpen className="w-3.5 h-3.5 mr-1" />
+            <RefreshCw className="w-3.5 h-3.5 mr-1" />
             <span>3. Sync Past Data</span>
-            {isMigrationApplied && <span className="w-2 h-2 rounded-full bg-emerald-400 ml-1" />}
+            {isSyncApplied && <span className="w-2 h-2 rounded-full bg-emerald-400 ml-1" />}
           </button>
         </div>
 
-        {/* Tab 1: Machine Connection Content */}
-        {activeTab === "machine" && (
-          <div className="flex-1 overflow-y-auto space-y-4 py-1 pr-1 text-xs">
+        {/* Step 1: Connect DE1 Machine */}
+        {step === 1 && (
+          <div className="flex-1 overflow-y-auto space-y-3.5 py-1 pr-1 text-xs">
+            <div className="p-3 rounded-2xl bg-amber-950/30 border border-amber-500/40 text-[11px] text-amber-200/90 leading-relaxed">
+              Connect to your Decent DE1 espresso machine via the local Decaid Bridge (default: <span className="font-mono font-semibold text-white">localhost:8080</span>) or scan for Bluetooth / Network machines below.
+            </div>
+
             {connectionError && (
               <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-500/80 text-rose-300 text-xs flex items-start space-x-2 animate-in fade-in duration-150">
                 <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
@@ -389,17 +382,17 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
               </div>
             )}
 
-            {/* Quick Network Connect via Decaid Bridge */}
+            {/* Network Bridge Connect Form */}
             <div className="p-4 rounded-2xl bg-decent-card border border-decent-border/60 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-white flex items-center space-x-1.5">
                   <Wifi className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Decaid Bridge Address (REST & WebSocket)</span>
+                  <span>Decaid Bridge Address</span>
                 </span>
-                <span className="text-[10px] text-decent-muted font-mono">Standard Port: 8080</span>
+                <span className="text-[10px] text-decent-muted font-mono">Port: 8080</span>
               </div>
 
-              <div className="grid grid-cols-[1fr_90px_110px] gap-2 items-center">
+              <div className="grid grid-cols-[1fr_80px_110px] gap-2 items-center">
                 <div>
                   <label className="text-[10px] text-decent-muted block mb-0.5 uppercase tracking-wider">Host / Tablet IP</label>
                   <input
@@ -437,7 +430,7 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
               </div>
             </div>
 
-            {/* Discover DE1 Machines via BLE or Network Scan */}
+            {/* Discover DE1 Machines */}
             <div className="p-4 rounded-2xl bg-decent-card border border-decent-border/60 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-white flex items-center space-x-1.5">
@@ -483,16 +476,20 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
                 </div>
               ) : (
                 <div className="text-center py-2 text-[11px] text-decent-muted italic">
-                  {isScanningMachines ? "Scanning for active DE1 machines..." : "No machines scanned yet. Click 'Scan DE1' to discover."}
+                  {isScanningMachines ? "Scanning for active DE1 machines..." : "Click 'Scan DE1' to auto-detect nearby machines."}
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {/* Tab 2: Bluetooth Scale Pairing Content */}
-        {activeTab === "scale" && (
-          <div className="flex-1 overflow-y-auto space-y-4 py-1 pr-1 text-xs">
+        {/* Step 2: Connect Bluetooth Scale */}
+        {step === 2 && (
+          <div className="flex-1 overflow-y-auto space-y-3.5 py-1 pr-1 text-xs">
+            <div className="p-3 rounded-2xl bg-sky-950/30 border border-sky-500/40 text-[11px] text-sky-200/90 leading-relaxed">
+              Pair a Bluetooth scale to unlock real-time gravimetric flow curves and automated stop at target yield. If you don't use a Bluetooth scale, tap <span className="font-semibold text-white">"Skip (No Scale)"</span> to continue.
+            </div>
+
             {pairedScale ? (
               <div className="p-4 rounded-2xl bg-emerald-950/30 border border-emerald-500/50 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
@@ -520,11 +517,11 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
                 </button>
               </div>
             ) : (
-              <div className="p-4 rounded-2xl bg-decent-dark/60 border border-decent-border/60 text-center py-4 space-y-2">
-                <Scale className="w-8 h-8 text-decent-muted mx-auto" />
+              <div className="p-4 rounded-2xl bg-decent-dark/60 border border-decent-border/60 text-center py-3.5 space-y-1.5">
+                <Scale className="w-7 h-7 text-decent-muted mx-auto" />
                 <div className="text-xs font-bold text-white">No Bluetooth Scale Paired</div>
                 <p className="text-[11px] text-decent-muted max-w-sm mx-auto">
-                  Pair a Bluetooth scale to enable real-time weight flow curves, flow-by-weight calculation, and automatic stop at target yield.
+                  Click 'Scan Scales' below to pair, or tap 'Skip (No Scale)' to proceed.
                 </p>
               </div>
             )}
@@ -582,14 +579,14 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
 
             {/* Supported Models Badges */}
             <div>
-              <span className="text-[10px] text-decent-muted uppercase tracking-wider block mb-1.5">
-                Officially Supported Scale Protocols
+              <span className="text-[10px] text-decent-muted uppercase tracking-wider block mb-1">
+                Supported Scale Protocols
               </span>
               <div className="flex flex-wrap gap-1">
                 {SUPPORTED_SCALE_MODELS.map((m) => (
                   <span
                     key={m.id}
-                    className="text-[10px] px-2 py-0.5 rounded-md bg-decent-dark text-slate-300 border border-decent-border"
+                    className="text-[9.5px] px-2 py-0.5 rounded-md bg-decent-dark text-slate-300 border border-decent-border"
                   >
                     {m.name}
                   </span>
@@ -599,140 +596,47 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
           </div>
         )}
 
-        {/* Tab 3: Sync History & Profiles (Onboarding / Migration) */}
-        {activeTab === "sync" && (
-          <div className="flex-1 overflow-y-auto space-y-4 py-1 pr-1 text-xs">
-            {/* Hidden File Inputs for Directory / Multi-file picking */}
-            <input
-              ref={historyInputRef}
-              type="file"
-              // @ts-ignore
-              webkitdirectory=""
-              directory=""
-              multiple
-              className="hidden"
-              onChange={(e) => handleProcessUploadedFiles(e.target.files)}
-            />
-            <input
-              ref={profilesInputRef}
-              type="file"
-              // @ts-ignore
-              webkitdirectory=""
-              directory=""
-              multiple
-              className="hidden"
-              onChange={(e) => handleProcessUploadedFiles(e.target.files)}
-            />
-            <input
-              ref={allFolderInputRef}
-              type="file"
-              // @ts-ignore
-              webkitdirectory=""
-              directory=""
-              multiple
-              className="hidden"
-              onChange={(e) => handleProcessUploadedFiles(e.target.files)}
-            />
-
-            {/* Info Banner */}
-            <div className="p-3.5 rounded-2xl bg-purple-950/40 border border-purple-500/50 space-y-1.5">
+        {/* Step 3: Automatic Decaid History & Profile Sync */}
+        {step === 3 && (
+          <div className="flex-1 overflow-y-auto space-y-3.5 py-1 pr-1 text-xs">
+            <div className="p-3.5 rounded-2xl bg-purple-950/30 border border-purple-500/40 space-y-1.5">
               <div className="flex items-center space-x-2 text-purple-300 font-bold text-xs">
-                <FolderOpen className="w-4 h-4" />
-                <span>Sync Existing Extraction History & Profiles</span>
+                <Sparkles className="w-4 h-4 text-purple-400" />
+                <span>Automatic Decaid History & Profile Sync</span>
               </div>
               <p className="text-[11px] text-slate-300 leading-relaxed">
-                Bring in your past espresso shots and custom profiles whether migrating from another Decaid skin or the original <span className="font-mono text-purple-300 font-semibold">de1app</span>.
+                Bring in your extraction profiles, historical shots, coffee inventory, and grinder/basket equipment directly from the Decaid Gateway with a single tap. If you prefer a completely clean start, simply click <span className="font-semibold text-white">"Cancel / Skip Sync"</span> below.
               </p>
             </div>
 
-            {/* Deduplication Guarantee Pill */}
-            <div className="p-3 rounded-2xl bg-decent-dark border border-decent-border/80 flex items-start space-x-2.5">
-              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-              <div className="text-[11px] text-decent-muted">
-                <span className="font-semibold text-slate-200">Anti-Duplication Guarantee:</span> When syncing both <span className="font-mono text-white">profiles/</span> and <span className="font-mono text-white">profiles2/</span>, your customized versions in <span className="font-mono text-amber-300">profiles2/</span> automatically override factory profiles. Duplicate profiles are strictly eliminated to keep your Profile Drawer clean.
+            {/* Single Action Import Card */}
+            <div className="p-4 rounded-2xl bg-decent-card border border-decent-border/80 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <RefreshCw className="w-4 h-4 text-sky-400" />
+                  <span className="text-xs font-bold text-white">Direct Decaid Gateway Sync</span>
+                </div>
+                <span className="text-[10px] text-decent-muted font-mono">
+                  {hostInput}:{portInput}
+                </span>
               </div>
+
+              <p className="text-[11px] text-decent-muted">
+                Fetches all stored profiles from <span className="font-mono text-purple-300">/api/v1/profiles</span> and your past espresso shots from <span className="font-mono text-amber-300">/api/v1/shots</span>, parsing terroir, dose, yield, grinders, burrs, and puck prep into fully searchable records.
+              </p>
+
+              <button
+                type="button"
+                onClick={handleSyncFromGateway}
+                disabled={isSyncingGateway}
+                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-sky-600 hover:from-purple-500 hover:to-sky-500 text-white font-bold text-xs flex items-center justify-center space-x-2 cursor-pointer transition-all active:scale-98 shadow-lg disabled:opacity-60"
+              >
+                <RefreshCw className={`w-4 h-4 ${isSyncingGateway ? "animate-spin" : ""}`} />
+                <span>{isSyncingGateway ? "Importing from Decaid Gateway..." : "Import History & Profiles from Decaid"}</span>
+              </button>
             </div>
 
-            {/* Action Cards Grid: Folder Browse vs Decaid Gateway */}
-            <div className="grid grid-cols-2 gap-3">
-              {/* Option 1: Browse de1app Folders */}
-              <div className="p-3.5 rounded-2xl bg-decent-card border border-decent-border/60 flex flex-col justify-between space-y-3">
-                <div>
-                  <div className="flex items-center space-x-2 text-xs font-bold text-white mb-1">
-                    <History className="w-4 h-4 text-amber-400" />
-                    <span>Browse de1app Folders</span>
-                  </div>
-                  <div className="text-[10px] text-decent-muted">
-                    Select folders on your tablet or computer:
-                    <ul className="list-disc list-inside mt-1 space-y-0.5 font-mono text-[9.5px]">
-                      <li>history/ (.shot files)</li>
-                      <li>profiles/ & profiles2/ (.tcl files)</li>
-                    </ul>
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <div className="grid grid-cols-2 gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => historyInputRef.current?.click()}
-                      disabled={isProcessingFiles}
-                      className="py-1.5 px-2 rounded-xl bg-decent-dark hover:bg-slate-800 border border-decent-border text-white text-[11px] font-semibold flex items-center justify-center space-x-1 cursor-pointer transition-all active:scale-95 shadow-sm"
-                      title="Select the history/ folder containing .shot files"
-                    >
-                      <FolderOpen className="w-3.5 h-3.5 text-amber-400" />
-                      <span>History Folder</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => profilesInputRef.current?.click()}
-                      disabled={isProcessingFiles}
-                      className="py-1.5 px-2 rounded-xl bg-decent-dark hover:bg-slate-800 border border-decent-border text-white text-[11px] font-semibold flex items-center justify-center space-x-1 cursor-pointer transition-all active:scale-95 shadow-sm"
-                      title="Select profiles/ or profiles2/ folder containing .tcl files"
-                    >
-                      <Layers className="w-3.5 h-3.5 text-purple-400" />
-                      <span>Profiles Folder</span>
-                    </button>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => allFolderInputRef.current?.click()}
-                    disabled={isProcessingFiles}
-                    className="w-full py-2 px-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-bold flex items-center justify-center space-x-1.5 cursor-pointer transition-all active:scale-95 shadow-sm"
-                    title="Select root de1app folder to import history and profiles together"
-                  >
-                    <FolderOpen className="w-3.5 h-3.5" />
-                    <span>Browse Entire de1app Folder</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Option 2: Live Decaid Gateway API Sync */}
-              <div className="p-3.5 rounded-2xl bg-decent-card border border-decent-border/60 flex flex-col justify-between space-y-3">
-                <div>
-                  <div className="flex items-center space-x-2 text-xs font-bold text-white mb-1">
-                    <Wifi className="w-4 h-4 text-sky-400" />
-                    <span>Decaid Gateway Sync</span>
-                  </div>
-                  <div className="text-[10px] text-decent-muted">
-                    Fetch past extractions and stored profiles directly from Decaid REST endpoints (<span className="font-mono">/api/v1/profiles</span> & <span className="font-mono">/api/v1/shots</span>).
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleSyncFromGateway}
-                  disabled={isSyncingGateway}
-                  className="w-full py-2 px-3 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 border border-sky-500/40 text-sky-300 text-xs font-bold flex items-center justify-center space-x-1.5 cursor-pointer transition-all active:scale-95 shadow-sm"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${isSyncingGateway ? "animate-spin" : ""}`} />
-                  <span>{isSyncingGateway ? "Querying Gateway..." : "Sync via Decaid Gateway"}</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Migration Feedback Message */}
+            {/* Feedback Toast */}
             {syncFeedback && (
               <div
                 className={`p-3 rounded-xl text-xs flex items-center space-x-2 animate-in fade-in duration-150 ${
@@ -754,55 +658,61 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
               </div>
             )}
 
-            {/* Migration Summary & Apply Card */}
-            {migrationResult && (
-              <div className="p-4 rounded-2xl bg-decent-card border border-decent-border/80 space-y-3">
+            {/* Discovered Records Summary */}
+            {syncResult && (
+              <div className="p-3.5 rounded-2xl bg-decent-card border border-decent-border/80 space-y-2.5 animate-in fade-in duration-150">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-white flex items-center space-x-1.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    <span>Discovered Records & Deduplication Summary</span>
+                    <span>Imported Records & Hardware Equipment</span>
                   </span>
-                  <span className="text-[10px] text-decent-muted font-mono">
-                    Ready to Apply
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-semibold">
+                    SAVED TO LIBRARY
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 text-center">
-                  <div className="p-2.5 rounded-xl bg-decent-dark border border-decent-border">
-                    <div className="text-[10px] text-decent-muted uppercase">Profiles to Add</div>
-                    <div className="text-base font-bold text-white font-mono mt-0.5">
-                      {migrationResult.profileStats.uniqueAdded}
-                    </div>
-                    <div className="text-[9.5px] text-emerald-400 mt-0.5">
-                      {migrationResult.profileStats.duplicateCount} duplicates eliminated ({migrationResult.profileStats.profiles2OverridesCount} profiles2 overrides)
+                <div className="grid grid-cols-4 gap-2 text-center">
+                  <div className="p-2 rounded-xl bg-decent-dark border border-decent-border">
+                    <div className="text-[9.5px] text-decent-muted uppercase">Profiles</div>
+                    <div className="text-sm font-bold text-white font-mono mt-0.5">
+                      {syncResult.profiles.length}
                     </div>
                   </div>
-
-                  <div className="p-2.5 rounded-xl bg-decent-dark border border-decent-border">
-                    <div className="text-[10px] text-decent-muted uppercase">Shots to Add</div>
-                    <div className="text-base font-bold text-white font-mono mt-0.5">
-                      {migrationResult.shotStats.uniqueAdded}
+                  <div className="p-2 rounded-xl bg-decent-dark border border-decent-border">
+                    <div className="text-[9.5px] text-decent-muted uppercase">Shots</div>
+                    <div className="text-sm font-bold text-white font-mono mt-0.5">
+                      {syncResult.shots.length}
                     </div>
-                    <div className="text-[9.5px] text-slate-400 mt-0.5">
-                      {migrationResult.shotStats.duplicateCount} duplicates ignored
+                  </div>
+                  <div className="p-2 rounded-xl bg-decent-dark border border-decent-border">
+                    <div className="text-[9.5px] text-decent-muted uppercase">Coffees</div>
+                    <div className="text-sm font-bold text-white font-mono mt-0.5">
+                      {syncResult.beans.length}
+                    </div>
+                  </div>
+                  <div className="p-2 rounded-xl bg-decent-dark border border-decent-border">
+                    <div className="text-[9.5px] text-decent-muted uppercase">Gear Items</div>
+                    <div className="text-sm font-bold text-white font-mono mt-0.5">
+                      {syncResult.equipment.grinders.length +
+                        syncResult.equipment.burrs.length +
+                        syncResult.equipment.baskets.length +
+                        syncResult.equipment.tampers.length +
+                        syncResult.equipment.distributors.length}
                     </div>
                   </div>
                 </div>
 
-                {!isMigrationApplied ? (
-                  <button
-                    type="button"
-                    onClick={handleApplyMigration}
-                    disabled={migrationResult.importedProfiles.length === 0 && migrationResult.importedShots.length === 0}
-                    className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center space-x-1.5 shadow-md active:scale-95 transition-all cursor-pointer disabled:opacity-50"
-                  >
-                    <Check className="w-4 h-4" />
-                    <span>Apply & Save to PantaRhei Library</span>
-                  </button>
-                ) : (
-                  <div className="p-2.5 rounded-xl bg-emerald-950/40 text-emerald-300 border border-emerald-500/50 text-xs font-bold text-center flex items-center justify-center space-x-1.5">
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Applied to Library Successfully</span>
+                {/* Discovered Gear Detail */}
+                {(syncResult.equipment.grinders.length > 0 || syncResult.equipment.baskets.length > 0) && (
+                  <div className="text-[10.5px] text-slate-300 bg-decent-dark p-2 rounded-xl border border-decent-border/60">
+                    <span className="text-amber-400 font-semibold">Active Hardware: </span>
+                    {[
+                      syncResult.activeEquipment?.grinder,
+                      syncResult.activeEquipment?.burrs ? `(${syncResult.activeEquipment.burrs})` : "",
+                      syncResult.activeEquipment?.basket,
+                      ...(syncResult.activeEquipment?.tampers || []),
+                      ...(syncResult.activeEquipment?.distributors || []),
+                    ].filter(Boolean).join(" · ")}
                   </div>
                 )}
               </div>
@@ -810,7 +720,7 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
           </div>
         )}
 
-        {/* Footer / Wizard Actions */}
+        {/* Footer Walkthrough Navigation */}
         <div className="pt-3 border-t border-decent-border/60 shrink-0 space-y-2">
           <div className="flex items-center justify-between">
             <label className="flex items-center space-x-2 cursor-pointer text-xs text-decent-muted">
@@ -820,51 +730,96 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
                 onChange={(e) => setDontShowAgain(e.target.checked)}
                 className="rounded bg-decent-dark border-decent-border text-amber-500"
               />
-              <span>Don't show this alert on startup</span>
+              <span>Don't show this walkthrough on startup</span>
             </label>
 
             <div className="flex items-center space-x-2">
-              {activeTab === "machine" && (
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("scale")}
-                  className="px-3.5 py-2 rounded-xl bg-decent-dark hover:bg-slate-800 border border-decent-border text-white font-semibold text-xs flex items-center space-x-1.5 cursor-pointer transition-all"
-                >
-                  <span>Next: Scale Pairing</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
+              {/* Step 1 Actions */}
+              {step === 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleContinueSimulator}
+                    className="px-3 py-1.5 rounded-xl bg-decent-dark hover:bg-slate-800 border border-decent-border text-slate-300 font-semibold text-xs flex items-center space-x-1 cursor-pointer transition-all"
+                  >
+                    <Play className="w-3 h-3 fill-current" />
+                    <span>Simulator Mode</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setStep(2)}
+                    className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center space-x-1.5 cursor-pointer transition-all shadow-md"
+                  >
+                    <span>Next: Scale Setup</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </>
               )}
 
-              {activeTab === "scale" && (
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("sync")}
-                  className="px-3.5 py-2 rounded-xl bg-decent-dark hover:bg-slate-800 border border-decent-border text-white font-semibold text-xs flex items-center space-x-1.5 cursor-pointer transition-all"
-                >
-                  <span>Next: Sync Data</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
+              {/* Step 2 Actions */}
+              {step === 2 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setStep(1)}
+                    className="px-3 py-1.5 rounded-xl bg-decent-dark hover:bg-slate-800 border border-decent-border text-slate-300 font-semibold text-xs flex items-center space-x-1 cursor-pointer transition-all"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Back</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setStep(3)}
+                    className="px-3 py-1.5 rounded-xl bg-decent-dark hover:bg-slate-800 border border-slate-600 text-slate-200 font-semibold text-xs flex items-center space-x-1 cursor-pointer transition-all"
+                    title="Continue without pairing a Bluetooth scale"
+                  >
+                    <SkipForward className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Skip (No Scale)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setStep(3)}
+                    className="px-3.5 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs flex items-center space-x-1.5 cursor-pointer transition-all shadow-md"
+                  >
+                    <span>Next: Sync Past Data</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </>
               )}
 
-              {activeTab === "sync" && (
-                <button
-                  type="button"
-                  onClick={handleFinishOnboarding}
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold text-xs flex items-center space-x-1.5 shadow-md active:scale-95 transition-all cursor-pointer"
-                >
-                  <Check className="w-3.5 h-3.5" />
-                  <span>Finish Setup & Enter Cockpit</span>
-                </button>
-              )}
+              {/* Step 3 Actions */}
+              {step === 3 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setStep(2)}
+                    className="px-3 py-1.5 rounded-xl bg-decent-dark hover:bg-slate-800 border border-decent-border text-slate-300 font-semibold text-xs flex items-center space-x-1 cursor-pointer transition-all"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Back</span>
+                  </button>
 
-              <button
-                type="button"
-                onClick={handleContinueSimulator}
-                className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-sky-600 to-sky-500 hover:from-sky-500 hover:to-sky-400 text-white font-bold text-xs flex items-center space-x-1.5 shadow-md active:scale-95 transition-all cursor-pointer"
-              >
-                <Play className="w-3.5 h-3.5 fill-current" />
-                <span>Continue Simulator</span>
-              </button>
+                  <button
+                    type="button"
+                    onClick={handleSkipSyncAndFinish}
+                    className="px-3 py-1.5 rounded-xl bg-decent-dark hover:bg-slate-800 border border-decent-border text-slate-300 font-semibold text-xs flex items-center space-x-1 cursor-pointer transition-all"
+                  >
+                    <span>Cancel / Skip Sync</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleFinishOnboarding}
+                    className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold text-xs flex items-center space-x-1.5 shadow-md active:scale-95 transition-all cursor-pointer"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Finish & Start Brewing</span>
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
