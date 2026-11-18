@@ -68,9 +68,9 @@ export const HomeCafeHeader: React.FC<HomeCafeHeaderProps> = ({
             className="font-bold tracking-wider transition-all duration-200 truncate select-none text-center max-w-full"
             style={{
               fontFamily: config.fontFamily || "inherit",
-              fontSize: `${Math.min(fit.actualFontSize, 22)}px`,
+              fontSize: `${Math.min(fit.actualFontSize, 18)}px`,
               color: config.color || "#f8fafc",
-              letterSpacing: `${config.letterSpacing || 2}px`,
+              letterSpacing: `${config.letterSpacing || 1.5}px`,
               textShadow: "0 2px 8px rgba(0,0,0,0.4)",
             }}
           >
@@ -80,7 +80,7 @@ export const HomeCafeHeader: React.FC<HomeCafeHeaderProps> = ({
             <span
               className="tracking-widest uppercase select-none font-medium truncate max-w-full mt-0.5"
               style={{
-                fontSize: `${Math.max(9, Math.round(fit.actualFontSize * 0.48))}px`,
+                fontSize: `${Math.max(8.5, Math.round(fit.actualFontSize * 0.45))}px`,
                 color: config.subtitleColor || "#94a3b8",
               }}
             >
@@ -93,18 +93,18 @@ export const HomeCafeHeader: React.FC<HomeCafeHeaderProps> = ({
       )}
 
       {/* 3. Right Corner: Action Buttons in a line based on relevance */}
-      <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0 z-20">
+      <div className="flex items-center space-x-1 sm:space-x-1.5 shrink-0 z-20">
         {/* Cleaning Due Alert Button */}
         {maintenanceStatus?.isCleaningDue && (
           <button
             type="button"
             onClick={() => onNavigateToMaintenance?.("cleaning")}
-            className="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border-2 border-rose-500 text-rose-300 hover:text-rose-100 text-xs font-bold flex items-center space-x-1.5 transition-all cursor-pointer shadow-md active:scale-95"
+            className="px-2 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 border-2 border-rose-500 text-rose-300 hover:text-rose-100 text-xs font-bold flex items-center space-x-1 transition-all cursor-pointer shadow-md active:scale-95"
             title={maintenanceStatus.tooltipText || "Group head cleaning overdue. Click to run cleaning routine."}
           >
             <Wrench className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-            <span className="hidden sm:inline">Clean Head</span>
-            <span className="sm:hidden">Clean</span>
+            <span className="hidden md:inline">Clean Head</span>
+            <span className="md:hidden">Clean</span>
           </button>
         )}
 
@@ -113,12 +113,12 @@ export const HomeCafeHeader: React.FC<HomeCafeHeaderProps> = ({
           <button
             type="button"
             onClick={() => onNavigateToMaintenance?.("descale")}
-            className="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border-2 border-amber-500 text-amber-300 hover:text-amber-100 text-xs font-bold flex items-center space-x-1.5 transition-all cursor-pointer shadow-md active:scale-95"
+            className="px-2 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 border-2 border-amber-500 text-amber-300 hover:text-amber-100 text-xs font-bold flex items-center space-x-1 transition-all cursor-pointer shadow-md active:scale-95"
             title={maintenanceStatus.tooltipText || "Machine descaling overdue. Click to run descaling routine."}
           >
             <Wrench className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            <span className="hidden sm:inline">Descale Due</span>
-            <span className="sm:hidden">Descale</span>
+            <span className="hidden md:inline">Descale Due</span>
+            <span className="md:hidden">Descale</span>
           </button>
         )}
 
@@ -127,11 +127,12 @@ export const HomeCafeHeader: React.FC<HomeCafeHeaderProps> = ({
           <button
             type="button"
             onClick={onOpenUpdates}
-            className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border-2 border-amber-400 text-amber-300 hover:text-white text-xs font-bold flex items-center space-x-1.5 transition-all cursor-pointer shadow-md active:scale-95"
+            className="px-2 sm:px-2.5 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 border-2 border-amber-400 text-amber-300 hover:text-white text-xs font-bold flex items-center space-x-1 transition-all cursor-pointer shadow-md active:scale-95"
             title="Software or firmware updates are available. Click to open updates."
           >
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0 shadow-[0_0_8px_#f59e0b]" />
-            <span className="font-extrabold tracking-wide">Update Available</span>
+            <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0 shadow-[0_0_8px_#f59e0b]" />
+            <span className="hidden sm:inline font-extrabold tracking-wide">Update Available</span>
+            <span className="sm:hidden font-extrabold tracking-wide">Update</span>
           </button>
         )}
 
@@ -140,11 +141,12 @@ export const HomeCafeHeader: React.FC<HomeCafeHeaderProps> = ({
           <button
             type="button"
             onClick={onStartAction}
-            className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black text-xs flex items-center space-x-1.5 shadow-md active:scale-95 transition-all border border-emerald-300 cursor-pointer"
+            className="px-2.5 sm:px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black text-xs flex items-center space-x-1 shadow-md active:scale-95 transition-all border border-emerald-300 cursor-pointer"
             title={isSimulatorMode ? "Start simulated extraction (Simulator Mode)" : "Start Extraction (Brew)"}
           >
             <Play className="w-3.5 h-3.5 fill-current text-slate-950" />
-            <span>{isSimulatorMode ? "Simulate Shot" : "Go!"}</span>
+            <span className="hidden sm:inline">{isSimulatorMode ? "Simulate Shot" : "Go!"}</span>
+            <span className="sm:hidden">Go!</span>
           </button>
         )}
 
@@ -153,11 +155,12 @@ export const HomeCafeHeader: React.FC<HomeCafeHeaderProps> = ({
           <button
             type="button"
             onClick={onOpenPairing}
-            className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border-2 border-amber-500 text-white text-xs font-bold flex items-center space-x-2 transition-all cursor-pointer shadow-md active:scale-95"
+            className="px-2.5 sm:px-3 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 border-2 border-amber-500 text-white text-xs font-bold flex items-center space-x-1.5 transition-all cursor-pointer shadow-md active:scale-95"
             title="Machine disconnected. Click to open connection and pair."
           >
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0 shadow-[0_0_8px_#f59e0b]" />
-            <span className="text-white font-extrabold tracking-wide">Disconnected · Tap to Pair</span>
+            <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0 shadow-[0_0_8px_#f59e0b]" />
+            <span className="hidden md:inline text-white font-extrabold tracking-wide">Disconnected · Tap to Pair</span>
+            <span className="md:hidden text-white font-extrabold tracking-wide">Pair DE1</span>
           </button>
         )}
 
@@ -165,10 +168,10 @@ export const HomeCafeHeader: React.FC<HomeCafeHeaderProps> = ({
           <button
             type="button"
             onClick={onOpenPairing}
-            className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-sky-400 text-sky-300 text-xs font-mono flex items-center space-x-1.5 cursor-pointer transition-all"
+            className="px-2 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-sky-400 text-sky-300 text-[11px] font-mono flex items-center space-x-1 cursor-pointer transition-all"
             title="Running in local simulator mode. Click to open connection settings."
           >
-            <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>
             <span className="font-bold">Simulator</span>
           </button>
         )}
