@@ -722,6 +722,34 @@ export class DecaidClient {
     return success;
   }
 
+  /**
+   * Sets the target yield (stop-at-weight) for the next extraction in Decaid Gateway.
+   * Updates context.targetYield in PUT /api/v1/workflow (the single source of truth for stop-at-weight).
+   */
+  public async setTargetYield(targetYield: number): Promise<boolean> {
+    const val = Number(targetYield);
+    if (isNaN(val) || val <= 0) return false;
+
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/workflow`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          context: {
+            targetYield: val,
+          },
+        }),
+      });
+      if (res.ok) {
+        console.log(`[DecaidClient] Synchronized stop-at-weight targetYield: ${val}g to Decaid Gateway`);
+        return true;
+      }
+    } catch (e) {
+      console.warn("[DecaidClient] Failed to synchronize targetYield to Decaid:", e);
+    }
+    return false;
+  }
+
   public isULSafetyRestricted(): boolean {
     return this.ulSafetyRestricted;
   }
@@ -740,6 +768,9 @@ export class DecaidClient {
     }
     if (this.isLiveMachineConnected) {
       try {
+        // Ensure Decaid's active stop-at-weight is synchronized before extraction starts
+        await this.setTargetYield(targetYield);
+
         await fetch(`${this.baseUrl}/api/v1/scale/tare`, { method: "POST" });
         const res = await fetch(`${this.baseUrl}/api/v1/machine/state/espresso`, { method: "PUT" });
         if (res.status === 403 || res.status === 405) {

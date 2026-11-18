@@ -209,6 +209,17 @@ export function App() {
     return def;
   });
 
+  const handleCoffeeConfigChange = (newConfig: CoffeeTabConfig) => {
+    const prevYield = coffeeConfig.targetYield;
+    setCoffeeConfig(newConfig);
+    try {
+      localStorage.setItem("pantarhei_coffee_config", JSON.stringify(newConfig));
+    } catch {}
+    if (newConfig.targetYield && newConfig.targetYield !== prevYield) {
+      decaid.setTargetYield(newConfig.targetYield);
+    }
+  };
+
   const [steamConfig, setSteamConfig] = useState<SteamTabConfig>({
     temperature: 150,
     flowRate: 1.2,
@@ -855,7 +866,7 @@ export function App() {
                 setMainPaneView("graph");
               }}
               coffeeConfig={coffeeConfig}
-              onCoffeeConfigChange={setCoffeeConfig}
+              onCoffeeConfigChange={handleCoffeeConfigChange}
               steamConfig={steamConfig}
               onSteamConfigChange={setSteamConfig}
               waterConfig={waterConfig}
