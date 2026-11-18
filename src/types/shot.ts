@@ -86,12 +86,7 @@ export function loadShotHistoryFromStorage(): ShotRecord[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) {
-      return parsed.filter(
-        (s: ShotRecord) =>
-          !s.id.startsWith("shot-20261116-") &&
-          !s.id.startsWith("shot-20261115-") &&
-          s.beanName !== "Worka Sakaro"
-      );
+      return parsed.filter((s: ShotRecord) => s && typeof s.id === "string" && s.id !== "demo-dummy-mock");
     }
     return [];
   } catch (err) {

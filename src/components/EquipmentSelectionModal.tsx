@@ -3,7 +3,7 @@ import type { EquipmentInventory, ActiveEquipmentSelection } from "../types/equi
 import { formatEquipmentSummary, getFreezerSlowdownFactor } from "../types/equipment.ts";
 import {
   Wrench,
-  X,
+  ArrowLeft,
   Check,
   Settings,
   Scale,
@@ -21,6 +21,7 @@ interface EquipmentSelectionModalProps {
   selection: ActiveEquipmentSelection;
   onSelectionChange: (newSelection: ActiveEquipmentSelection) => void;
   onOpenSettingsEquipment: () => void;
+  embedded?: boolean;
 }
 
 export const EquipmentSelectionModal: React.FC<EquipmentSelectionModalProps> = ({
@@ -30,6 +31,7 @@ export const EquipmentSelectionModal: React.FC<EquipmentSelectionModalProps> = (
   selection,
   onSelectionChange,
   onOpenSettingsEquipment,
+  embedded = false,
 }) => {
   if (!isOpen) return null;
 
@@ -66,9 +68,14 @@ export const EquipmentSelectionModal: React.FC<EquipmentSelectionModalProps> = (
 
   const summary = formatEquipmentSummary(selection);
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-6 select-none animate-in fade-in duration-150">
-      <div className="w-[840px] max-h-[92vh] rounded-3xl bg-decent-surface border border-decent-border shadow-2xl flex flex-col p-6">
+  const modalContent = (
+    <div
+      className={
+        embedded
+          ? "w-full h-full flex flex-col min-h-0 bg-slate-900/95 border border-slate-700/80 rounded-2xl p-4 lg:p-6 shadow-2xl overflow-hidden select-none"
+          : "w-[840px] max-h-[92vh] rounded-3xl bg-decent-surface border border-decent-border shadow-2xl flex flex-col p-6 select-none min-h-0"
+      }
+    >
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-decent-border/60 shrink-0">
           <div className="flex items-center space-x-2.5">
@@ -101,9 +108,11 @@ export const EquipmentSelectionModal: React.FC<EquipmentSelectionModalProps> = (
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-lg text-decent-muted hover:text-white hover:bg-decent-dark transition-colors cursor-pointer"
+              className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-600 text-xs font-semibold flex items-center space-x-1 cursor-pointer transition-colors shadow-sm"
+              title="Return to cockpit graph"
             >
-              <X className="w-5 h-5" />
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Back to Graph</span>
             </button>
           </div>
         </div>
@@ -443,7 +452,16 @@ export const EquipmentSelectionModal: React.FC<EquipmentSelectionModalProps> = (
             <span>Apply to Next Shot</span>
           </button>
         </div>
-      </div>
+    </div>
+  );
+
+  if (embedded) {
+    return modalContent;
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-6 select-none animate-in fade-in duration-150">
+      {modalContent}
     </div>
   );
 };

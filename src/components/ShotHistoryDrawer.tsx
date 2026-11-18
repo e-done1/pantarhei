@@ -27,6 +27,7 @@ interface ShotHistoryDrawerProps {
   onRedialShot: (shot: ShotRecord) => void;
   onDeleteShot?: (shotId: string) => void;
   onUpdateShot?: (updatedShot: ShotRecord) => void;
+  embedded?: boolean;
 }
 
 /**
@@ -92,6 +93,7 @@ export const ShotHistoryDrawer: React.FC<ShotHistoryDrawerProps> = ({
   onRedialShot,
   onDeleteShot,
   onUpdateShot,
+  embedded = false,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBean, setSelectedBean] = useState<string | undefined>(undefined);
@@ -474,9 +476,14 @@ export const ShotHistoryDrawer: React.FC<ShotHistoryDrawerProps> = ({
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex justify-start bg-black/75 backdrop-blur-sm select-none animate-in fade-in duration-150">
-      <div className="w-[550px] h-full bg-decent-surface border-r border-decent-border shadow-2xl flex flex-col p-5">
+  const drawerContent = (
+    <div
+      className={
+        embedded
+          ? "w-full h-full flex flex-col min-h-0 bg-slate-900/95 border border-slate-700/80 rounded-2xl p-4 lg:p-5 shadow-2xl overflow-hidden select-none"
+          : "w-[550px] h-full bg-decent-surface border-r border-decent-border shadow-2xl flex flex-col p-5 min-h-0 select-none"
+      }
+    >
         {/* VIEW 1: SHOT LIST & SEARCH */}
         {!inspectingShot && !editingShot && (
           <>
@@ -495,9 +502,11 @@ export const ShotHistoryDrawer: React.FC<ShotHistoryDrawerProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="p-1.5 rounded-lg text-decent-muted hover:text-white hover:bg-decent-dark transition-all"
+                className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-600 text-xs font-semibold flex items-center space-x-1 cursor-pointer transition-colors shadow-sm"
+                title="Return to cockpit graph"
               >
-                <X className="w-5 h-5" />
+                <ArrowLeft className="w-4 h-4" />
+                <span className="hidden sm:inline">Back to Graph</span>
               </button>
             </div>
 
@@ -1616,7 +1625,16 @@ export const ShotHistoryDrawer: React.FC<ShotHistoryDrawerProps> = ({
             </div>
           </div>
         )}
-      </div>
+    </div>
+  );
+
+  if (embedded) {
+    return drawerContent;
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-start bg-black/75 backdrop-blur-sm select-none animate-in fade-in duration-150">
+      {drawerContent}
     </div>
   );
 };

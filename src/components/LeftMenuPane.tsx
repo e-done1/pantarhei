@@ -51,6 +51,7 @@ interface LeftMenuPaneProps {
   activeEquipment?: ActiveEquipmentSelection;
   onOpenEquipmentSelection?: () => void;
   onOpenSettingsEquipment?: () => void;
+  activeSection?: "graph" | "beans" | "profiles" | "equipment" | "history";
 }
 
 export const LeftMenuPane: React.FC<LeftMenuPaneProps> = ({
@@ -74,6 +75,7 @@ export const LeftMenuPane: React.FC<LeftMenuPaneProps> = ({
   activeEquipment,
   onOpenEquipmentSelection,
   onOpenSettingsEquipment,
+  activeSection = "graph",
 }) => {
   const equipmentInv = loadEquipmentInventory();
   const rest = activeBean ? calculateRestDays(activeBean, new Date(), equipmentInv.freezers) : null;
@@ -855,31 +857,47 @@ export const LeftMenuPane: React.FC<LeftMenuPaneProps> = ({
         <button
           type="button"
           onClick={onOpenBeanDrawer}
-          className="flex flex-col items-center justify-center py-2 lg:py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 hover:text-white text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-sm"
+          className={`flex flex-col items-center justify-center py-2 lg:py-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-sm ${
+            activeSection === "beans"
+              ? "bg-amber-400 text-slate-950 border-amber-300 font-black shadow-md"
+              : "bg-slate-900 hover:bg-slate-800 border-slate-700 text-slate-200 hover:text-white"
+          }`}
+          title="Toggle Coffee Beans in Main View"
         >
-          <FolderArchive className="w-4 h-4 mb-0.5 text-amber-400 shrink-0" />
+          <FolderArchive className={`w-4 h-4 mb-0.5 shrink-0 ${activeSection === "beans" ? "text-slate-950" : "text-amber-400"}`} />
           <span>Beans</span>
         </button>
         <button
           type="button"
           onClick={onOpenProfileDrawer}
-          className="flex flex-col items-center justify-center py-2 lg:py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 hover:text-white text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-sm"
+          className={`flex flex-col items-center justify-center py-2 lg:py-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-sm ${
+            activeSection === "profiles"
+              ? "bg-sky-400 text-slate-950 border-sky-300 font-black shadow-md"
+              : "bg-slate-900 hover:bg-slate-800 border-slate-700 text-slate-200 hover:text-white"
+          }`}
+          title="Toggle Extraction Profiles in Main View"
         >
-          <BookOpen className="w-4 h-4 mb-0.5 text-sky-400 shrink-0" />
+          <BookOpen className={`w-4 h-4 mb-0.5 shrink-0 ${activeSection === "profiles" ? "text-slate-950" : "text-sky-400"}`} />
           <span>Profiles</span>
         </button>
         <button
           type="button"
           onClick={onOpenHistory}
-          className="flex flex-col items-center justify-center py-2 lg:py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 hover:text-white text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-sm"
+          className={`flex flex-col items-center justify-center py-2 lg:py-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-sm ${
+            activeSection === "history"
+              ? "bg-emerald-400 text-slate-950 border-emerald-300 font-black shadow-md"
+              : "bg-slate-900 hover:bg-slate-800 border-slate-700 text-slate-200 hover:text-white"
+          }`}
+          title="Toggle Shot History in Main View"
         >
-          <History className="w-4 h-4 mb-0.5 text-emerald-400 shrink-0" />
+          <History className={`w-4 h-4 mb-0.5 shrink-0 ${activeSection === "history" ? "text-slate-950" : "text-emerald-400"}`} />
           <span>History</span>
         </button>
         <button
           type="button"
           onClick={onOpenSettings}
           className="flex flex-col items-center justify-center py-2 lg:py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 hover:text-white text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-sm"
+          title="Open Settings"
         >
           <Sliders className="w-4 h-4 mb-0.5 text-purple-400 shrink-0" />
           <span>Settings</span>

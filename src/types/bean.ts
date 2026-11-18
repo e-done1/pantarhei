@@ -116,11 +116,11 @@ export function createNewBeanEntry(params: {
   id?: string;
   name: string;
   roaster: string;
-  countryOfOrigin: string;
+  countryOfOrigin?: string;
   region?: string;
   farm?: string;
   varietal?: string | string[];
-  process: string;
+  process?: string;
   altitude?: string;
   cropYear?: string;
   roastDate?: string;
@@ -151,7 +151,7 @@ export function createNewBeanEntry(params: {
     id: params.id || generateUUID(),
     name: params.name.trim() || "Untitled Lot",
     roaster: params.roaster.trim() || "Unknown Roaster",
-    countryOfOrigin: params.countryOfOrigin.trim() || "Single Origin",
+    countryOfOrigin: params.countryOfOrigin?.trim() || "Single Origin",
     region: params.region?.trim() || undefined,
     farm: params.farm?.trim() || undefined,
     varietal: params.varietal || "Heirloom",
@@ -394,16 +394,11 @@ export const BEANS_STORAGE_KEY = "pantarhei_beans_inventory";
 export function loadBeansFromStorage(fallback: PantaBean[] = []): PantaBean[] {
   if (typeof window === "undefined") return fallback;
   try {
-    const raw = localStorage.getItem(BEANS_STORAGE_KEY);
+    const raw = localStorage.getItem(BEANS_STORAGE_KEY) || localStorage.getItem("pantarhei_beans");
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        return parsed.filter(
-          (b: PantaBean) =>
-            b.id !== "bean-worka" &&
-            b.id !== "bean-kenya" &&
-            b.name !== "Worka Sakaro"
-        );
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.filter((b: PantaBean) => b && typeof b.id === "string" && typeof b.name === "string");
       }
     }
   } catch {}
@@ -415,5 +410,39 @@ export function saveBeansToStorage(beans: PantaBean[]): void {
   try {
     localStorage.setItem(BEANS_STORAGE_KEY, JSON.stringify(beans));
   } catch {}
+}
+
+/**
+ * Extracts unique coffee beans from shot history records so historical beans are never lost.
+ */
+export function extractBeansFromShots(
+  shots: Array<{ beanId?: string; beanName?: string; roaster?: string; profileTitle?: string; timestamp?: string | number; tags?: string[] }>
+): PantaBean[] {
+  const map = new Map<string, PantaBean>();
+  for (const s of shots) {
+    const name = (s.beanName || "").trim();
+    if (!name || map.has(name.toLowerCase())) continue;
+
+    const beanId = s.beanId || `bean-${name.toLowerCase().replace(/[^a-z0-9]/g, "-")}`;
+    const roastDate = typeof s.timestamp === "string"
+      ? s.timestamp.split("T")[0]
+      : typeof s.timestamp === "number"
+      ? new Date(s.timestamp).toISOString().split("T")[0]
+      : new Date().toISOString().split("T")[0];
+
+    const bean = createNewBeanEntry({
+      id: beanId,
+      name,
+      roaster: s.roaster || "Decaid Synced",
+      countryOfOrigin: s.roaster?.toLowerCase().includes("ethiopia") ? "Ethiopia" : "Single Origin",
+      roastDate,
+      totalGrams: 250,
+      remainingGrams: 250,
+      preferredProfileId: s.profileTitle,
+      tastingNotes: s.tags && s.tags.length > 0 ? s.tags : ["Sweet", "Balanced"],
+    });
+    map.set(name.toLowerCase(), bean);
+  }
+  return Array.from(map.values());
 }
 

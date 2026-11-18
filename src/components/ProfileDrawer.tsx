@@ -40,6 +40,7 @@ interface ProfileDrawerProps {
   activeProfileTitle: string;
   onSelectProfile: (profile: ProfileItem) => void;
   onSaveProfile?: (profile: ProfileItem) => void;
+  embedded?: boolean;
 }
 
 function downloadBlob(filename: string, content: string, mime: string) {
@@ -61,6 +62,7 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({
   activeProfileTitle,
   onSelectProfile,
   onSaveProfile,
+  embedded = false,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -445,9 +447,14 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex justify-start bg-black/75 backdrop-blur-sm select-none">
-      <div className="w-[520px] h-full bg-decent-surface border-r border-decent-border shadow-2xl flex flex-col p-5">
+  const drawerContent = (
+    <div
+      className={
+        embedded
+          ? "w-full h-full flex flex-col min-h-0 bg-slate-900/95 border border-slate-700/80 rounded-2xl p-4 lg:p-5 shadow-2xl overflow-hidden select-none"
+          : "w-[520px] h-full bg-decent-surface border-r border-decent-border shadow-2xl flex flex-col p-5 min-h-0 select-none"
+      }
+    >
         {/* VIEW 1: Profiles List View */}
         {!isFormOpen && (
           <>
@@ -525,7 +532,7 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({
             </div>
 
             {/* Category Tags: Wrapped lines with No Scrolling, Add & Remove Tags */}
-            <div className="flex flex-wrap items-center gap-1.5 mb-3">
+            <div className="flex items-center gap-1.5 mb-2.5 overflow-x-auto pb-1 shrink-0 no-scrollbar">
               <button
                 type="button"
                 onClick={() => setSelectedCategory(null)}
@@ -617,65 +624,66 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({
               )}
             </div>
 
-            {/* Recent Profiles Shelf (Visible when search is untouched) */}
-            {!searchQuery.trim() && selectedCategory === null && recentProfiles.length > 0 && (
-              <div className="mb-3 p-3 rounded-2xl bg-decent-dark/60 border border-decent-border/50">
-                <div className="text-[11px] font-semibold text-decent-muted uppercase tracking-wider flex items-center space-x-1.5 mb-2">
-                  <Clock className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Recent Profiles</span>
-                </div>
-                <div className="space-y-1.5">
-                  {recentProfiles.map((p) => {
-                    const isHidden = hiddenProfileIds.has(p.id);
-                    return (
-                      <div
-                        key={p.id}
-                        onClick={() => {
-                          onSelectProfile(p);
-                          onClose();
-                        }}
-                        className={`px-3 py-2 rounded-xl border cursor-pointer flex items-center justify-between transition-all ${
-                          isHidden
-                            ? "bg-decent-dark/40 border-dashed border-slate-600 opacity-60"
-                            : "bg-decent-card hover:bg-slate-800 border-decent-border/60 hover:border-amber-500/50"
-                        }`}
-                      >
-                        <div className="flex items-center space-x-2 truncate">
-                          <span className="text-xs font-bold text-white truncate">{p.title}</span>
-                          {p.isCustom && (
-                            <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono">
-                              CUSTOM
-                            </span>
-                          )}
+            {/* Profiles Scroll Area: Holds Recent Profiles Shelf & Profile Library */}
+            <div className="flex-1 overflow-y-auto space-y-2.5 pr-1 min-h-0">
+              {/* Recent Profiles Shelf (Inside scrollable container so it scrolls naturally without covering tags) */}
+              {!searchQuery.trim() && selectedCategory === null && recentProfiles.length > 0 && (
+                <div className="p-3 rounded-2xl bg-slate-950/90 border border-slate-800 shadow-inner">
+                  <div className="text-[11px] font-bold text-amber-400 uppercase tracking-wider flex items-center space-x-1.5 mb-2">
+                    <Clock className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Recent Profiles</span>
+                  </div>
+                  <div className={embedded ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2" : "space-y-1.5"}>
+                    {recentProfiles.map((p) => {
+                      const isHidden = hiddenProfileIds.has(p.id);
+                      return (
+                        <div
+                          key={p.id}
+                          onClick={() => {
+                            onSelectProfile(p);
+                            onClose();
+                          }}
+                          className={`px-3 py-2 rounded-xl border cursor-pointer flex items-center justify-between transition-all ${
+                            isHidden
+                              ? "bg-slate-900/40 border-dashed border-slate-700 opacity-60"
+                              : "bg-slate-900 hover:bg-slate-800 border-slate-700 hover:border-amber-400 shadow-sm"
+                          }`}
+                        >
+                          <div className="flex items-center space-x-2 truncate">
+                            <span className="text-xs font-bold text-white truncate">{p.title}</span>
+                            {p.isCustom && (
+                              <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono">
+                                CUSTOM
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-2 shrink-0">
+                            <span className="text-[10px] text-amber-400 font-mono uppercase">{p.category}</span>
+                            <button
+                              type="button"
+                              title={isHidden ? "Unhide profile" : "Hide profile from list"}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleProfileVisibility(p.id);
+                              }}
+                              className={`p-1 rounded-lg border transition-colors cursor-pointer ${
+                                isHidden
+                                  ? "text-rose-400 border-rose-500/50 bg-rose-950/40"
+                                  : "text-slate-400 hover:text-amber-300 border-transparent hover:border-slate-500"
+                              }`}
+                            >
+                              {isHidden ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                            </button>
+                          </div>
                         </div>
-                        <div className="flex items-center space-x-2 shrink-0">
-                          <span className="text-[10px] text-amber-400 font-mono uppercase">{p.category}</span>
-                          {/* Visibility Eye Icon Button */}
-                          <button
-                            type="button"
-                            title={isHidden ? "Unhide profile" : "Hide profile from list"}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleProfileVisibility(p.id);
-                            }}
-                            className={`p-1 rounded-lg border transition-colors cursor-pointer ${
-                              isHidden
-                                ? "text-rose-400 border-rose-500/50 bg-rose-950/40"
-                                : "text-decent-muted hover:text-amber-300 border-transparent hover:border-slate-500"
-                            }`}
-                          >
-                            {isHidden ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Profiles List */}
-            <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+              {/* All / Filtered Profiles */}
+              <div className={embedded ? "grid grid-cols-1 md:grid-cols-2 gap-2" : "space-y-2"}>
               {filteredProfiles.map((p) => {
                 const isSelected = p.title === activeProfileTitle;
                 const isHidden = hiddenProfileIds.has(p.id);
@@ -771,13 +779,14 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({
                     </div>
 
                     {p.notes && (
-                      <p className="text-[11px] text-decent-muted mt-1.5 line-clamp-2 leading-relaxed">
+                      <p className="text-[11px] text-slate-400 mt-1.5 line-clamp-2 leading-relaxed">
                         {p.notes}
                       </p>
                     )}
                   </div>
                 );
               })}
+              </div>
             </div>
           </>
         )}
@@ -1203,7 +1212,16 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({
             </form>
           </div>
         )}
-      </div>
+    </div>
+  );
+
+  if (embedded) {
+    return drawerContent;
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-start bg-black/75 backdrop-blur-sm select-none animate-in fade-in duration-150">
+      {drawerContent}
     </div>
   );
 };

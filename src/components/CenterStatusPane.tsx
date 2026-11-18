@@ -29,6 +29,7 @@ interface CenterStatusPaneProps {
   lastShotProfileTitle?: string;
   lastShotHistory?: TelemetryPoint[];
   onOpenSummaryModal?: () => void;
+  highContrastTelemetry?: boolean;
 }
 
 interface SeriesVisibility {

@@ -3,7 +3,7 @@ import { decaid } from "./services/decaidConnection.ts";
 import { simulator, type TelemetryPoint, type MachineSnapshot, type ScaleSnapshot } from "./services/telemetrySimulator.ts";
 import type { CockpitTabId, CoffeeTabConfig, SteamTabConfig, WaterTabConfig, MaintenanceTabConfig } from "./types/cockpitTabs.ts";
 import type { PantaBean } from "./types/bean.ts";
-import { loadBeansFromStorage, saveBeansToStorage, createNewBeanEntry } from "./types/bean.ts";
+import { loadBeansFromStorage, saveBeansToStorage, createNewBeanEntry, extractBeansFromShots } from "./types/bean.ts";
 import type { CafeHeaderConfig } from "./types/header.ts";
 import { syncShotToDYE } from "./services/dyeBridge.ts";
 import { uploadShotToVisualizer, loadVisualizerSettings } from "./services/visualizerBridge.ts";
@@ -91,7 +91,15 @@ export function App() {
 
   // Persistent Shot History & Inventory Archive
   const [shots, setShots] = useState<ShotRecord[]>(() => loadShotHistoryFromStorage());
-  const [beans, setBeans] = useState<PantaBean[]>(() => loadBeansFromStorage([]));
+  const [beans, setBeans] = useState<PantaBean[]>(() => {
+    let loadedBeans = loadBeansFromStorage([]);
+    const initialShots = loadShotHistoryFromStorage();
+    if (loadedBeans.length === 0 && initialShots.length > 0) {
+      loadedBeans = extractBeansFromShots(initialShots);
+      saveBeansToStorage(loadedBeans);
+    }
+    return loadedBeans;
+  });
 
   const [telemetryHistory, setTelemetryHistory] = useState<TelemetryPoint[]>([]);
   const [completedShotHistory, setCompletedShotHistory] = useState<TelemetryPoint[]>(() => {
@@ -113,12 +121,24 @@ export function App() {
   const [showSummaryModal, setShowSummaryModal] = useState(false);
 
   const [lastShotBean, setLastShotBean] = useState<PantaBean | undefined>(() => {
-    const loadedBeans = loadBeansFromStorage([]);
+    let loadedBeans = loadBeansFromStorage([]);
     const initialShots = loadShotHistoryFromStorage();
+    if (loadedBeans.length === 0 && initialShots.length > 0) {
+      loadedBeans = extractBeansFromShots(initialShots);
+      saveBeansToStorage(loadedBeans);
+    }
     if (initialShots.length > 0) {
       const s = initialShots[0];
       const matched = loadedBeans.find((b) => b.id === s.beanId || b.name === s.beanName);
       if (matched) return matched;
+      if (s.beanName) {
+        return createNewBeanEntry({
+          id: s.beanId || `bean-${s.beanName.toLowerCase().replace(/[^a-z0-9]/g, "-")}`,
+          name: s.beanName,
+          roaster: s.roaster || "Decaid Synced",
+          totalGrams: 250,
+        });
+      }
     }
     return loadedBeans.length > 0 ? loadedBeans[0] : undefined;
   });
@@ -210,7 +230,12 @@ export function App() {
 
   // Coffee & Profiles Selection
   const [activeBean, setActiveBean] = useState<PantaBean | undefined>(() => {
-    const loaded = loadBeansFromStorage([]);
+    let loaded = loadBeansFromStorage([]);
+    const initialShots = loadShotHistoryFromStorage();
+    if (loaded.length === 0 && initialShots.length > 0) {
+      loaded = extractBeansFromShots(initialShots);
+      saveBeansToStorage(loaded);
+    }
     try {
       const savedActiveId = localStorage.getItem("pantarhei_active_bean_id");
       if (savedActiveId) {
@@ -218,11 +243,18 @@ export function App() {
         if (found) return found;
       }
     } catch {}
-    const initialShots = loadShotHistoryFromStorage();
     if (initialShots.length > 0) {
       const s = initialShots[0];
       const matched = loaded.find((b) => b.id === s.beanId || b.name === s.beanName);
       if (matched) return matched;
+      if (s.beanName) {
+        return createNewBeanEntry({
+          id: s.beanId || `bean-${s.beanName.toLowerCase().replace(/[^a-z0-9]/g, "-")}`,
+          name: s.beanName,
+          roaster: s.roaster || "Decaid Synced",
+          totalGrams: 250,
+        });
+      }
     }
     return loaded.length > 0 ? loaded[0] : undefined;
   });
@@ -254,10 +286,9 @@ export function App() {
   const [clockPaletteId, setClockPaletteId] = useState("cyberpunk");
   const [fluidEnabled, setFluidEnabled] = useState(true);
 
-  // Drawers & Modals
-  const [isBeanDrawerOpen, setIsBeanDrawerOpen] = useState(false);
-  const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState(false);
-  const [isHistoryDrawerOpen, setIsHistoryDrawerOpen] = useState(false);
+  // Drawers & Main Pane Embedded Views
+  type MainPaneView = "graph" | "beans" | "profiles" | "equipment" | "history";
+  const [mainPaneView, setMainPaneView] = useState<MainPaneView>("graph");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isConnectModalOpen, setIsConnectModalOpen] = useState(() => {
     try {
@@ -273,7 +304,6 @@ export function App() {
   const [ulNotice, setUlNotice] = useState<string | null>(null);
 
   // Equipment Inventory & Active Extraction Gear Selection
-  const [isEquipmentModalOpen, setIsEquipmentModalOpen] = useState(false);
   const [equipmentInventory, setEquipmentInventory] = useState<EquipmentInventory>(loadEquipmentInventory);
   const [activeEquipment, setActiveEquipment] = useState<ActiveEquipmentSelection>(loadActiveEquipment);
   const [settingsInitialTab, setSettingsInitialTab] = useState<"appearance" | "screensaver" | "pairing" | "plugins" | "backup" | "equipment">("appearance");
@@ -766,12 +796,15 @@ export function App() {
             </div>
           )}
 
-          {/* Main 2-Pane Cockpit Body: Recipe & Controls (Left), Expanded Live Telemetry & Graph (Right) */}
+          {/* Main 2-Pane Cockpit Body: Recipe & Controls (Left), Expanded Live Telemetry & Full-Room Views (Right) */}
           <main className="flex-1 w-full min-h-0 flex items-stretch overflow-hidden">
             {/* Left Pane: 4 Dedicated Tabs (Coffee, Steam, Water, Maintenance) */}
             <LeftMenuPane
               activeTab={activeTab}
-              onTabChange={setActiveTab}
+              onTabChange={(tab) => {
+                setActiveTab(tab);
+                setMainPaneView("graph");
+              }}
               coffeeConfig={coffeeConfig}
               onCoffeeConfigChange={setCoffeeConfig}
               steamConfig={steamConfig}
@@ -782,25 +815,152 @@ export function App() {
               onMaintenanceConfigChange={setMaintenanceConfig}
               activeBean={activeBean}
               activeProfileTitle={activeProfileTitle}
-              onOpenBeanDrawer={() => setIsBeanDrawerOpen(true)}
-              onOpenProfileDrawer={() => setIsProfileDrawerOpen(true)}
-              onOpenHistory={() => setIsHistoryDrawerOpen(true)}
+              onOpenBeanDrawer={() => setMainPaneView((v) => (v === "beans" ? "graph" : "beans"))}
+              onOpenProfileDrawer={() => setMainPaneView((v) => (v === "profiles" ? "graph" : "profiles"))}
+              onOpenHistory={() => setMainPaneView((v) => (v === "history" ? "graph" : "history"))}
               onOpenSettings={() => handleOpenSettingsWithTab("appearance")}
               onTriggerFlush={() => decaid.startFlush()}
               activeEquipment={activeEquipment}
-              onOpenEquipmentSelection={() => setIsEquipmentModalOpen(true)}
+              onOpenEquipmentSelection={() => setMainPaneView((v) => (v === "equipment" ? "graph" : "equipment"))}
               onOpenSettingsEquipment={() => handleOpenSettingsWithTab("equipment")}
+              activeSection={mainPaneView}
             />
 
-            {/* Center Pane: Ambient Machine Status, Previous Shot Bean Data & Graph (Now taking all remaining width!) */}
-            <CenterStatusPane
-              machine={machine}
-              lastShotSummary={lastShotSummary}
-              lastShotBean={lastShotBean}
-              lastShotProfileTitle={lastShotProfileTitle}
-              lastShotHistory={completedShotHistory}
-              onOpenSummaryModal={() => setShowSummaryModal(true)}
-            />
+            {/* Main Content Area: Seamlessly switches between Telemetry Graph and Full-Room Data Views (Beans, Profiles, Equipment, History) */}
+            <div className="flex-1 min-w-0 h-full p-2 lg:p-3 overflow-hidden flex flex-col min-h-0">
+              {mainPaneView === "graph" && (
+                <CenterStatusPane
+                  machine={machine}
+                  lastShotSummary={lastShotSummary}
+                  lastShotBean={lastShotBean}
+                  lastShotProfileTitle={lastShotProfileTitle}
+                  lastShotHistory={completedShotHistory}
+                  onOpenSummaryModal={() => setShowSummaryModal(true)}
+                />
+              )}
+
+              {mainPaneView === "beans" && (
+                <BeanDrawer
+                  isOpen={true}
+                  embedded={true}
+                  onClose={() => setMainPaneView("graph")}
+                  beans={beans}
+                  activeBeanId={activeBean?.id}
+                  onSelectBean={(selected) => {
+                    setActiveBean(selected);
+                    try {
+                      localStorage.setItem("pantarhei_active_bean_id", selected.id);
+                    } catch {}
+                    setMainPaneView("graph");
+                  }}
+                  onSaveBean={(newBean) => {
+                    setBeans((prev) => {
+                      const updated = [newBean, ...prev.filter((b) => b.id !== newBean.id)];
+                      saveBeansToStorage(updated);
+                      return updated;
+                    });
+                  }}
+                />
+              )}
+
+              {mainPaneView === "profiles" && (
+                <ProfileDrawer
+                  isOpen={true}
+                  embedded={true}
+                  onClose={() => setMainPaneView("graph")}
+                  activeProfileTitle={activeProfileTitle}
+                  onSelectProfile={(p) => {
+                    setActiveProfileTitle(p.title);
+                    setActiveProfile(p);
+                    decaid.selectProfile(p);
+                    setCoffeeConfig((prev) => ({
+                      ...prev,
+                      profileId: p.id || p.title,
+                      targetYield: Number(p.target_weight) || prev.targetYield,
+                      dose: Number(p.target_dose) || prev.dose,
+                    }));
+                    try {
+                      localStorage.setItem("pantarhei_active_profile_title", p.title);
+                    } catch {}
+                    setMainPaneView("graph");
+                  }}
+                  onSaveProfile={(p) => {
+                    decaid.saveProfile(p).catch((e) => console.warn("[PantaRhei] Error saving profile to Decaid:", e));
+                  }}
+                />
+              )}
+
+              {mainPaneView === "equipment" && (
+                <EquipmentSelectionModal
+                  isOpen={true}
+                  embedded={true}
+                  onClose={() => setMainPaneView("graph")}
+                  inventory={equipmentInventory}
+                  selection={activeEquipment}
+                  onSelectionChange={handleEquipmentSelectionChange}
+                  onOpenSettingsEquipment={() => {
+                    setMainPaneView("graph");
+                    handleOpenSettingsWithTab("equipment");
+                  }}
+                />
+              )}
+
+              {mainPaneView === "history" && (
+                <ShotHistoryDrawer
+                  isOpen={true}
+                  embedded={true}
+                  onClose={() => setMainPaneView("graph")}
+                  shots={shots}
+                  onSelectShotAsReference={(selectedShot) => {
+                    setCompletedShotHistory(selectedShot.telemetry);
+                    const matchingBean: PantaBean = beans.find((b) => b.id === selectedShot.beanId) || createNewBeanEntry({
+                      name: selectedShot.beanName,
+                      roaster: selectedShot.roaster,
+                      countryOfOrigin: selectedShot.countryOfOrigin || "Various",
+                      process: selectedShot.process || "Washed",
+                      totalGrams: 250,
+                    });
+                    setLastShotBean(matchingBean);
+                    setLastShotProfileTitle(selectedShot.profileTitle);
+                    setLastShotSummary({
+                      extractionTime: selectedShot.durationSeconds,
+                      yieldGrams: selectedShot.actualYield,
+                      peakPressure: selectedShot.peakPressure,
+                      eyPercentage: selectedShot.ey,
+                    });
+                    setMainPaneView("graph");
+                  }}
+                  onRedialShot={(selectedShot) => {
+                    const matchingBean = beans.find(
+                      (b) => b.id === selectedShot.beanId || b.name === selectedShot.beanName
+                    );
+                    if (matchingBean) {
+                      setActiveBean(matchingBean);
+                    }
+                    setActiveProfileTitle(selectedShot.profileTitle);
+                    setCoffeeConfig((prev) => ({
+                      ...prev,
+                      dose: selectedShot.actualDose,
+                      targetYield: selectedShot.targetYield,
+                    }));
+                    if (selectedShot.equipment) {
+                      setActiveEquipment(selectedShot.equipment);
+                      saveActiveEquipment(selectedShot.equipment);
+                    }
+                    setMainPaneView("graph");
+                  }}
+                  onDeleteShot={(shotId) => {
+                    setShots((prev) => {
+                      const updated = prev.filter((s) => s.id !== shotId);
+                      saveShotHistoryToStorage(updated);
+                      return updated;
+                    });
+                    decaid.deleteShot(shotId).catch(() => {});
+                  }}
+                  onUpdateShot={handleUpdateShot}
+                />
+              )}
+            </div>
           </main>
         </div>
       )}
@@ -828,90 +988,7 @@ export function App() {
         />
       )}
 
-      {/* Coffee Inventory Drawer */}
-      <BeanDrawer
-        isOpen={isBeanDrawerOpen}
-        onClose={() => setIsBeanDrawerOpen(false)}
-        beans={beans}
-        activeBeanId={activeBean?.id}
-        onSelectBean={setActiveBean}
-        onSaveBean={(newBean) => {
-          setBeans((prev) => {
-            const updated = [newBean, ...prev.filter((b) => b.id !== newBean.id)];
-            saveBeansToStorage(updated);
-            return updated;
-          });
-        }}
-      />
 
-      {/* Extraction Profiles Drawer */}
-      <ProfileDrawer
-        isOpen={isProfileDrawerOpen}
-        onClose={() => setIsProfileDrawerOpen(false)}
-        activeProfileTitle={activeProfileTitle}
-        onSelectProfile={(p) => {
-          setActiveProfileTitle(p.title);
-          setActiveProfile(p);
-          decaid.selectProfile(p);
-          setCoffeeConfig((prev) => ({
-            ...prev,
-            profileId: p.id || p.title,
-            targetYield: Number(p.target_weight) || prev.targetYield,
-            dose: Number(p.target_dose) || prev.dose,
-          }));
-        }}
-        onSaveProfile={(p) => {
-          decaid.saveProfile(p).catch((e) => console.warn("[PantaRhei] Error saving profile to Decaid:", e));
-        }}
-      />
-
-      {/* Shot History & Dial-in Archive Drawer */}
-      <ShotHistoryDrawer
-        isOpen={isHistoryDrawerOpen}
-        onClose={() => setIsHistoryDrawerOpen(false)}
-        shots={shots}
-        onSelectShotAsReference={(selectedShot) => {
-          setCompletedShotHistory(selectedShot.telemetry);
-          const matchingBean: PantaBean = beans.find((b) => b.id === selectedShot.beanId) || createNewBeanEntry({
-            name: selectedShot.beanName,
-            roaster: selectedShot.roaster,
-            countryOfOrigin: selectedShot.countryOfOrigin || "Various",
-            process: selectedShot.process || "Washed",
-            totalGrams: 250,
-          });
-          setLastShotBean(matchingBean);
-          setLastShotProfileTitle(selectedShot.profileTitle);
-          setLastShotSummary({
-            extractionTime: selectedShot.durationSeconds,
-            yieldGrams: selectedShot.actualYield,
-            peakPressure: selectedShot.peakPressure,
-            eyPercentage: selectedShot.ey,
-          });
-        }}
-        onRedialShot={(selectedShot) => {
-          const matchingBean = beans.find(
-            (b) => b.id === selectedShot.beanId || b.name === selectedShot.beanName
-          );
-          if (matchingBean) {
-            setActiveBean(matchingBean);
-          }
-          setActiveProfileTitle(selectedShot.profileTitle);
-          setCoffeeConfig((prev) => ({
-            ...prev,
-            dose: selectedShot.actualDose,
-            targetYield: selectedShot.targetYield,
-          }));
-        }}
-        onDeleteShot={(shotId) => {
-          setShots((prev) => {
-            const updated = prev.filter((s) => s.id !== shotId);
-            saveShotHistoryToStorage(updated);
-            return updated;
-          });
-          decaid.deleteShot(shotId).catch(() => {});
-        }}
-        onUpdateShot={handleUpdateShot}
-      />
 
       {/* Settings Modal */}
       <SettingsModal
@@ -953,18 +1030,7 @@ export function App() {
         onImportData={handleImportMigratedData}
       />
 
-      {/* Equipment Selection Modal for Upcoming Shot */}
-      <EquipmentSelectionModal
-        isOpen={isEquipmentModalOpen}
-        onClose={() => setIsEquipmentModalOpen(false)}
-        inventory={equipmentInventory}
-        selection={activeEquipment}
-        onSelectionChange={handleEquipmentSelectionChange}
-        onOpenSettingsEquipment={() => {
-          setIsEquipmentModalOpen(false);
-          handleOpenSettingsWithTab("equipment");
-        }}
-      />
+
 
       {/* Ambient Screensaver Overlay */}
       <ScreensaverOverlay

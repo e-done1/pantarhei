@@ -40,6 +40,7 @@ interface BeanDrawerProps {
   activeBeanId?: string;
   onSelectBean: (bean: PantaBean) => void;
   onSaveBean: (newBean: PantaBean) => void;
+  embedded?: boolean;
 }
 
 const COMMON_PACKAGE_SIZES = [
@@ -68,6 +69,7 @@ export const BeanDrawer: React.FC<BeanDrawerProps> = ({
   activeBeanId,
   onSelectBean,
   onSaveBean,
+  embedded = false,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRoaster, setSelectedRoaster] = useState<string | undefined>(undefined);
@@ -351,9 +353,16 @@ export const BeanDrawer: React.FC<BeanDrawerProps> = ({
     setIsFormOpen(false);
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex justify-start bg-black/75 backdrop-blur-sm select-none animate-in fade-in duration-150">
-      <div className="w-[520px] h-full bg-decent-surface border-r border-decent-border shadow-2xl flex flex-col p-5">
+  if (!isOpen) return null;
+
+  const drawerContent = (
+    <div
+      className={
+        embedded
+          ? "w-full h-full flex flex-col min-h-0 bg-slate-900/95 border border-slate-700/80 rounded-2xl p-4 lg:p-5 shadow-2xl overflow-hidden select-none"
+          : "w-[520px] h-full bg-decent-surface border-r border-decent-border shadow-2xl flex flex-col p-5 min-h-0 select-none"
+      }
+    >
         {/* Header with Total Available Weight */}
         <div className="flex items-center justify-between pb-3 border-b border-decent-border/60 shrink-0">
           <div>
@@ -387,9 +396,11 @@ export const BeanDrawer: React.FC<BeanDrawerProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-lg text-decent-muted hover:text-white hover:bg-decent-dark transition-all cursor-pointer"
+              className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-600 text-xs font-semibold flex items-center space-x-1 cursor-pointer transition-colors shadow-sm"
+              title="Return to cockpit graph"
             >
-              <X className="w-5 h-5" />
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Back to Graph</span>
             </button>
           </div>
         </div>
@@ -1150,7 +1161,7 @@ export const BeanDrawer: React.FC<BeanDrawerProps> = ({
             </div>
 
             {/* Beans List with Available Weight Indicators */}
-            <div className="flex-1 overflow-y-auto space-y-2.5 pr-1">
+            <div className={`flex-1 overflow-y-auto space-y-2.5 pr-1 min-h-0 ${embedded ? "grid grid-cols-1 md:grid-cols-2 gap-2.5 space-y-0" : ""}`}>
               {filteredBeans.length === 0 ? (
                 <div className="h-48 flex flex-col items-center justify-center text-center p-4 rounded-2xl bg-decent-dark/40 border border-decent-border/40">
                   <Coffee className="w-8 h-8 text-decent-muted mb-2 opacity-50" />
@@ -1327,7 +1338,16 @@ export const BeanDrawer: React.FC<BeanDrawerProps> = ({
             </div>
           </>
         )}
-      </div>
+    </div>
+  );
+
+  if (embedded) {
+    return drawerContent;
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-start bg-black/75 backdrop-blur-sm select-none animate-in fade-in duration-150">
+      {drawerContent}
     </div>
   );
 };
