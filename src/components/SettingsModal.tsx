@@ -170,6 +170,7 @@ interface SettingsModalProps {
   onMaintenanceConfigChange?: (config: MachineMaintenanceConfig) => void;
   onNavigateToMaintenanceContext?: (actionType: "cleaning" | "descale") => void;
   initialTab?: "appearance" | "screensaver" | "pairing" | "plugins" | "backup" | "equipment";
+  onImportData?: (data: any) => void;
 }
 
 const FONT_OPTIONS = [
@@ -204,6 +205,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onMaintenanceConfigChange,
   onNavigateToMaintenanceContext,
   initialTab = "appearance",
+  onImportData,
 }) => {
   // Navigation: Appearance, Screensaver, Pairing, Equipment, Plugins, Backup
   const [activeTab, setActiveTab] = useState<"appearance" | "screensaver" | "pairing" | "plugins" | "backup" | "equipment">(initialTab);
@@ -997,9 +999,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       }
 
       setDecaidSyncResult(data);
+      if (onImportData) {
+        onImportData(data);
+      }
       setMigrationToast({
         type: "success",
-        message: `Successfully imported ${data.profiles.length} profiles, ${data.shots.length} shots, ${data.beans.length} coffees, and equipment from Decaid Gateway!`,
+        message: `Successfully imported ${data.profiles.length} profiles, ${data.shots.length} shots, ${data.beans.length} coffees, and equipment from Decaid Gateway! Cockpit initialized with your last shot.`,
       });
     } catch (err: any) {
       setMigrationToast({

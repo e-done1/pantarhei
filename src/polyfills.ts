@@ -82,4 +82,17 @@ if (typeof (window as any).structuredClone === "undefined") {
   };
 }
 
+// 7. AbortSignal.timeout fallback for Chromium < 103 (e.g. Chrome 69 on Android 9)
+if (typeof AbortSignal !== "undefined" && typeof (AbortSignal as any).timeout !== "function") {
+  (AbortSignal as any).timeout = function (ms: number) {
+    const controller = new AbortController();
+    setTimeout(() => {
+      try {
+        controller.abort();
+      } catch {}
+    }, ms);
+    return controller.signal;
+  };
+}
+
 export {};

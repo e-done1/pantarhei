@@ -10,6 +10,8 @@ import {
   parseEquipmentDetails,
   parseDecaidProfile,
   parseDecaidShot,
+  convertDecaidMeasurementsToTelemetry,
+  syncFromDecaidGateway,
   type ProfileWithFolder,
 } from "../src/services/legacyMigration.ts";
 import type { ProfileItem } from "../src/types/profile.ts";
@@ -384,4 +386,275 @@ test("Migration: parseDecaidShot parses Decaid Gateway shot item with context & 
   assert.ok(shot.tags.includes("HE Basket"));
   assert.ok(shot.tags.includes("Bravo Tamper"));
   assert.ok(shot.baristaNotes.includes("Barista: Idan"));
+});
+
+test("Migration: convertDecaidMeasurementsToTelemetry maps live Decaid telemetry frames", () => {
+  const measurements = [
+    {
+      machine: {
+        timestamp: "2026-11-17T20:25:29.007Z",
+        flow: 0,
+        pressure: 0,
+        targetFlow: -1,
+        targetPressure: -1,
+        groupTemperature: 87.0,
+        targetGroupTemperature: 87.0,
+        steamTemperature: 0,
+      },
+      scale: {
+        timestamp: "2026-11-17T20:25:29.007Z",
+        weight: 0,
+        weightFlow: 0,
+      },
+    },
+    {
+      machine: {
+        timestamp: "2026-11-17T20:25:31.007Z",
+        flow: 4.5,
+        pressure: 2.1,
+        targetFlow: 4.5,
+        targetPressure: -1,
+        groupTemperature: 88.0,
+        targetGroupTemperature: 88.0,
+        steamTemperature: 0,
+      },
+      scale: {
+        timestamp: "2026-11-17T20:25:31.007Z",
+        weight: 1.2,
+        weightFlow: 0.6,
+      },
+    },
+    {
+      machine: {
+        timestamp: "2026-11-17T20:25:49.007Z",
+        flow: 1.8,
+        pressure: 3.3,
+        targetFlow: 1.8,
+        targetPressure: -1,
+        groupTemperature: 84.5,
+        targetGroupTemperature: 84.0,
+        steamTemperature: 0,
+      },
+      scale: {
+        timestamp: "2026-11-17T20:25:49.007Z",
+        weight: 32.5,
+        weightFlow: 1.8,
+      },
+    },
+  ];
+
+  const telemetry = convertDecaidMeasurementsToTelemetry(measurements, 1794947129000);
+  assert.equal(telemetry.length, 3);
+  assert.equal(telemetry[0].timeSeconds, 0);
+  assert.equal(telemetry[0].pressure, 0);
+  assert.equal(telemetry[0].phase, "preinfusion");
+
+  assert.equal(telemetry[1].timeSeconds, 2.0);
+  assert.equal(telemetry[1].pressure, 2.1);
+  assert.equal(telemetry[1].flow, 4.5);
+  assert.equal(telemetry[1].weight, 1.2);
+  assert.equal(telemetry[1].weightFlow, 0.6);
+  assert.equal(telemetry[1].phase, "preinfusion");
+
+  assert.equal(telemetry[2].timeSeconds, 20.0);
+  assert.equal(telemetry[2].pressure, 3.3);
+  assert.equal(telemetry[2].flow, 1.8);
+  assert.equal(telemetry[2].weight, 32.5);
+  assert.equal(telemetry[2].weightFlow, 1.8);
+  assert.equal(telemetry[2].phase, "extraction");
+  assert.ok(telemetry[2].puckResistance > 0);
+});
+
+test("Migration: syncFromDecaidGateway indexes beans, equipment, and transitions latest shot", async () => {
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = (async (url: string | URL | Request) => {
+      const urlStr = url.toString();
+
+      if (urlStr.endsWith("/api/v1/profiles")) {
+        return {
+          ok: true,
+          json: async () => [{ id: "prof-1", profile: { title: "Peony/FlowHUNB1.8", steps: [] } }],
+        } as any;
+      }
+
+      if (urlStr.endsWith("/api/v1/grinders")) {
+        return {
+          ok: true,
+          json: async () => [
+            { id: "g-1", model: "Laom P100 with 98mm HU burrs" },
+            { id: "g-2", model: "Niche Zero" },
+          ],
+        } as any;
+      }
+
+      if (urlStr.endsWith("/api/v1/beans")) {
+        return {
+          ok: true,
+          json: async () => [
+            {
+              id: "bean-123",
+              name: "Benti Nenka, Hambela Wamena, Natural, Heirloom, Guji, Ethiopia, 1,900 - 2,300 masl",
+              roaster: "Peony",
+              decaf: false,
+              archived: false,
+            },
+            {
+              id: "bean-456",
+              name: "AA Kerugoya, Washed SL28, SL34, Inoi, Kenya",
+              roaster: "Peony",
+              decaf: false,
+              archived: false,
+            },
+          ],
+        } as any;
+      }
+
+      if (urlStr.endsWith("/api/v1/bean-batches")) {
+        return {
+          ok: true,
+          json: async () => [
+            {
+              id: "batch-1",
+              beanId: "bean-123",
+              roastLevel: "light",
+              frozen: false,
+              archived: false,
+            },
+            {
+              id: "batch-2",
+              beanId: "bean-456",
+              roastLevel: "light",
+              frozen: true,
+              archived: false,
+            },
+          ],
+        } as any;
+      }
+
+      if (urlStr.includes("/api/v1/shots?limit=")) {
+        return {
+          ok: true,
+          json: async () => ({
+            items: [
+              {
+                id: "de1app-1794947129",
+                timestamp: "2026-11-17T20:25:29.000Z",
+                workflow: {
+                  name: "Peony/FlowHUNB1.8",
+                  context: {
+                    coffeeName: "Benti Nenka, Hambela Wamena, Natural, Heirloom, Guji, Ethiopia, 1,900 - 2,300 masl",
+                    coffeeRoaster: "Peony",
+                    beanBatchId: "batch-1",
+                    grinderModel: "Laom P100 with 98mm HU burrs",
+                    grinderSetting: "1.6 grind, 6.5 mm spacers on leveler + Bravo Tamper + HE basket",
+                    targetDoseWeight: 18.6,
+                    targetYield: 34.0,
+                  },
+                },
+                annotations: {
+                  actualDoseWeight: 18.6,
+                  actualYield: 34.2,
+                },
+              },
+            ],
+            total: 1,
+          }),
+        } as any;
+      }
+
+      if (urlStr.includes("/api/v1/shots/de1app-1794947129")) {
+        return {
+          ok: true,
+          json: async () => ({
+            id: "de1app-1794947129",
+            timestamp: "2026-11-17T20:25:29.000Z",
+            measurements: [
+              {
+                machine: { timestamp: "2026-11-17T20:25:29.007Z", flow: 0, pressure: 0 },
+                scale: { timestamp: "2026-11-17T20:25:29.007Z", weight: 0, weightFlow: 0 },
+              },
+              {
+                machine: { timestamp: "2026-11-17T20:25:50.525Z", flow: 1.85, pressure: 3.27 },
+                scale: { timestamp: "2026-11-17T20:25:50.525Z", weight: 32.5, weightFlow: 1.87 },
+              },
+            ],
+            workflow: {
+              context: {
+                coffeeName: "Benti Nenka, Hambela Wamena, Natural, Heirloom, Guji, Ethiopia, 1,900 - 2,300 masl",
+                coffeeRoaster: "Peony",
+                beanBatchId: "batch-1",
+                grinderModel: "Laom P100 with 98mm HU burrs",
+                grinderSetting: "1.6 grind, 6.5 mm spacers on leveler + Bravo Tamper + HE basket",
+                targetDoseWeight: 18.6,
+                targetYield: 34.0,
+              },
+            },
+            annotations: {
+              actualDoseWeight: 18.6,
+              actualYield: 34.2,
+              enjoyment: 8.5,
+            },
+          }),
+        } as any;
+      }
+
+      return { ok: false, status: 404 } as any;
+    }) as any;
+
+    const result = await syncFromDecaidGateway("http://mock-gateway:8080", 10);
+
+    // Verify profiles
+    assert.equal(result.profiles.length, 1);
+    assert.equal(result.profiles[0].title, "Peony/FlowHUNB1.8");
+
+    // Verify equipment discovery
+    assert.ok(result.equipment.grinders.includes("Lagom P100"));
+    assert.ok(result.equipment.grinders.includes("Niche Zero"));
+    assert.ok(result.equipment.burrs.includes("98mm HU"));
+
+    // Verify beans inventory from /api/v1/beans & /api/v1/bean-batches
+    assert.equal(result.beans.length, 2);
+    const b1 = result.beans.find((b) => b.id === "bean-123");
+    assert.ok(b1);
+    assert.equal(b1.name, "Benti Nenka, Hambela Wamena");
+    assert.equal(b1.roaster, "Peony");
+    assert.equal(b1.countryOfOrigin, "Ethiopia");
+    assert.equal(b1.process, "Natural");
+    assert.equal(b1.roastProfile, "Light");
+    assert.equal(b1.isFrozen, false);
+
+    const b2 = result.beans.find((b) => b.id === "bean-456");
+    assert.ok(b2);
+    assert.equal(b2.countryOfOrigin, "Kenya");
+    assert.equal(b2.isFrozen, true);
+
+    // Verify latest shot transition
+    assert.ok(result.latestShot);
+    assert.equal(result.latestShot.telemetry.length, 2);
+    assert.equal(result.latestShot.durationSeconds, 21.5);
+    assert.equal(result.latestShot.peakPressure, 3.3);
+    assert.equal(result.latestShot.actualDose, 18.6);
+    assert.equal(result.latestShot.actualYield, 34.2);
+
+    // Verify active transition states
+    assert.ok(result.activeBean);
+    assert.equal(result.activeBean.id, "bean-123");
+    assert.equal(result.activeBean.targetDose, 18.6);
+    assert.equal(result.activeBean.targetYield, 34.2);
+    assert.equal(result.activeBean.targetGrind, "1.6");
+    assert.equal(result.activeProfileTitle, "Peony/FlowHUNB1.8");
+    assert.equal(result.activeDose, 18.6);
+    assert.equal(result.activeTargetYield, 34.2);
+
+    assert.ok(result.activeEquipment);
+    assert.equal(result.activeEquipment.grinder, "Lagom P100");
+    assert.equal(result.activeEquipment.burrs, "98mm HU");
+    assert.equal(result.activeEquipment.basket, "HE Basket");
+    assert.deepEqual(result.activeEquipment.tampers, ["Bravo Tamper"]);
+    assert.deepEqual(result.activeEquipment.distributors, ["6.5 mm spacers on leveler"]);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });

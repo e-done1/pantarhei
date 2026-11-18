@@ -113,6 +113,7 @@ export function generateUUID(): string {
  * Creates a brand new coffee lot entry from scratch with standard defaults
  */
 export function createNewBeanEntry(params: {
+  id?: string;
   name: string;
   roaster: string;
   countryOfOrigin: string;
@@ -139,12 +140,15 @@ export function createNewBeanEntry(params: {
   preferredProfileId?: string;
   preferredBasket?: string;
   baristaNotes?: string;
+  archived?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }): PantaBean {
   const now = new Date();
   const todayStr = now.toISOString().split("T")[0];
 
   return {
-    id: generateUUID(),
+    id: params.id || generateUUID(),
     name: params.name.trim() || "Untitled Lot",
     roaster: params.roaster.trim() || "Unknown Roaster",
     countryOfOrigin: params.countryOfOrigin.trim() || "Single Origin",
@@ -171,9 +175,9 @@ export function createNewBeanEntry(params: {
     preferredProfileId: params.preferredProfileId,
     preferredBasket: params.preferredBasket,
     baristaNotes: params.baristaNotes,
-    archived: false,
-    createdAt: now.toISOString(),
-    updatedAt: now.toISOString(),
+    archived: Boolean(params.archived),
+    createdAt: params.createdAt || now.toISOString(),
+    updatedAt: params.updatedAt || now.toISOString(),
   };
 }
 

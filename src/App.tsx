@@ -93,28 +93,105 @@ export function App() {
     isTared: true,
   });
 
+  // Persistent Shot History & Inventory Archive
+  const [shots, setShots] = useState<ShotRecord[]>(() => loadShotHistoryFromStorage());
+  const [beans, setBeans] = useState<PantaBean[]>(() => loadBeansFromStorage([]));
+
   const [telemetryHistory, setTelemetryHistory] = useState<TelemetryPoint[]>([]);
-  const [completedShotHistory, setCompletedShotHistory] = useState<TelemetryPoint[]>([]);
+  const [completedShotHistory, setCompletedShotHistory] = useState<TelemetryPoint[]>(() => {
+    try {
+      const saved = localStorage.getItem("pantarhei_last_shot_history");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    const initialShots = loadShotHistoryFromStorage();
+    if (initialShots.length > 0 && initialShots[0].telemetry && initialShots[0].telemetry.length > 0) {
+      return initialShots[0].telemetry;
+    }
+    return [];
+  });
   const telemetryHistoryRef = useRef<TelemetryPoint[]>([]);
   const [shotStartTime, setShotStartTime] = useState<number>(0);
   const [showSummaryModal, setShowSummaryModal] = useState(false);
-  const [lastShotBean, setLastShotBean] = useState<PantaBean | undefined>(undefined);
-  const [lastShotProfileTitle, setLastShotProfileTitle] = useState<string | undefined>(undefined);
+
+  const [lastShotBean, setLastShotBean] = useState<PantaBean | undefined>(() => {
+    const loadedBeans = loadBeansFromStorage([]);
+    const initialShots = loadShotHistoryFromStorage();
+    if (initialShots.length > 0) {
+      const s = initialShots[0];
+      const matched = loadedBeans.find((b) => b.id === s.beanId || b.name === s.beanName);
+      if (matched) return matched;
+    }
+    return loadedBeans.length > 0 ? loadedBeans[0] : undefined;
+  });
+
+  const [lastShotProfileTitle, setLastShotProfileTitle] = useState<string | undefined>(() => {
+    const initialShots = loadShotHistoryFromStorage();
+    if (initialShots.length > 0) {
+      return initialShots[0].profileTitle;
+    }
+    return undefined;
+  });
+
   const [lastShotSummary, setLastShotSummary] = useState<{
     extractionTime: number;
     yieldGrams: number;
     peakPressure: number;
     eyPercentage?: number;
-  } | undefined>(undefined);
+    dose?: number;
+    avgFlow?: number;
+  } | undefined>(() => {
+    try {
+      const saved = localStorage.getItem("pantarhei_last_shot_summary");
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    const initialShots = loadShotHistoryFromStorage();
+    if (initialShots.length > 0) {
+      const s = initialShots[0];
+      return {
+        extractionTime: s.durationSeconds,
+        yieldGrams: s.actualYield,
+        peakPressure: s.peakPressure,
+        eyPercentage: s.ey,
+        dose: s.actualDose,
+        avgFlow: s.avgFlow,
+      };
+    }
+    return undefined;
+  });
 
   // Operational Tabs State
   const [activeTab, setActiveTab] = useState<CockpitTabId>("coffee");
-  const [coffeeConfig, setCoffeeConfig] = useState<CoffeeTabConfig>({
-    dose: 18.0,
-    targetYield: 36.0,
-    profileId: "default-espresso",
-    ratioText: "1:2.0",
+  const [coffeeConfig, setCoffeeConfig] = useState<CoffeeTabConfig>(() => {
+    const def: CoffeeTabConfig = {
+      dose: 18.0,
+      targetYield: 36.0,
+      profileId: "default-espresso",
+      ratioText: "1:2.0",
+    };
+    try {
+      const saved = localStorage.getItem("pantarhei_coffee_config");
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    const initialShots = loadShotHistoryFromStorage();
+    if (initialShots.length > 0) {
+      const s = initialShots[0];
+      const dose = s.actualDose || s.targetDose || 18.0;
+      const targetYield = s.actualYield || s.targetYield || 36.0;
+      const ratio = dose > 0 ? Math.round((targetYield / dose) * 10) / 10 : 2.0;
+      return {
+        ...def,
+        dose,
+        targetYield,
+        ratioText: `1:${ratio}`,
+        profileId: s.profileId || s.profileTitle || "default-espresso",
+      };
+    }
+    return def;
   });
+
   const [steamConfig, setSteamConfig] = useState<SteamTabConfig>({
     temperature: 150,
     flowRate: 1.2,
@@ -136,17 +213,34 @@ export function App() {
   });
 
   // Coffee & Profiles Selection
-  const [beans, setBeans] = useState<PantaBean[]>(() => loadBeansFromStorage([]));
   const [activeBean, setActiveBean] = useState<PantaBean | undefined>(() => {
     const loaded = loadBeansFromStorage([]);
+    try {
+      const savedActiveId = localStorage.getItem("pantarhei_active_bean_id");
+      if (savedActiveId) {
+        const found = loaded.find((b) => b.id === savedActiveId);
+        if (found) return found;
+      }
+    } catch {}
+    const initialShots = loadShotHistoryFromStorage();
+    if (initialShots.length > 0) {
+      const s = initialShots[0];
+      const matched = loaded.find((b) => b.id === s.beanId || b.name === s.beanName);
+      if (matched) return matched;
+    }
     return loaded.length > 0 ? loaded[0] : undefined;
   });
+
   const [activeProfileTitle, setActiveProfileTitle] = useState<string>(() => {
     try {
-      return localStorage.getItem("pantarhei_active_profile_title") || "Default Espresso";
-    } catch {
-      return "Default Espresso";
+      const saved = localStorage.getItem("pantarhei_active_profile_title");
+      if (saved) return saved;
+    } catch {}
+    const initialShots = loadShotHistoryFromStorage();
+    if (initialShots.length > 0 && initialShots[0].profileTitle) {
+      return initialShots[0].profileTitle;
     }
+    return "Default Espresso";
   });
   const [activeProfile, setActiveProfile] = useState<ProfileItem | null>(null);
 
@@ -254,9 +348,6 @@ export function App() {
     setSettingsInitialTab(tab);
     setIsSettingsOpen(true);
   };
-
-  // Persistent Shot History Archive
-  const [shots, setShots] = useState<ShotRecord[]>(() => loadShotHistoryFromStorage());
 
   // Subscribe to live/simulated Decaid telemetry
   useEffect(() => {
@@ -524,24 +615,30 @@ export function App() {
     beans?: PantaBean[];
     equipment?: Partial<EquipmentInventory>;
     activeEquipment?: Partial<ActiveEquipmentSelection>;
+    latestShot?: ShotRecord;
+    activeBean?: PantaBean;
+    activeProfileTitle?: string;
+    activeDose?: number;
+    activeTargetYield?: number;
   }) => {
+    let mergedShotsList: ShotRecord[] = shots;
     if (data.shots && data.shots.length > 0) {
       setShots((prev) => {
-        const merged = mergeShots(prev, data.shots, "merge_deduplicate");
-        saveShotHistoryToStorage(merged);
-        return merged;
+        mergedShotsList = mergeShots(prev, data.shots, "merge_deduplicate");
+        saveShotHistoryToStorage(mergedShotsList);
+        return mergedShotsList;
       });
     }
+
+    let mergedBeansList: PantaBean[] = beans;
     if (data.beans && data.beans.length > 0) {
       setBeans((prev) => {
-        const merged = mergeBeans(prev, data.beans!, "merge_deduplicate");
-        saveBeansToStorage(merged);
-        if (!activeBean && merged.length > 0) {
-          setActiveBean(merged[0]);
-        }
-        return merged;
+        mergedBeansList = mergeBeans(prev, data.beans!, "merge_deduplicate");
+        saveBeansToStorage(mergedBeansList);
+        return mergedBeansList;
       });
     }
+
     if (data.equipment) {
       setEquipmentInventory((prev) => {
         const updated: EquipmentInventory = {
@@ -557,6 +654,7 @@ export function App() {
         return updated;
       });
     }
+
     if (data.activeEquipment) {
       setActiveEquipment((prev) => {
         const updated: ActiveEquipmentSelection = {
@@ -568,6 +666,76 @@ export function App() {
           distributors: data.activeEquipment?.distributors && data.activeEquipment.distributors.length > 0 ? data.activeEquipment.distributors : prev.distributors,
         };
         saveActiveEquipment(updated);
+        return updated;
+      });
+    }
+
+    // Cockpit transition from latest shot
+    const latest = data.latestShot || (data.shots && data.shots.length > 0 ? data.shots[0] : mergedShotsList[0]);
+    if (latest) {
+      // 1. Telemetry points for the middle pane extraction graph
+      if (latest.telemetry && latest.telemetry.length > 0) {
+        setCompletedShotHistory(latest.telemetry);
+        try {
+          localStorage.setItem("pantarhei_last_shot_history", JSON.stringify(latest.telemetry));
+        } catch {}
+      }
+
+      // 2. Post-shot summary pill
+      const summary = {
+        extractionTime: latest.durationSeconds,
+        yieldGrams: latest.actualYield,
+        peakPressure: latest.peakPressure,
+        eyPercentage: latest.ey,
+        dose: latest.actualDose,
+        avgFlow: latest.avgFlow,
+      };
+      setLastShotSummary(summary);
+      try {
+        localStorage.setItem("pantarhei_last_shot_summary", JSON.stringify(summary));
+      } catch {}
+
+      // 3. Active bean & last shot bean
+      const allAvailableBeans = data.beans && data.beans.length > 0 ? data.beans : mergedBeansList;
+      const targetBean =
+        data.activeBean ||
+        allAvailableBeans.find((b) => b.id === latest.beanId || b.name === latest.beanName) ||
+        (allAvailableBeans.length > 0 ? allAvailableBeans[0] : undefined);
+
+      if (targetBean) {
+        setActiveBean(targetBean);
+        setLastShotBean(targetBean);
+        try {
+          localStorage.setItem("pantarhei_active_bean_id", targetBean.id);
+        } catch {}
+      }
+
+      // 4. Active profile & last shot profile
+      const profTitle = data.activeProfileTitle || latest.profileTitle;
+      if (profTitle) {
+        setActiveProfileTitle(profTitle);
+        setLastShotProfileTitle(profTitle);
+        try {
+          localStorage.setItem("pantarhei_active_profile_title", profTitle);
+        } catch {}
+      }
+
+      // 5. Active dose & target yield for Cockpit
+      const dose = data.activeDose || latest.actualDose || latest.targetDose || 18.0;
+      const targetYield = data.activeTargetYield || latest.actualYield || latest.targetYield || 36.0;
+      const ratio = dose > 0 ? Math.round((targetYield / dose) * 10) / 10 : 2.0;
+
+      setCoffeeConfig((prev) => {
+        const updated = {
+          ...prev,
+          dose,
+          targetYield,
+          ratioText: `1:${ratio}`,
+          profileId: latest.profileId || latest.profileTitle || prev.profileId,
+        };
+        try {
+          localStorage.setItem("pantarhei_coffee_config", JSON.stringify(updated));
+        } catch {}
         return updated;
       });
     }
@@ -847,6 +1015,7 @@ export function App() {
         onMaintenanceConfigChange={handleMaintenanceConfigChange}
         onNavigateToMaintenanceContext={handleNavigateToMaintenanceContext}
         initialTab={settingsInitialTab}
+        onImportData={handleImportMigratedData}
       />
 
       {/* Equipment Selection Modal for Upcoming Shot */}

@@ -237,18 +237,12 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
 
       // Notify parent app
       if (onImportData) {
-        onImportData({
-          profiles: data.profiles,
-          shots: data.shots,
-          beans: data.beans,
-          equipment: data.equipment,
-          activeEquipment: data.activeEquipment,
-        });
+        onImportData(data);
       }
 
       setSyncFeedback({
         type: "success",
-        message: `Successfully imported ${data.profiles.length} profiles, ${data.shots.length} shots, ${data.beans.length} coffees, and active gear from Decaid!`,
+        message: `Successfully imported ${data.profiles.length} profiles, ${data.shots.length} shots, ${data.beans.length} coffees, and active gear from Decaid! Cockpit initialized with your last shot.`,
       });
     } catch (err: any) {
       setSyncFeedback({

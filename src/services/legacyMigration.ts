@@ -19,6 +19,24 @@ import { createNewBeanEntry } from "../types/bean.ts";
 import type { TelemetryPoint } from "./telemetrySimulator.ts";
 import { normalizeShotKey } from "../types/backup.ts";
 
+function createTimeoutSignal(ms: number): AbortSignal | undefined {
+  if (typeof AbortSignal !== "undefined" && typeof (AbortSignal as any).timeout === "function") {
+    return (AbortSignal as any).timeout(ms);
+  }
+  if (typeof AbortController !== "undefined") {
+    const controller = new AbortController();
+    setTimeout(() => {
+      try {
+        controller.abort();
+      } catch {
+        // ignore
+      }
+    }, ms);
+    return controller.signal;
+  }
+  return undefined;
+}
+
 export interface ProfileDeduplicationResult {
   uniqueProfiles: ProfileItem[];
   duplicateCount: number;
@@ -47,6 +65,11 @@ export interface DecaidGatewaySyncResult {
   beans: PantaBean[];
   equipment: DecaidDiscoveredEquipment;
   activeEquipment?: Partial<ActiveEquipmentSelection>;
+  latestShot?: ShotRecord;
+  activeBean?: PantaBean;
+  activeProfileTitle?: string;
+  activeDose?: number;
+  activeTargetYield?: number;
 }
 
 export interface MigrationBatchResult {
@@ -906,6 +929,54 @@ export function deduplicateShots(
 // Decaid Gateway API Sync
 // -------------------------------------------------------------
 
+/**
+ * Converts Decaid telemetry measurements into PantaRhei TelemetryPoint series
+ */
+export function convertDecaidMeasurementsToTelemetry(
+  measurements: any[],
+  baseTimestamp: number = Date.now()
+): TelemetryPoint[] {
+  if (!Array.isArray(measurements) || measurements.length === 0) return [];
+
+  const firstT = measurements[0]?.machine?.timestamp
+    ? new Date(measurements[0].machine.timestamp).getTime()
+    : baseTimestamp;
+
+  return measurements.map((m: any, i: number) => {
+    const rawT = m.machine?.timestamp
+      ? new Date(m.machine.timestamp).getTime()
+      : firstT + i * 250;
+    const timeSeconds = Math.max(0, Math.round(((rawT - firstT) / 1000) * 10) / 10);
+    const pressure = Math.round((m.machine?.pressure ?? 0) * 10) / 10;
+    const targetPressure = m.machine?.targetPressure >= 0 ? Math.round(m.machine.targetPressure * 10) / 10 : 0;
+    const flow = Math.round((m.machine?.flow ?? 0) * 10) / 10;
+    const targetFlow = m.machine?.targetFlow >= 0 ? Math.round(m.machine.targetFlow * 10) / 10 : 0;
+    const weight = Math.round((m.scale?.weight ?? 0) * 10) / 10;
+    const weightFlow = Math.round((m.scale?.weightFlow ?? 0) * 10) / 10;
+    const groupTemperature = Math.round((m.machine?.groupTemperature ?? 93.0) * 10) / 10;
+    const targetGroupTemp = Math.round((m.machine?.targetGroupTemperature ?? 93.0) * 10) / 10;
+    const steamTemperature = Math.round((m.machine?.steamTemperature ?? 0) * 10) / 10;
+    const puckResistance = flow > 0.1 ? Math.round((pressure / (flow * flow)) * 100) / 100 : 0;
+
+    return {
+      timestamp: baseTimestamp + Math.round(timeSeconds * 1000),
+      timeSeconds,
+      pressure,
+      targetPressure,
+      flow,
+      targetFlow,
+      weightFlow,
+      weight,
+      groupTemperature,
+      targetGroupTemp,
+      steamTemperature,
+      puckResistance,
+      phase: timeSeconds < 5 ? "preinfusion" : "extraction",
+      channelDetected: false,
+    };
+  });
+}
+
 export async function syncFromDecaidGateway(
   baseUrl: string = "http://localhost:8080",
   limit: number = 100
@@ -932,11 +1003,11 @@ export async function syncFromDecaidGateway(
   const tampersSet = new Set<string>();
   const distributorsSet = new Set<string>();
 
+  // 1. Fetch profiles from Decaid
   try {
-    // 1. Fetch profiles from Decaid
     const profRes = await fetch(`${baseUrl}/api/v1/profiles`, {
       headers: { "Content-Type": "application/json" },
-      signal: AbortSignal.timeout(5000),
+      signal: createTimeoutSignal(5000),
     });
     if (profRes.ok) {
       const data = await profRes.json();
@@ -950,11 +1021,108 @@ export async function syncFromDecaidGateway(
     console.warn("[PantaRhei] Decaid Gateway profiles endpoint unreachable:", err);
   }
 
+  // 2. Fetch grinders & burrs inventory
   try {
-    // 2. Fetch historical shots from Decaid
+    const gRes = await fetch(`${baseUrl}/api/v1/grinders`, {
+      headers: { "Content-Type": "application/json" },
+      signal: createTimeoutSignal(5000),
+    });
+    if (gRes.ok) {
+      const data = await gRes.json();
+      const items = Array.isArray(data) ? data : Array.isArray(data?.items) ? data.items : [];
+      for (const g of items) {
+        if (g.model) {
+          const parsed = parseEquipmentDetails(g.model);
+          if (parsed.grinder) grindersSet.add(parsed.grinder);
+          if (parsed.burrs) burrsSet.add(parsed.burrs);
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("[PantaRhei] Decaid Gateway grinders endpoint unreachable:", err);
+  }
+
+  // 3. Fetch comprehensive beans & bean batches from Decaid / DYE database
+  try {
+    const [beansRes, batchesRes] = await Promise.all([
+      fetch(`${baseUrl}/api/v1/beans`, {
+        headers: { "Content-Type": "application/json" },
+        signal: createTimeoutSignal(5000),
+      }).catch(() => null),
+      fetch(`${baseUrl}/api/v1/bean-batches`, {
+        headers: { "Content-Type": "application/json" },
+        signal: createTimeoutSignal(5000),
+      }).catch(() => null),
+    ]);
+
+    let rawBeans: any[] = [];
+    if (beansRes && beansRes.ok) {
+      const data = await beansRes.json();
+      rawBeans = Array.isArray(data) ? data : Array.isArray(data?.items) ? data.items : [];
+    }
+
+    let rawBatches: any[] = [];
+    if (batchesRes && batchesRes.ok) {
+      const data = await batchesRes.json();
+      rawBatches = Array.isArray(data) ? data : Array.isArray(data?.items) ? data.items : [];
+    }
+
+    const batchMap = new Map<string, any>();
+    for (const b of rawBatches) {
+      if (b.beanId) {
+        batchMap.set(b.beanId, b);
+      }
+    }
+
+    for (const rb of rawBeans) {
+      const batch = batchMap.get(rb.id);
+      const details = parseCoffeeDetails(rb.name, rb.roaster);
+      const beanKey = `${normalizeProfileTitle(details.name)}-${normalizeProfileTitle(details.roaster)}`;
+
+      let roastProfile: PantaBean["roastProfile"] = undefined;
+      const rl = (batch?.roastLevel || "").toLowerCase();
+      if (rl.includes("ultra") || rl.includes("nordic")) roastProfile = "Ultra-Light/Nordic";
+      else if (rl.includes("medium_light") || rl.includes("medium-light")) roastProfile = "Medium-Light";
+      else if (rl.includes("light")) roastProfile = "Light";
+      else if (rl.includes("medium")) roastProfile = "Medium";
+      else if (rl.includes("dark")) roastProfile = "Dark";
+
+      const beanEntry = createNewBeanEntry({
+        id: rb.id,
+        name: details.name,
+        roaster: details.roaster,
+        countryOfOrigin: details.countryOfOrigin,
+        region: details.region,
+        process: details.process,
+        varietal: details.varietal,
+        altitude: details.altitude,
+        roastProfile,
+        isFrozen: Boolean(batch?.frozen),
+        baristaNotes: rb.notes || undefined,
+        archived: Boolean(rb.archived || batch?.archived),
+        createdAt: rb.createdAt,
+        updatedAt: rb.updatedAt,
+        totalGrams: 250,
+        remainingGrams: 250,
+      });
+
+      discoveredBeansMap.set(beanKey, beanEntry);
+      if (rb.id) {
+        discoveredBeansMap.set(`id-${rb.id}`, beanEntry);
+      }
+      if (batch?.id) {
+        discoveredBeansMap.set(`batch-${batch.id}`, beanEntry);
+      }
+    }
+  } catch (err) {
+    console.warn("[PantaRhei] Decaid Gateway beans/batches endpoint unreachable:", err);
+  }
+
+  // 4. Fetch historical shots from Decaid
+  try {
     const shotRes = await fetch(`${baseUrl}/api/v1/shots?limit=${limit}`, {
       headers: { "Content-Type": "application/json" },
-      signal: AbortSignal.timeout(6000),
+      signal: createTimeoutSignal(6000),
     });
     if (shotRes.ok) {
       const data = await shotRes.json();
@@ -974,7 +1142,7 @@ export async function syncFromDecaidGateway(
           for (const d of shot.equipment.distributors || []) distributorsSet.add(d);
         }
 
-        // Discovered Beans & Terroir Indexing
+        // Fallback bean discovery if beans endpoint didn't populate it
         const ctx = item.workflow?.context || {};
         const coffee = parseCoffeeDetails(ctx.coffeeName, ctx.coffeeRoaster);
         const beanKey = `${normalizeProfileTitle(coffee.name)}-${normalizeProfileTitle(coffee.roaster)}`;
@@ -998,29 +1166,127 @@ export async function syncFromDecaidGateway(
           discoveredBeansMap.set(beanKey, newBean);
         }
       }
-
-      // If shots were found, set active equipment from the latest shot
-      if (result.shots.length > 0) {
-        const latestShot = result.shots[0];
-        if (latestShot.equipment) {
-          result.activeEquipment = {
-            grinder: latestShot.equipment.grinder,
-            burrs: latestShot.equipment.burrs,
-            basket: latestShot.equipment.basket,
-            scale: latestShot.equipment.scale,
-            tampers: latestShot.equipment.tampers || [],
-            distributors: latestShot.equipment.distributors || [],
-            wdt: [],
-            rdt: [],
-          };
-        }
-      }
     }
   } catch (err) {
     console.warn("[PantaRhei] Decaid Gateway shots endpoint unreachable:", err);
   }
 
-  result.beans = Array.from(discoveredBeansMap.values());
+  // 5. Fetch telemetry and details for the latest shot to ensure seamless cockpit transition!
+  if (result.shots.length > 0) {
+    const latestShot = result.shots[0];
+    try {
+      const detailRes = await fetch(`${baseUrl}/api/v1/shots/${latestShot.id}`, {
+        headers: { "Content-Type": "application/json" },
+        signal: createTimeoutSignal(5000),
+      });
+      if (detailRes.ok) {
+        const detail = await detailRes.json();
+        if (detail.measurements && Array.isArray(detail.measurements)) {
+          const telemetry = convertDecaidMeasurementsToTelemetry(detail.measurements, latestShot.timestamp);
+          if (telemetry.length > 0) {
+            latestShot.telemetry = telemetry;
+            const finalPt = telemetry[telemetry.length - 1];
+            const peakP = telemetry.reduce((max, pt) => Math.max(max, pt.pressure), 0);
+            const sumFlow = telemetry.reduce((sum, pt) => sum + pt.flow, 0);
+            latestShot.durationSeconds = finalPt.timeSeconds;
+            latestShot.peakPressure = peakP;
+            latestShot.avgFlow = Math.round((sumFlow / telemetry.length) * 10) / 10;
+            if (detail.annotations?.actualYield || finalPt.weight > 0) {
+              latestShot.actualYield = detail.annotations?.actualYield || finalPt.weight;
+            }
+          }
+        }
+
+        if (detail.annotations?.actualDoseWeight) {
+          latestShot.actualDose = Number(detail.annotations.actualDoseWeight);
+        }
+        if (detail.annotations?.enjoyment) {
+          latestShot.rating = Number(detail.annotations.enjoyment);
+        }
+        if (detail.annotations?.drinkEy) {
+          latestShot.ey = Number(detail.annotations.drinkEy);
+        }
+        if (detail.annotations?.drinkTds) {
+          latestShot.tds = Number(detail.annotations.drinkTds);
+        }
+
+        // Equipment from latest shot context
+        const ctx = detail.workflow?.context || {};
+        if (ctx.targetDoseWeight) latestShot.targetDose = Number(ctx.targetDoseWeight);
+        if (ctx.targetYield) latestShot.targetYield = Number(ctx.targetYield);
+
+        const eqParsed = parseEquipmentDetails(ctx.grinderModel, ctx.grinderSetting);
+        latestShot.equipment = {
+          grinder: eqParsed.grinder,
+          burrs: eqParsed.burrs,
+          basket: eqParsed.basket,
+          scale: eqParsed.scale,
+          tampers: eqParsed.tampers,
+          distributors: eqParsed.distributors,
+          wdt: [],
+          rdt: [],
+        };
+        latestShot.grindSetting = eqParsed.grindSetting;
+
+        // Find active bean
+        let matchedBean: PantaBean | undefined = undefined;
+        if (ctx.beanBatchId && discoveredBeansMap.has(`batch-${ctx.beanBatchId}`)) {
+          matchedBean = discoveredBeansMap.get(`batch-${ctx.beanBatchId}`);
+        } else if (ctx.coffeeName) {
+          const coffee = parseCoffeeDetails(ctx.coffeeName, ctx.coffeeRoaster);
+          const beanKey = `${normalizeProfileTitle(coffee.name)}-${normalizeProfileTitle(coffee.roaster)}`;
+          matchedBean = discoveredBeansMap.get(beanKey);
+        }
+
+        if (matchedBean) {
+          matchedBean.targetDose = latestShot.actualDose || latestShot.targetDose || 18.0;
+          matchedBean.targetYield = latestShot.actualYield || latestShot.targetYield || 36.0;
+          matchedBean.targetGrind = latestShot.grindSetting;
+          matchedBean.preferredProfileId = latestShot.profileTitle;
+          if (latestShot.basket) matchedBean.preferredBasket = latestShot.basket;
+          result.activeBean = matchedBean;
+        }
+      }
+    } catch (err) {
+      console.warn("[PantaRhei] Error fetching latest shot detail for telemetry transition:", err);
+    }
+
+    result.latestShot = latestShot;
+    result.activeProfileTitle = latestShot.profileTitle;
+    result.activeDose = latestShot.actualDose || latestShot.targetDose;
+    result.activeTargetYield = latestShot.actualYield || latestShot.targetYield;
+
+    if (latestShot.equipment) {
+      result.activeEquipment = {
+        grinder: latestShot.equipment.grinder,
+        burrs: latestShot.equipment.burrs,
+        basket: latestShot.equipment.basket,
+        scale: latestShot.equipment.scale,
+        tampers: latestShot.equipment.tampers || [],
+        distributors: latestShot.equipment.distributors || [],
+        wdt: [],
+        rdt: [],
+      };
+    }
+  }
+
+  // Filter out internal id/batch lookup entries from beans array
+  const uniqueBeansList: PantaBean[] = [];
+  const seenIds = new Set<string>();
+  for (const [key, bean] of discoveredBeansMap.entries()) {
+    if (key.startsWith("id-") || key.startsWith("batch-")) continue;
+    if (!seenIds.has(bean.id)) {
+      seenIds.add(bean.id);
+      uniqueBeansList.push(bean);
+    }
+  }
+  result.beans = uniqueBeansList;
+
+  // If activeBean still not assigned, pick first bean
+  if (!result.activeBean && result.beans.length > 0) {
+    result.activeBean = result.beans[0];
+  }
+
   result.equipment = {
     grinders: Array.from(grindersSet),
     burrs: Array.from(burrsSet),
