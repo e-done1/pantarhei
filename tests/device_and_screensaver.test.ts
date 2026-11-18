@@ -167,14 +167,14 @@ test("Decaid Connection: Bluetooth scale scanning, pairing, and taring", async (
 
 test("Decaid Connection: Machine power control (wake & sleep)", async () => {
   await decaid.wakeMachine();
-  assert.notEqual(decaid.getMachineInfo().state, "sleep");
+  assert.ok(decaid.getMachineInfo().state === "idle" || decaid.getMachineInfo().state === "ready");
 
   await decaid.sleepMachine();
-  assert.equal(decaid.getMachineInfo().state, "sleep");
+  assert.ok(decaid.getMachineInfo().state === "sleeping" || decaid.getMachineInfo().state === "sleep");
 
   // Re-wake for subsequent tests
   await decaid.wakeMachine();
-  assert.notEqual(decaid.getMachineInfo().state, "sleep");
+  assert.ok(decaid.getMachineInfo().state === "idle" || decaid.getMachineInfo().state === "ready");
 });
 
 test("Decaid Connection: Simulator mode fallback ensures unblocked barista experience", () => {

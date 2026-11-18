@@ -297,15 +297,21 @@ test("DYE2 Integration: formatShotForDYE matches Decaid DYE2 standard schema", (
 });
 
 test("DYE2 Integration: syncHistoryToDYE processes historical archive with progress", async () => {
-  let progressCount = 0;
-  const result = await syncHistoryToDYE("http://localhost:8080", SAMPLE_SHOTS, (current, total) => {
-    progressCount++;
-    assert.equal(total, 1);
-  });
+  const originalFetch = globalThis.fetch;
+  try {
+    globalThis.fetch = (async () => ({ ok: true, json: async () => ({ status: "ok" }) } as any));
+    let progressCount = 0;
+    const result = await syncHistoryToDYE("http://localhost:8080", SAMPLE_SHOTS, (current, total) => {
+      progressCount++;
+      assert.equal(total, 1);
+    });
 
-  assert.equal(result.synced, 1);
-  assert.equal(result.failed, 0);
-  assert.equal(progressCount, 1);
+    assert.equal(result.synced, 1);
+    assert.equal(result.failed, 0);
+    assert.equal(progressCount, 1);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
 
 test("Visualizer Bridge: Token validation and settings management", async () => {
@@ -352,8 +358,14 @@ test("DYE2 Edit Synchronization: Edited shot TDS, EY, tasting notes, and recipe 
   assert.equal(dyePayload.recipe.grind_setting, "4.0", "Grind setting updated");
 
   // Verify syncShotToDYE handles the edited shot without error
-  const success = await syncShotToDYE("http://localhost:8080", updatedShot, false);
-  assert.equal(success, true, "syncShotToDYE successfully dispatches edited record");
+  const origFetch = globalThis.fetch;
+  try {
+    globalThis.fetch = (async () => ({ ok: true, json: async () => ({ status: "ok" }) } as any));
+    const success = await syncShotToDYE("http://localhost:8080", updatedShot, false);
+    assert.equal(success, true, "syncShotToDYE successfully dispatches edited record");
+  } finally {
+    globalThis.fetch = origFetch;
+  }
 });
 
 test("Interoperability: serializeShotToTcl serializes shot to official de1app TCL format for cross-skin compatibility", () => {

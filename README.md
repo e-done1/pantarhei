@@ -148,16 +148,54 @@ PantaRhei is optimized for the standard Decent DE1 landscape tablet resolution:
 
 1. Copy or clone this repository into the Decaid `skins/` directory on your DE1 tablet:
    ```bash
-   cd ~/decaid/skins/
-   git clone https://github.com/e-done1/pantarhei.git pantarhei
+---
+
+## Installation & Deployment
+
+### Option A: 1-Click Install via Decaid (Recommended)
+Decaid supports installing skins directly from GitHub Release assets:
+1. On your Decent tablet, open **Decaid Settings** $\rightarrow$ **WebUI / Skins**.
+2. Select **Install from GitHub Release** and enter:
+   - **Repository**: `e-done1/pantarhei`
+   - **Tag**: Select latest release (e.g. `v1.0.0`)
+3. Decaid will automatically download, unpack `pantarhei.zip`, and activate the skin.
+
+### Option B: Manual ZIP Installation
+Every release and push automatically produces a validated `pantarhei.zip` via GitHub Actions:
+1. Download `pantarhei.zip` from [Releases](https://github.com/e-done1/pantarhei/releases).
+2. In Decaid Settings, choose **Upload Skin ZIP** or extract the zip directly so `index.html` sits at:
+   ```bash
+   ~/decaid/skins/pantarhei/index.html
    ```
-2. Open Decaid **Settings** $\rightarrow$ **Skins** and select **PantaRhei**.
+3. In Decaid Settings $\rightarrow$ Skins, select **PantaRhei**.
+
+### Option C: Build from Source
+If building locally on your workstation:
+```bash
+git clone https://github.com/e-done1/pantarhei.git
+cd pantarhei
+npm install
+npm test
+npm run build
+```
+Package the built assets (`index.html` must sit directly at the root of the archive):
+```bash
+cd dist
+zip -r ../pantarhei.zip .
+cd ..
+```
+Deploy `pantarhei.zip` to your Decaid tablet.
 
 ---
 
 ## Development
 
-- **Prerequisites**: Node.js 18+ and npm
+- **Prerequisites**: Node.js 20+ and npm
 - **Install dependencies**: `npm install`
 - **Run test suite**: `npm test`
 - **Production build**: `npm run build`
+- **Connect to Live Decaid Tablet during Development**:
+  ```bash
+  GATEWAY_HOST=192.168.1.120:8080 npm run dev
+  ```
+  Vite will proxy `/api` and `/ws` directly to your Decent tablet or local Decaid simulator (`flutter run --dart-define=simulate=machine,scale`).

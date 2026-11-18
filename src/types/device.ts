@@ -12,7 +12,7 @@ export interface DE1MachineInfo {
   firmwareVersion: string;  // e.g. "1.42"
   bleVersion: string;       // e.g. "2.1"
   softwareVersion?: string; // Decaid software version e.g. "2.1.0"
-  state: "ready" | "sleep" | "heating" | "espresso" | "steam" | "water" | "rinse" | "disconnected";
+  state: "ready" | "idle" | "sleep" | "sleeping" | "heating" | "espresso" | "steam" | "water" | "rinse" | "disconnected";
   headTemp: number;         // °C
   targetHeadTemp: number;   // °C
   steamTemp: number;        // °C

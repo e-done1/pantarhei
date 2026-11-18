@@ -209,6 +209,8 @@ export function App() {
     return def;
   });
 
+  const targetYieldDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const handleCoffeeConfigChange = (newConfig: CoffeeTabConfig) => {
     const prevYield = coffeeConfig.targetYield;
     setCoffeeConfig(newConfig);
@@ -216,7 +218,12 @@ export function App() {
       localStorage.setItem("pantarhei_coffee_config", JSON.stringify(newConfig));
     } catch {}
     if (newConfig.targetYield && newConfig.targetYield !== prevYield) {
-      decaid.setTargetYield(newConfig.targetYield);
+      if (targetYieldDebounceRef.current) {
+        clearTimeout(targetYieldDebounceRef.current);
+      }
+      targetYieldDebounceRef.current = setTimeout(() => {
+        decaid.setTargetYield(newConfig.targetYield);
+      }, 300);
     }
   };
 

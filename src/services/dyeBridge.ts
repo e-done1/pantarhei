@@ -186,8 +186,8 @@ export async function syncShotToDYE(
     }
   }
 
-  // Graceful offline mock / local simulation acknowledgment
-  return true;
+  // Real network failure: return false so callers and UI can accurately report status
+  return false;
 }
 
 /**

@@ -246,7 +246,7 @@ export function generateProfileFilename(title: string, extension: "json" | "tcl"
 
 /**
  * Serializes a PantaRhei Profile into standard Decaid v2 JSON format
- * Suitable for saving to the `profiles_v2` directory or `POST /api/v1/profiles`
+ * Matches Decaid's defaultProfiles/*.json structure.
  */
 export function serializeToDecaidV2(profile: ProfileItem): Record<string, any> {
   const steps = (profile.steps || createDefaultProfileSteps()).map((step) => ({
@@ -265,6 +265,7 @@ export function serializeToDecaidV2(profile: ProfileItem): Record<string, any> {
   }));
 
   return {
+    version: "2",
     title: profile.title.trim() || "Untitled Profile",
     author: profile.author?.trim() || "Barista",
     notes: profile.notes?.trim() || "",
@@ -280,8 +281,38 @@ export function serializeToDecaidV2(profile: ProfileItem): Record<string, any> {
     hidden: "",
     reference_file: "",
     changes_since_last_espresso: "",
-    version: "2",
   };
+}
+
+/**
+ * Strips legacy TCL fields and validates pump discrimination for Decaid's Rea Gateway API (PUT /workflow, POST /machine/profile)
+ * Prevents Rea's strict Dart deserializer from stalling or failing with 400.
+ */
+export function sanitizeProfileForRea(profileData: Record<string, any>): Record<string, any> {
+  const profile = JSON.parse(JSON.stringify(profileData));
+  profile.version = profile.version || "2";
+
+  for (const k of ["type", "legacy_profile_type", "lang", "hidden", "reference_file", "changes_since_last_espresso"]) {
+    delete profile[k];
+  }
+
+  if (Array.isArray(profile?.steps)) {
+    for (const step of profile.steps) {
+      if (step.pump === "flow") {
+        delete step.pressure;
+      } else if (step.pump === "pressure") {
+        delete step.flow;
+      }
+      if (step.limiter && (step.limiter.value === 0 || step.limiter.value === "0")) {
+        delete step.limiter;
+      }
+      if (step.exit && step.exit.type !== "pressure" && step.exit.type !== "flow") {
+        delete step.exit;
+      }
+    }
+  }
+
+  return profile;
 }
 
 /**

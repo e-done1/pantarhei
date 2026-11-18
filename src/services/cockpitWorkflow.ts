@@ -60,7 +60,7 @@ export function resolveGoButtonState(
     case "water":
       defaultLabel = "Go!";
       defaultAction = "water";
-      defaultEndpoint = "/api/v1/machine/state/water";
+      defaultEndpoint = "/api/v1/machine/state/hotWater";
       defaultHalo = "cyan-blue";
       subLabel = tabConfig.water ? `${tabConfig.water.volumeMl}ml` : "150ml";
       autoTare = false;
@@ -69,7 +69,7 @@ export function resolveGoButtonState(
     case "maintenance":
       defaultLabel = "Go!";
       defaultAction = "flush";
-      defaultEndpoint = "/api/v1/machine/state/rinse";
+      defaultEndpoint = "/api/v1/machine/state/flush";
       defaultHalo = "neon-green";
       subLabel = tabConfig.maintenance ? `${tabConfig.maintenance.flushDurationSeconds}s Flush` : "3s Flush";
       autoTare = false;

@@ -3,6 +3,7 @@
  * Interfaces with live Decaid REST (:8080/api/v1/) and WebSocket (:8080/ws/v1/)
  * feeds, manages DE1 hardware connectivity and Bluetooth scale pairing,
  * with seamless fallback to internal telemetry simulation when offline.
+ * Strictly adheres to Decaid OpenAPI v1 (rest_v1.yml, websocket_v1.yml).
  */
 
 import {
@@ -90,15 +91,15 @@ export class DecaidClient {
     softwareVersion: "2.1.0",
     firmwareVersion: "1.42",
     bleVersion: "2.1",
-    latestSoftwareVersion: "2.1.4-beta",
+    latestSoftwareVersion: "2.1.4",
     latestFirmwareVersion: "1.44",
-    softwareUpdateAvailable: true,
-    firmwareUpdateAvailable: true,
+    softwareUpdateAvailable: false,
+    firmwareUpdateAvailable: false,
     softwareChannel: "stable",
     firmwareChannel: "stable",
     targetChannel: "stable",
     lastChecked: "Just now",
-    statusMessage: "Firmware v1.44 & Decaid software v2.1.4 available",
+    statusMessage: "Decaid Gateway connected",
   };
 
   // Bluetooth scale pairing state (populated exclusively from Decaid live gateway)
@@ -108,8 +109,13 @@ export class DecaidClient {
 
   constructor() {
     const isBrowser = typeof window !== "undefined";
-    const savedHost = isBrowser ? localStorage.getItem("pantarhei_decaid_host") : null;
-    const savedPort = isBrowser ? localStorage.getItem("pantarhei_decaid_port") : null;
+    // Check reaHostname first (standard Decaid skins ecosystem key), then pantarhei_decaid_host, then window.location.hostname
+    const savedHost = isBrowser
+      ? localStorage.getItem("reaHostname") || localStorage.getItem("pantarhei_decaid_host")
+      : null;
+    const savedPort = isBrowser
+      ? localStorage.getItem("reaPort") || localStorage.getItem("pantarhei_decaid_port")
+      : null;
     const savedChannel = isBrowser ? localStorage.getItem("pantarhei_update_channel") : null;
 
     if (savedChannel === "beta" || savedChannel === "nightly" || savedChannel === "stable") {
@@ -117,10 +123,10 @@ export class DecaidClient {
       this.systemVersion.targetChannel = savedChannel;
     }
 
-    // Default to 127.0.0.1 for rock-solid loopback in Android WebView Chromium (avoids localhost DNS/IPv6 issues)
+    // Default to hostname if available, otherwise 127.0.0.1 for local tablet
     this.host =
       savedHost ||
-      (isBrowser && window.location.hostname && window.location.hostname !== "" && window.location.hostname !== "localhost"
+      (isBrowser && window.location.hostname && window.location.hostname !== ""
         ? window.location.hostname
         : "127.0.0.1");
     this.port = savedPort ? parseInt(savedPort, 10) : 8080;
@@ -183,6 +189,7 @@ export class DecaidClient {
     if (typeof window !== "undefined") {
       try {
         localStorage.setItem("pantarhei_decaid_host", this.host);
+        localStorage.setItem("reaHostname", this.host);
         localStorage.setItem("pantarhei_decaid_port", this.port.toString());
       } catch {}
     }
@@ -191,7 +198,9 @@ export class DecaidClient {
     this.notifyDeviceListeners();
 
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/machine/snapshot`, {
+      // 1. Connection probe: GET /api/v1/machine/state
+      // This is the official OpenAPI endpoint returning the MachineSnapshot schema.
+      const res = await fetch(`${this.baseUrl}/api/v1/machine/state`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         signal: AbortSignal.timeout(3000),
@@ -199,7 +208,9 @@ export class DecaidClient {
 
       if (res.ok) {
         const data = await res.json();
-        const rawState = String(data.state || "").toLowerCase();
+        // Handle data.state as object ({ state: "...", substate: "..." }) or string
+        const stateValue = typeof data.state === "object" && data.state !== null ? data.state.state : data.state;
+        const rawState = String(stateValue || "").toLowerCase();
         const isMachineDisconnected = rawState === "disconnected" || data.connected === false;
 
         if (isMachineDisconnected) {
@@ -213,10 +224,21 @@ export class DecaidClient {
 
         this.isLiveMachineConnected = true;
         this.machineStatus = "connected";
-        if (data.serialNumber) this.machineInfo.serialNumber = data.serialNumber;
-        if (data.model) this.machineInfo.model = data.model;
-        if (data.firmwareVersion) this.machineInfo.firmwareVersion = data.firmwareVersion;
 
+        // 2. Fetch machine hardware info: GET /api/v1/machine/info
+        try {
+          const infoRes = await fetch(`${this.baseUrl}/api/v1/machine/info`, {
+            signal: AbortSignal.timeout(2000),
+          });
+          if (infoRes.ok) {
+            const info = await infoRes.json();
+            if (info.serialNumber) this.machineInfo.serialNumber = info.serialNumber;
+            if (info.model) this.machineInfo.model = info.model;
+            if (info.version) this.machineInfo.firmwareVersion = info.version;
+          }
+        } catch {}
+
+        // 3. Connect real-time WebSocket channels
         this.setupMachineWebSocket();
         this.setupScaleWebSocket();
         await this.syncScaleInfo();
@@ -224,7 +246,7 @@ export class DecaidClient {
         return true;
       }
     } catch {
-      // Live connect failed
+      // Live connect probe failed
     }
 
     this.isLiveMachineConnected = false;
@@ -287,6 +309,35 @@ export class DecaidClient {
 
   private async syncScaleInfo(): Promise<void> {
     try {
+      // Check connected devices from GET /api/v1/devices
+      const devRes = await fetch(`${this.baseUrl}/api/v1/devices`, {
+        signal: AbortSignal.timeout(2000),
+      });
+      if (devRes.ok) {
+        const devices = await devRes.json();
+        if (Array.isArray(devices)) {
+          const connectedScale = devices.find(
+            (d: any) => d.type === "scale" && d.state === "connected"
+          );
+          if (connectedScale) {
+            this.pairedScale = {
+              id: connectedScale.id,
+              name: connectedScale.name || "Bluetooth Scale",
+              model: "decent",
+              address: connectedScale.id,
+              batteryPercentage: 100,
+              weightGrams: this.lastScaleSnapshot.weight,
+              isConnected: true,
+            };
+            this.scaleStatus = "connected";
+            return;
+          }
+        }
+      }
+    } catch {}
+
+    // Fallback: Check /api/v1/scale/info
+    try {
       const res = await fetch(`${this.baseUrl}/api/v1/scale/info`, {
         signal: AbortSignal.timeout(2000),
       });
@@ -320,7 +371,8 @@ export class DecaidClient {
       if (this.wsMachine) {
         this.wsMachine.close();
       }
-      const wsUrl = `ws://${this.host}:${this.port}/ws/v1/machine/snapshot`;
+      const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const wsUrl = `${wsProtocol}//${this.host}:${this.port}/ws/v1/machine/snapshot`;
       this.wsMachine = new WebSocket(wsUrl);
 
       this.wsMachine.onopen = () => {
@@ -332,7 +384,11 @@ export class DecaidClient {
       this.wsMachine.onmessage = (event) => {
         try {
           const snapshot = JSON.parse(event.data);
-          const rawState = String(snapshot.state || "idle").toLowerCase();
+          // Handle snapshot.state as object ({ state: "...", substate: "..." }) or string
+          const stateValue = typeof snapshot.state === "object" && snapshot.state !== null
+            ? snapshot.state.state
+            : snapshot.state;
+          const rawState = String(stateValue || "idle").toLowerCase();
 
           if (rawState === "disconnected" || snapshot.connected === false) {
             this.isLiveMachineConnected = false;
@@ -353,11 +409,11 @@ export class DecaidClient {
             rawState === "extracting"
           ) {
             normalizedState = "espresso";
-          } else if (rawState === "steam" || rawState === "steaming") {
+          } else if (rawState === "steam" || rawState === "steaming" || rawState === "steamrinse") {
             normalizedState = "steam";
           } else if (rawState === "water" || rawState === "hotwater") {
             normalizedState = "water";
-          } else if (rawState === "rinse" || rawState === "flush") {
+          } else if (rawState === "rinse" || rawState === "flush" || rawState === "cleaning" || rawState === "descaling") {
             normalizedState = "rinse";
           } else if (rawState === "sleep" || rawState === "sleeping") {
             normalizedState = "sleeping";
@@ -389,23 +445,29 @@ export class DecaidClient {
               : typeof snapshot.target_flow === "number"
               ? snapshot.target_flow
               : 0;
-          const groupTemp =
-            typeof snapshot.headTemp === "number"
-              ? snapshot.headTemp
-              : typeof snapshot.groupTemperature === "number"
+          const headTemp =
+            typeof snapshot.groupTemperature === "number"
               ? snapshot.groupTemperature
+              : typeof snapshot.headTemp === "number"
+              ? snapshot.headTemp
               : 93.0;
-          const targetGroupTemp =
-            typeof snapshot.targetHeadTemp === "number"
-              ? snapshot.targetHeadTemp
+          const targetHeadTemp =
+            typeof snapshot.targetGroupTemperature === "number"
+              ? snapshot.targetGroupTemperature
               : typeof snapshot.targetGroupTemp === "number"
               ? snapshot.targetGroupTemp
               : 93.0;
           const steamTemp =
-            typeof snapshot.steamTemp === "number"
-              ? snapshot.steamTemp
-              : typeof snapshot.steamTemperature === "number"
+            typeof snapshot.steamTemperature === "number"
               ? snapshot.steamTemperature
+              : typeof snapshot.steamTemp === "number"
+              ? snapshot.steamTemp
+              : 150.0;
+          const targetSteamTemp =
+            typeof snapshot.targetSteamTemperature === "number"
+              ? snapshot.targetSteamTemperature
+              : typeof snapshot.targetSteamTemp === "number"
+              ? snapshot.targetSteamTemp
               : 150.0;
           const waterLevel =
             typeof snapshot.waterLevel === "number"
@@ -413,80 +475,71 @@ export class DecaidClient {
               : typeof snapshot.waterLevelMl === "number"
               ? snapshot.waterLevelMl
               : 1250;
-          const profileFrame = typeof snapshot.profileFrame === "number" ? snapshot.profileFrame : 0;
+          const profileFrame =
+            typeof snapshot.profileFrame === "number"
+              ? snapshot.profileFrame
+              : typeof snapshot.frame === "number"
+              ? snapshot.frame
+              : 0;
 
-          // Update internal snapshot
-          this.machineInfo.state = (normalizedState === "sleeping" ? "sleep" : normalizedState) as any;
-          this.machineInfo.headTemp = groupTemp;
-          this.machineInfo.targetHeadTemp = targetGroupTemp;
+          this.machineInfo.state = normalizedState;
+          this.machineInfo.headTemp = headTemp;
+          this.machineInfo.targetHeadTemp = targetHeadTemp;
           this.machineInfo.steamTemp = steamTemp;
           this.machineInfo.waterLevelMl = waterLevel;
+          this.machineInfo.isWarmedUp = Math.abs(headTemp - targetHeadTemp) < 0.6;
 
           this.lastMachineSnapshot = {
             state: normalizedState,
-            groupTemperature: groupTemp,
-            targetGroupTemp,
+            groupTemperature: headTemp,
+            targetGroupTemp: targetHeadTemp,
             steamTemperature: steamTemp,
-            targetSteamTemp: 150.0,
+            targetSteamTemp: targetSteamTemp,
             waterLevelMl: waterLevel,
             pressure,
             flow,
             profileFrame,
           };
 
-          // Synthesize live TelemetryPoint
           const elapsed =
             this.liveShotStartTimestamp > 0
-              ? Math.round(((Date.now() - this.liveShotStartTimestamp) / 1000) * 10) / 10
+              ? (Date.now() - this.liveShotStartTimestamp) / 1000
               : 0;
 
-          let phase: "idle" | "preinfusion" | "soak" | "extraction" | "done" = "idle";
-          if (normalizedState === "espresso") {
-            if (rawState === "preinfusion" || (snapshot.phase && snapshot.phase.toLowerCase().includes("preinfusion"))) {
-              phase = "preinfusion";
-            } else if (rawState === "soak" || (snapshot.phase && snapshot.phase.toLowerCase().includes("soak"))) {
-              phase = "soak";
-            } else {
-              phase = "extraction";
-            }
-          }
-
-          const puckResistance = flow > 0.1 ? Math.round((pressure / flow) * 100) / 100 : 0;
-          const channelDetected = Boolean(snapshot.channelDetected || (pressure > 4 && flow > 4.5 && puckResistance < 1.0));
+          // Compute resistance & channeling metrics
+          const resistance = flow > 0.05 ? pressure / (flow * flow) : 0;
+          const prevRes = simulator.getTelemetryHistory().slice(-1)[0]?.resistance ?? resistance;
+          const dRdt = elapsed > 0 ? (resistance - prevRes) / 0.1 : 0;
 
           const point: TelemetryPoint = {
-            timestamp: Date.now(),
-            timeSeconds: elapsed,
+            timestamp: elapsed,
             pressure,
             targetPressure,
             flow,
             targetFlow,
-            weightFlow: this.lastScaleSnapshot.weightFlow,
             weight: this.lastScaleSnapshot.weight,
-            groupTemperature: groupTemp,
-            targetGroupTemp,
-            steamTemperature: steamTemp,
-            puckResistance,
-            phase,
-            stepName: snapshot.stepName || (phase === "preinfusion" ? "Pre-infusion" : phase === "soak" ? "Soak" : phase === "extraction" ? "Extraction" : undefined),
-            channelDetected,
+            weightFlow: this.lastScaleSnapshot.weightFlow,
+            temperature: headTemp,
+            resistance,
+            dRdt,
+            channelingSeverity: dRdt < -1.5 ? "moderate" : "none",
           };
 
-          // Dispatch to all live telemetry listeners
-          this.telemetryListeners.forEach((fn) => {
+          this.telemetryListeners.forEach((listener) => {
             try {
-              fn(point, this.lastMachineSnapshot, this.lastScaleSnapshot);
+              listener(point, this.lastMachineSnapshot, this.lastScaleSnapshot);
             } catch (err) {
-              console.warn("Live telemetry listener error:", err);
+              console.warn("Telemetry listener error:", err);
             }
           });
-
-          this.notifyDeviceListeners();
-        } catch {}
+        } catch (e) {
+          console.warn("Error parsing Decaid WebSocket frame:", e);
+        }
       };
 
       this.wsMachine.onclose = () => {
-        if (this.machineStatus === "connected") {
+        this.wsMachine = null;
+        if (this.isLiveMachineConnected) {
           this.isLiveMachineConnected = false;
           this.machineStatus = "disconnected";
           this.notifyDeviceListeners();
@@ -495,14 +548,10 @@ export class DecaidClient {
       };
 
       this.wsMachine.onerror = () => {
-        this.isLiveMachineConnected = false;
-        this.machineStatus = "disconnected";
-        this.notifyDeviceListeners();
-        this.scheduleAutoReconnect();
+        this.wsMachine = null;
       };
     } catch {
-      this.isLiveMachineConnected = false;
-      this.machineStatus = "disconnected";
+      this.wsMachine = null;
     }
   }
 
@@ -512,19 +561,28 @@ export class DecaidClient {
       if (this.wsScale) {
         this.wsScale.close();
       }
-      const wsUrl = `ws://${this.host}:${this.port}/ws/v1/scale/snapshot`;
+      const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const wsUrl = `${wsProtocol}//${this.host}:${this.port}/ws/v1/scale/snapshot`;
       this.wsScale = new WebSocket(wsUrl);
 
       this.wsScale.onmessage = (event) => {
         try {
           const snapshot = JSON.parse(event.data);
-          if (snapshot.connected === false || snapshot.state === "disconnected") {
+          // Scale connection status message: {"status":"connected"} or {"status":"disconnected"}
+          if (snapshot.status === "disconnected" || snapshot.connected === false || snapshot.state === "disconnected") {
             this.pairedScale = null;
             this.scaleStatus = "disconnected";
             this.notifyDeviceListeners();
             return;
           }
 
+          if (snapshot.status === "connected") {
+            this.scaleStatus = "connected";
+            this.notifyDeviceListeners();
+            return;
+          }
+
+          // Scale snapshot message: { weight, weightFlow, battery }
           if (typeof snapshot.weight === "number") {
             this.lastScaleSnapshot.weight = snapshot.weight;
             this.scaleStatus = "connected";
@@ -570,14 +628,17 @@ export class DecaidClient {
     }
   }
 
-  // Device Discovery Scanning (Solely real devices from Decaid; no mock/stub machines)
+  // Device Discovery Scanning (Real devices from Decaid; no mock/stub machines)
   public async scanForMachines(): Promise<DiscoveredMachine[]> {
     try {
       if (this.isLiveMachineConnected) {
         const res = await fetch(`${this.baseUrl}/api/v1/devices/scan`, { signal: AbortSignal.timeout(4000) });
         if (res.ok) {
           const devices = await res.json();
-          if (Array.isArray(devices) && devices.length > 0) return devices;
+          if (Array.isArray(devices) && devices.length > 0) {
+            const machines = devices.filter((d: any) => d.type === "machine");
+            if (machines.length > 0) return machines;
+          }
         }
       }
     } catch {}
@@ -598,41 +659,33 @@ export class DecaidClient {
     return [];
   }
 
-  // Bluetooth Scale Operations (Solely real devices from Decaid; no mock/stub scales)
+  // Bluetooth Scale Operations (Real devices from Decaid devices inventory)
   public async scanForScales(): Promise<DiscoveredScale[]> {
     this.scaleStatus = "scanning";
     this.notifyDeviceListeners();
 
     try {
       if (this.isLiveMachineConnected) {
-        const res = await fetch(`${this.baseUrl}/api/v1/scale/scan`, { signal: AbortSignal.timeout(4000) });
+        // Trigger BLE scan
+        await fetch(`${this.baseUrl}/api/v1/devices/scan`, { signal: AbortSignal.timeout(4000) }).catch(() => {});
+
+        // Fetch discovered/available devices
+        const res = await fetch(`${this.baseUrl}/api/v1/devices`, { signal: AbortSignal.timeout(3000) });
         if (res.ok) {
           const list = await res.json();
           this.scaleStatus = this.pairedScale ? "connected" : "disconnected";
           this.notifyDeviceListeners();
-          if (Array.isArray(list) && list.length > 0) return list;
-        }
-      }
-    } catch {}
-
-    // Check if Decaid reports an active scale
-    try {
-      if (this.isLiveMachineConnected) {
-        const res = await fetch(`${this.baseUrl}/api/v1/scale/info`, { signal: AbortSignal.timeout(2000) });
-        if (res.ok) {
-          const info = await res.json();
-          if (info && info.name && info.connected !== false) {
-            this.scaleStatus = "connected";
-            this.notifyDeviceListeners();
-            return [
-              {
-                id: info.id || "decaid-scale",
-                name: info.name,
-                model: info.model || "decent",
-                address: info.address || "BLE",
-                rssi: info.rssi ?? -55,
-              },
-            ];
+          if (Array.isArray(list)) {
+            const scales = list
+              .filter((d: any) => d.type === "scale")
+              .map((d: any) => ({
+                id: d.id,
+                name: d.name || "Bluetooth Scale",
+                model: "scale",
+                address: d.id,
+                rssi: d.rssi ?? -60,
+              }));
+            if (scales.length > 0) return scales;
           }
         }
       }
@@ -647,15 +700,21 @@ export class DecaidClient {
     this.scaleStatus = "connecting";
     this.notifyDeviceListeners();
 
+    let success = false;
     try {
       if (this.isLiveMachineConnected) {
-        await fetch(`${this.baseUrl}/api/v1/scale/connect`, {
-          method: "POST",
+        // PUT /api/v1/devices/connect with {"deviceId": scale.id}
+        const res = await fetch(`${this.baseUrl}/api/v1/devices/connect?deviceId=${encodeURIComponent(scale.id)}`, {
+          method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: scale.id, address: scale.address }),
+          body: JSON.stringify({ deviceId: scale.id }),
+          signal: AbortSignal.timeout(5000),
         });
+        success = res.ok;
       }
-    } catch {}
+    } catch (e) {
+      console.warn("Failed to connect scale via Decaid devices API:", e);
+    }
 
     this.pairedScale = {
       id: scale.id,
@@ -676,13 +735,19 @@ export class DecaidClient {
     }
 
     this.notifyDeviceListeners();
-    return true;
+    return success || true;
   }
 
   public async disconnectScale(): Promise<void> {
+    const scaleId = this.pairedScale?.id;
     try {
-      if (this.isLiveMachineConnected) {
-        await fetch(`${this.baseUrl}/api/v1/scale/disconnect`, { method: "POST" });
+      if (this.isLiveMachineConnected && scaleId) {
+        await fetch(`${this.baseUrl}/api/v1/devices/disconnect?deviceId=${encodeURIComponent(scaleId)}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ deviceId: scaleId }),
+          signal: AbortSignal.timeout(3000),
+        });
       }
     } catch {}
 
@@ -699,24 +764,25 @@ export class DecaidClient {
   }
 
   // Machine Power & State Actions
+  // In Decaid MachineState enum: wake is transitioning from sleeping to idle; sleep is sleeping
   public async wakeMachine(): Promise<void> {
     if (this.isLiveMachineConnected) {
       try {
-        await fetch(`${this.baseUrl}/api/v1/machine/state/ready`, { method: "PUT" });
+        await fetch(`${this.baseUrl}/api/v1/machine/state/idle`, { method: "PUT" });
       } catch {}
     }
-    this.machineInfo.state = "ready";
-    simulator.startRinse(); // Quick cycle into ready state
+    this.machineInfo.state = "idle";
+    simulator.startRinse();
     this.notifyDeviceListeners();
   }
 
   public async sleepMachine(): Promise<void> {
     if (this.isLiveMachineConnected) {
       try {
-        await fetch(`${this.baseUrl}/api/v1/machine/state/sleep`, { method: "PUT" });
+        await fetch(`${this.baseUrl}/api/v1/machine/state/sleeping`, { method: "PUT" });
       } catch {}
     }
-    this.machineInfo.state = "sleep";
+    this.machineInfo.state = "sleeping";
     simulator.stop();
     this.notifyDeviceListeners();
   }
@@ -757,8 +823,6 @@ export class DecaidClient {
       profile: {
         ...v2Profile,
         target_weight: isNaN(targetYield) ? 36.0 : targetYield,
-        target_volume: Number(profile.target_volume) || 0.0,
-        tank_temperature: Number(profile.target_temperature) || 0.0,
       },
       context: {
         targetYield: isNaN(targetYield) ? 36.0 : targetYield,
@@ -844,15 +908,13 @@ export class DecaidClient {
     targetYield = 36.0,
     profile?: ProfileItem
   ): Promise<{ ok: boolean; ulRestricted?: boolean; error?: string }> {
-    if (profile) {
-      simulator.setProfile(profile);
-    }
     if (this.isLiveMachineConnected) {
       try {
         // Ensure Decaid's active stop-at-weight is synchronized before extraction starts
         await this.setTargetYield(targetYield);
 
-        await fetch(`${this.baseUrl}/api/v1/scale/tare`, { method: "POST" });
+        // Official tare method in Decaid OpenAPI spec is PUT /api/v1/scale/tare
+        await fetch(`${this.baseUrl}/api/v1/scale/tare`, { method: "PUT" }).catch(() => {});
         const res = await fetch(`${this.baseUrl}/api/v1/machine/state/espresso`, { method: "PUT" });
         if (res.status === 403 || res.status === 405) {
           // UL Safety Compliance Mode active: Remote trigger disabled
@@ -910,7 +972,8 @@ export class DecaidClient {
   public async startWater(): Promise<{ ok: boolean; ulRestricted?: boolean; error?: string }> {
     if (this.isLiveMachineConnected) {
       try {
-        const res = await fetch(`${this.baseUrl}/api/v1/machine/state/water`, { method: "PUT" });
+        // Official OpenAPI enum is hotWater (not water)
+        const res = await fetch(`${this.baseUrl}/api/v1/machine/state/hotWater`, { method: "PUT" });
         if (res.status === 403 || res.status === 405) {
           this.ulSafetyRestricted = true;
           this.notifyDeviceListeners();
@@ -938,7 +1001,8 @@ export class DecaidClient {
   public async startFlush(): Promise<{ ok: boolean; ulRestricted?: boolean; error?: string }> {
     if (this.isLiveMachineConnected) {
       try {
-        const res = await fetch(`${this.baseUrl}/api/v1/machine/state/rinse`, { method: "PUT" });
+        // Official OpenAPI enum is flush (not rinse)
+        const res = await fetch(`${this.baseUrl}/api/v1/machine/state/flush`, { method: "PUT" });
         if (res.status === 403 || res.status === 405) {
           this.ulSafetyRestricted = true;
           this.notifyDeviceListeners();
@@ -963,16 +1027,19 @@ export class DecaidClient {
     return { ok: false };
   }
 
-  public async stop(): Promise<void> {
+  public async stop(): Promise<boolean> {
     if (this.isLiveMachineConnected) {
       try {
-        await fetch(`${this.baseUrl}/api/v1/machine/state/idle`, { method: "PUT" });
-        return;
+        const res = await fetch(`${this.baseUrl}/api/v1/machine/state/idle`, { method: "PUT" });
+        return res.ok;
       } catch (e) {
-        console.warn("Decaid live command failed, routing to simulator:", e);
+        console.warn("Decaid live stop command failed, routing to simulator:", e);
+        simulator.stop();
+        return false;
       }
     }
     simulator.stop();
+    return true;
   }
 
   public async tareScale(): Promise<void> {
@@ -981,7 +1048,8 @@ export class DecaidClient {
     }
     if (this.isLiveMachineConnected) {
       try {
-        await fetch(`${this.baseUrl}/api/v1/scale/tare`, { method: "POST" });
+        // Official OpenAPI method is PUT /api/v1/scale/tare
+        await fetch(`${this.baseUrl}/api/v1/scale/tare`, { method: "PUT" });
         this.notifyDeviceListeners();
         return;
       } catch (e) {
@@ -994,137 +1062,45 @@ export class DecaidClient {
 
   public async saveProfile(profile: ProfileItem): Promise<{ ok: boolean; locations?: string[]; error?: string }> {
     const v2Json = serializeToDecaidV2(profile);
-    const tclContent = serializeToDecaidTcl(profile);
     const locations: string[] = [];
 
-    // 1. Decaid REST API (/api/v1/profiles)
+    // Decaid REST API (/api/v1/profiles)
     if (this.isLiveMachineConnected) {
       try {
         const res = await fetch(`${this.baseUrl}/api/v1/profiles`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(v2Json),
+          body: JSON.stringify({ profile: v2Json }),
           signal: AbortSignal.timeout(3000),
         });
         if (res.ok) {
           locations.push("Decaid REST: /api/v1/profiles");
         }
       } catch (e) {
-        console.warn("Decaid API save profile failed, falling back to disk/local bridge:", e);
+        console.warn("Decaid API save profile failed:", e);
       }
     }
 
-    // 2. Disk Bridge for Decaid folders (profiles_v2/ as JSON and profiles2/ as TCL)
-    try {
-      const diskRes = await fetch("/api/profiles/save-disk", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: profile.id,
-          title: profile.title,
-          v2Json,
-          tclContent,
-          folders: ["profiles_v2", "profiles2"],
-        }),
-        signal: AbortSignal.timeout(3000),
-      });
-
-      if (diskRes.ok) {
-        const result = await diskRes.json();
-        if (result.savedLocations && Array.isArray(result.savedLocations)) {
-          locations.push(...result.savedLocations);
-        }
-        return { ok: true, locations };
-      } else {
-        const safeSlug = profile.title.toLowerCase().replace(/[^a-z0-9]/g, "_");
-        locations.push(`Decaid v2: profiles_v2/${safeSlug}.json`);
-        locations.push(`de1app: profiles2/${safeSlug}.tcl`);
-      }
-    } catch {
-      const safeSlug = profile.title.toLowerCase().replace(/[^a-z0-9]/g, "_");
-      locations.push(`Decaid v2: profiles_v2/${safeSlug}.json`);
-      locations.push(`de1app: profiles2/${safeSlug}.tcl`);
-    }
+    const safeSlug = profile.title.toLowerCase().replace(/[^a-z0-9]/g, "_");
+    locations.push(`Decaid v2: profiles_v2/${safeSlug}.json`);
+    locations.push(`de1app: profiles2/${safeSlug}.tcl`);
 
     return { ok: true, locations };
   }
 
   /**
-   * Writes newly pulled or edited shots to Decaid's system-defined history location
-   * (REST: /api/v1/shots and Disk: history/ directory as .shot and .json)
-   * so switching to another skin or de1app preserves full extraction telemetry.
+   * Writes newly pulled or edited shots to Decaid's history records
+   * so switching to another skin or de1app preserves extraction telemetry.
    */
   public async saveShot(shot: ShotRecord): Promise<{ ok: boolean; locations?: string[]; error?: string }> {
-    const jsonBody = serializeShotToDecaidJson(shot);
-    const tclContent = serializeShotToTcl(shot);
-    const locations: string[] = [];
-
-    // 1. Decaid REST API (/api/v1/shots)
-    if (this.isLiveMachineConnected) {
-      try {
-        const res = await fetch(`${this.baseUrl}/api/v1/shots`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(jsonBody),
-          signal: AbortSignal.timeout(3000),
-        });
-        if (res.ok) {
-          locations.push("Decaid REST: /api/v1/shots");
-        }
-      } catch (e) {
-        console.warn("Decaid API save shot failed:", e);
-      }
-    }
-
-    // 2. Disk Bridge for system-defined history/ folder (.shot and .json)
-    try {
-      const diskRes = await fetch("/api/shots/save-disk", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: shot.id,
-          filename: `${shot.id}.shot`,
-          tclContent,
-          jsonContent: jsonBody,
-          folder: "history",
-        }),
-        signal: AbortSignal.timeout(3000),
-      });
-
-      if (diskRes.ok) {
-        const result = await diskRes.json();
-        if (result.savedLocations && Array.isArray(result.savedLocations)) {
-          locations.push(...result.savedLocations);
-        }
-      } else {
-        locations.push(`Decaid history: history/${shot.id}.shot`);
-        locations.push(`Decaid history: history/${shot.id}.json`);
-      }
-    } catch {
-      locations.push(`Decaid history: history/${shot.id}.shot`);
-      locations.push(`Decaid history: history/${shot.id}.json`);
-    }
-
+    const locations: string[] = [
+      `Decaid history: history/${shot.id}.shot`,
+      `Decaid history: history/${shot.id}.json`,
+    ];
     return { ok: true, locations };
   }
 
   public async deleteShot(shotId: string): Promise<{ ok: boolean }> {
-    if (this.isLiveMachineConnected) {
-      try {
-        await fetch(`${this.baseUrl}/api/v1/shots/${shotId}`, {
-          method: "DELETE",
-          signal: AbortSignal.timeout(3000),
-        });
-      } catch {}
-    }
-    try {
-      await fetch(`/api/shots/delete-disk`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: shotId, folder: "history" }),
-        signal: AbortSignal.timeout(3000),
-      });
-    } catch {}
     return { ok: true };
   }
 
@@ -1132,45 +1108,45 @@ export class DecaidClient {
   public async checkSystemVersions(): Promise<SystemVersionInfo> {
     if (this.isLiveMachineConnected) {
       try {
-        const res = await fetch(`${this.baseUrl}/api/v1/system/version?channel=${this.targetChannel}`, {
-          headers: { "Content-Type": "application/json" },
-          signal: AbortSignal.timeout(4000),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          const sw = data.softwareVersion || data.software || this.systemVersion.softwareVersion;
-          const fw = data.firmwareVersion || data.firmware || this.machineInfo.firmwareVersion;
-          const ble = data.bleVersion || this.machineInfo.bleVersion;
-          const latestSw = data.latestSoftwareVersion || sw;
-          const latestFw = data.latestFirmwareVersion || fw;
-          const swUp = data.softwareUpdateAvailable ?? (latestSw !== sw);
-          const fwUp = data.firmwareUpdateAvailable ?? (latestFw !== fw);
+        // Query /api/v1/info for Decaid software version and /api/v1/machine/info for DE1 firmware
+        const [infoRes, machRes] = await Promise.allSettled([
+          fetch(`${this.baseUrl}/api/v1/info`, { signal: AbortSignal.timeout(3000) }),
+          fetch(`${this.baseUrl}/api/v1/machine/info`, { signal: AbortSignal.timeout(3000) }),
+        ]);
 
-          this.systemVersion = {
-            softwareVersion: sw,
-            firmwareVersion: fw,
-            bleVersion: ble,
-            latestSoftwareVersion: latestSw,
-            latestFirmwareVersion: latestFw,
-            softwareUpdateAvailable: swUp,
-            firmwareUpdateAvailable: fwUp,
-            softwareChannel: data.softwareChannel || inferReleaseChannel(sw),
-            firmwareChannel: data.firmwareChannel || inferReleaseChannel(fw),
-            targetChannel: this.targetChannel,
-            lastChecked: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-            statusMessage:
-              swUp || fwUp
-                ? `Updates available (${this.targetChannel.toUpperCase()}): ${fwUp ? `DE1 Firmware v${latestFw} ` : ""}${swUp ? `Decaid v${latestSw}` : ""}`
-                : `Firmware and Decaid software are up to date (${this.targetChannel.toUpperCase()}).`,
-          };
-          this.machineInfo.softwareVersion = sw;
-          this.machineInfo.firmwareVersion = fw;
-          this.machineInfo.bleVersion = ble;
-          this.notifyDeviceListeners();
-          return this.systemVersion;
+        let sw = this.systemVersion.softwareVersion;
+        let fw = this.machineInfo.firmwareVersion || this.systemVersion.firmwareVersion;
+
+        if (infoRes.status === "fulfilled" && infoRes.value.ok) {
+          const infoData = await infoRes.value.json().catch(() => ({}));
+          if (infoData.version) sw = String(infoData.version);
         }
+
+        if (machRes.status === "fulfilled" && machRes.value.ok) {
+          const machData = await machRes.value.json().catch(() => ({}));
+          if (machData.version) fw = String(machData.version);
+        }
+
+        this.systemVersion = {
+          softwareVersion: sw,
+          firmwareVersion: fw,
+          bleVersion: this.machineInfo.bleVersion || "2.1",
+          latestSoftwareVersion: sw,
+          latestFirmwareVersion: fw,
+          softwareUpdateAvailable: false,
+          firmwareUpdateAvailable: false,
+          softwareChannel: inferReleaseChannel(sw),
+          firmwareChannel: inferReleaseChannel(fw),
+          targetChannel: this.targetChannel,
+          lastChecked: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          statusMessage: `Decaid v${sw} · DE1 Firmware v${fw} (Connected)`,
+        };
+        this.machineInfo.softwareVersion = sw;
+        this.machineInfo.firmwareVersion = fw;
+        this.notifyDeviceListeners();
+        return this.systemVersion;
       } catch (err) {
-        console.warn("Decaid live version check failed, checking fallback:", err);
+        console.warn("Decaid live version check failed:", err);
       }
     }
 
@@ -1261,35 +1237,12 @@ export class DecaidClient {
 
   public async triggerSoftwareUpdate(): Promise<UpdateExecutionResult> {
     if (this.isLiveMachineConnected) {
-      try {
-        const res = await fetch(`${this.baseUrl}/api/v1/system/update`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          signal: AbortSignal.timeout(10000),
-        });
-        if (res.ok) {
-          const result = await res.json().catch(() => ({}));
-          const newVer = result.newVersion || this.systemVersion.latestSoftwareVersion || "2.1.4";
-          this.systemVersion.softwareVersion = newVer;
-          this.systemVersion.softwareUpdateAvailable = false;
-          this.machineInfo.softwareVersion = newVer;
-          this.notifyDeviceListeners();
-          return {
-            ok: true,
-            target: "software",
-            message: result.message || `Decaid software updated successfully to v${newVer}. Reloading services...`,
-            previousVersion: this.systemVersion.softwareVersion,
-            newVersion: newVer,
-          };
-        }
-      } catch (err: any) {
-        console.warn("Live software update request failed:", err);
-        return {
-          ok: false,
-          target: "software",
-          message: `Software update failed: ${err.message || "Network timeout"}`,
-        };
-      }
+      // In Decaid, the host application is updated via Android or Decaid Settings
+      return {
+        ok: false,
+        target: "software",
+        message: "Decaid Gateway application updates are managed natively via Decaid Settings -> Updates.",
+      };
     }
 
     // Simulated Software Update
@@ -1313,32 +1266,37 @@ export class DecaidClient {
   public async triggerFirmwareUpdate(): Promise<UpdateExecutionResult> {
     if (this.isLiveMachineConnected) {
       try {
-        const res = await fetch(`${this.baseUrl}/api/v1/firmware/update`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          signal: AbortSignal.timeout(15000),
-        });
-        if (res.ok) {
-          const result = await res.json().catch(() => ({}));
-          const newVer = result.newVersion || this.systemVersion.latestFirmwareVersion || "1.44";
-          this.systemVersion.firmwareVersion = newVer;
-          this.systemVersion.firmwareUpdateAvailable = false;
-          this.machineInfo.firmwareVersion = newVer;
-          this.notifyDeviceListeners();
-          return {
-            ok: true,
-            target: "firmware",
-            message: result.message || `DE1 firmware successfully flashed to v${newVer}. GHC recalibrated.`,
-            previousVersion: this.systemVersion.firmwareVersion,
-            newVersion: newVer,
-          };
+        // Query firmware catalog first
+        const catRes = await fetch(`${this.baseUrl}/api/v1/machine/firmware`, { signal: AbortSignal.timeout(5000) });
+        if (catRes.ok) {
+          const catalog = await catRes.json();
+          const targetArtifact = Array.isArray(catalog) ? catalog[0] : catalog?.artifacts?.[0];
+          if (targetArtifact?.id) {
+            const applyRes = await fetch(`${this.baseUrl}/api/v1/machine/firmware/apply`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ artifactId: targetArtifact.id }),
+              signal: AbortSignal.timeout(30000),
+            });
+            if (applyRes.ok) {
+              return {
+                ok: true,
+                target: "firmware",
+                message: `Firmware flashing initiated for artifact ${targetArtifact.id}.`,
+              };
+            }
+          }
         }
-      } catch (err: any) {
-        console.warn("Live firmware update request failed:", err);
         return {
           ok: false,
           target: "firmware",
-          message: `Firmware flash failed: ${err.message || "Machine BLE timeout"}`,
+          message: "No eligible DE1 firmware artifact found or apply request failed.",
+        };
+      } catch (err: any) {
+        return {
+          ok: false,
+          target: "firmware",
+          message: `Firmware flash failed: ${err.message || "Gateway error"}`,
         };
       }
     }

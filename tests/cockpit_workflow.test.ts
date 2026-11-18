@@ -77,14 +77,14 @@ assert(waterState.actionType === "water", "Water tab sets actionType to 'water'"
 assert(waterState.haloColor === "cyan-blue", "Water tab sets cyan-blue halo");
 assert(waterState.subLabel === "150ml", "Water tab sets subLabel with target volume");
 assert(waterState.isReady === true, "Water tab is ready");
-assert(waterState.targetEndpoint === "/api/v1/machine/state/water", "Water tab targets water endpoint");
+assert(waterState.targetEndpoint === "/api/v1/machine/state/hotWater", "Water tab targets hotWater endpoint");
 
 // 6. Maintenance Tab Tests
 const maintState = resolveGoButtonState("maintenance", tabConfigs, readyTelemetry);
 assert(maintState.label === "Go!", "Maintenance tab retains 'Go!' label");
 assert(maintState.actionType === "flush", "Maintenance tab sets actionType to 'flush'");
 assert(maintState.subLabel?.includes("4s Flush") === true, "Maintenance tab sets subLabel with flush duration");
-assert(maintState.targetEndpoint === "/api/v1/machine/state/rinse", "Maintenance tab targets rinse endpoint");
+assert(maintState.targetEndpoint === "/api/v1/machine/state/flush", "Maintenance tab targets flush endpoint");
 
 // 7. Global Water Low Blocker Test
 const lowWaterTelemetry: MachineTelemetryState = {
