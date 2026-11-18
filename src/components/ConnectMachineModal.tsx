@@ -160,7 +160,7 @@ export const ConnectMachineModal: React.FC<ConnectMachineModalProps> = ({
   };
 
   const handleContinueSimulator = () => {
-    if (dontShowAgain && typeof window !== "undefined") {
+    if (typeof window !== "undefined") {
       try {
         localStorage.setItem("pantarhei_dont_show_startup_connect", "true");
         localStorage.setItem("pantarhei_onboarding_completed", "true");

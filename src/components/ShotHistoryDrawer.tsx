@@ -856,7 +856,7 @@ export const ShotHistoryDrawer: React.FC<ShotHistoryDrawerProps> = ({
                         )}
                         <span className="text-xs font-bold font-mono text-amber-300 px-2 py-0.5 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center space-x-1">
                           <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                          <span>{shot.rating.toFixed(1)}</span>
+                          <span>{(shot.rating != null ? shot.rating : 5).toFixed(1)}</span>
                         </span>
                       </div>
                     </div>
@@ -868,19 +868,19 @@ export const ShotHistoryDrawer: React.FC<ShotHistoryDrawerProps> = ({
                         <div>
                           <span className="text-decent-muted text-[10px]">Dose → Yield</span>
                           <div className="text-white font-bold">
-                            {shot.actualDose.toFixed(1)}g → {shot.actualYield.toFixed(1)}g
+                            {(shot.actualDose != null ? shot.actualDose : 18).toFixed(1)}g → {(shot.actualYield != null ? shot.actualYield : 36).toFixed(1)}g
                           </div>
                         </div>
                         <div>
                           <span className="text-decent-muted text-[10px]">Ratio & Time</span>
                           <div className="text-white font-bold">
-                            1:{shot.ratio.toFixed(2)} · {shot.durationSeconds.toFixed(1)}s
+                            1:{(shot.ratio != null ? shot.ratio : (shot.actualDose ? shot.actualYield / shot.actualDose : 2)).toFixed(2)} · {(shot.durationSeconds != null ? shot.durationSeconds : 25).toFixed(1)}s
                           </div>
                         </div>
                         <div>
                           <span className="text-decent-muted text-[10px]">Peak & Flow</span>
                           <div className="text-white font-bold">
-                            {shot.peakPressure.toFixed(1)}b · {shot.avgFlow.toFixed(1)}ml/s
+                            {(shot.peakPressure != null ? shot.peakPressure : 8.0).toFixed(1)}b · {(shot.avgFlow != null ? shot.avgFlow : 2.0).toFixed(1)}ml/s
                           </div>
                         </div>
                       </div>
@@ -1031,7 +1031,7 @@ export const ShotHistoryDrawer: React.FC<ShotHistoryDrawerProps> = ({
               </div>
               <div className="text-right">
                 <div className="text-xs font-mono font-bold text-amber-400">
-                  ★ {inspectingShot.rating.toFixed(1)} / 10
+                  ★ {(inspectingShot.rating != null ? inspectingShot.rating : 5).toFixed(1)} / 10
                 </div>
                 <div className="text-[10px] text-decent-muted">{inspectingShot.dateFormatted}</div>
               </div>
@@ -1070,7 +1070,7 @@ export const ShotHistoryDrawer: React.FC<ShotHistoryDrawerProps> = ({
               </div>
 
               <span className="text-[10px] font-mono text-decent-muted">
-                {inspectingShot.telemetry.length} data points
+                {inspectingShot.telemetry ? inspectingShot.telemetry.length : 0} data points
               </span>
             </div>
 
@@ -1083,27 +1083,27 @@ export const ShotHistoryDrawer: React.FC<ShotHistoryDrawerProps> = ({
             <div className="grid grid-cols-4 gap-2 text-xs p-3 rounded-2xl bg-decent-dark/70 border border-decent-border/60 font-mono">
               <div>
                 <span className="text-[10px] text-decent-muted">Input Dose</span>
-                <div className="text-white font-bold">{inspectingShot.actualDose.toFixed(1)}g</div>
+                <div className="text-white font-bold">{(inspectingShot.actualDose != null ? inspectingShot.actualDose : 18).toFixed(1)}g</div>
               </div>
               <div>
                 <span className="text-[10px] text-decent-muted">Final Yield</span>
-                <div className="text-white font-bold">{inspectingShot.actualYield.toFixed(1)}g</div>
+                <div className="text-white font-bold">{(inspectingShot.actualYield != null ? inspectingShot.actualYield : 36).toFixed(1)}g</div>
               </div>
               <div>
                 <span className="text-[10px] text-decent-muted">Brew Ratio</span>
-                <div className="text-amber-400 font-bold">1:{inspectingShot.ratio.toFixed(2)}</div>
+                <div className="text-amber-400 font-bold">1:{(inspectingShot.ratio != null ? inspectingShot.ratio : (inspectingShot.actualDose ? inspectingShot.actualYield / inspectingShot.actualDose : 2)).toFixed(2)}</div>
               </div>
               <div>
                 <span className="text-[10px] text-decent-muted">Shot Time</span>
-                <div className="text-white font-bold">{inspectingShot.durationSeconds.toFixed(1)}s</div>
+                <div className="text-white font-bold">{(inspectingShot.durationSeconds != null ? inspectingShot.durationSeconds : 25).toFixed(1)}s</div>
               </div>
               <div>
                 <span className="text-[10px] text-decent-muted">Peak Pressure</span>
-                <div className="text-emerald-400 font-bold">{inspectingShot.peakPressure.toFixed(1)} bar</div>
+                <div className="text-emerald-400 font-bold">{(inspectingShot.peakPressure != null ? inspectingShot.peakPressure : 8.0).toFixed(1)} bar</div>
               </div>
               <div>
                 <span className="text-[10px] text-decent-muted">Avg Water Flow</span>
-                <div className="text-cyan-400 font-bold">{inspectingShot.avgFlow.toFixed(1)} ml/s</div>
+                <div className="text-cyan-400 font-bold">{(inspectingShot.avgFlow != null ? inspectingShot.avgFlow : 2.0).toFixed(1)} ml/s</div>
               </div>
               <div>
                 <span className="text-[10px] text-decent-muted">Grind Setting</span>

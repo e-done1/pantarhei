@@ -9,6 +9,7 @@ import { syncShotToDYE } from "./services/dyeBridge.ts";
 import { uploadShotToVisualizer, loadVisualizerSettings } from "./services/visualizerBridge.ts";
 import { buildBackupEnvelope, saveAutoBackup } from "./services/backupManager.ts";
 import { loadCustomProfilesFromStorage } from "./types/profile.ts";
+import { syncFromDecaidGateway } from "./services/legacyMigration.ts";
 
 // Components
 import { FluidBackground } from "./components/FluidBackground.tsx";
@@ -745,6 +746,54 @@ export function App() {
     }
   };
 
+  // Automated Gateway Sync on Startup: Automatically queries Decaid Gateway for the latest real shots,
+  // beans (e.g. Peony Benti Nenka), equipment and profiles, transitioning the cockpit seamlessly!
+  useEffect(() => {
+    let isMounted = true;
+    const runAutoSync = async () => {
+      try {
+        const baseUrl = decaid.getBaseUrl();
+        const data = await syncFromDecaidGateway(baseUrl, 100);
+        if (!isMounted || !data || data.shots.length === 0) return;
+
+        // Purge any legacy mock shots if real Decaid shots are present
+        const realShots = data.shots.filter((s) => !s.id.startsWith("shot-20261116-"));
+        if (realShots.length > 0) {
+          console.log(`[PantaRhei] Auto-synced ${realShots.length} real shots & ${data.beans.length} beans from Decaid Gateway (${baseUrl}).`);
+          handleImportMigratedData({
+            profiles: data.profiles,
+            shots: realShots,
+            beans: data.beans,
+            equipment: data.equipment,
+            activeEquipment: data.activeEquipment,
+            latestShot: data.latestShot || realShots[0],
+            activeBean: data.activeBean,
+            activeProfileTitle: data.activeProfileTitle,
+            activeDose: data.activeDose,
+            activeTargetYield: data.activeTargetYield,
+          });
+        }
+      } catch (err) {
+        // Decaid Gateway might be in simulator mode or not yet reachable
+        console.log("[PantaRhei] Gateway auto-sync standby:", err);
+      }
+    };
+
+    const timer = setTimeout(runAutoSync, 600);
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, []);
+
+  const handleCloseConnectModal = () => {
+    try {
+      localStorage.setItem("pantarhei_dont_show_startup_connect", "true");
+      localStorage.setItem("pantarhei_onboarding_completed", "true");
+    } catch {}
+    setIsConnectModalOpen(false);
+  };
+
   return (
     <div className="relative w-screen h-screen overflow-hidden flex flex-col bg-decent-dark text-decent-text">
       {/* 1. Ambient Blue Fluid Canvas Background (Confined to Middle & Right Panes) */}
@@ -1042,8 +1091,8 @@ export function App() {
       {isConnectModalOpen && (
         <ConnectMachineModal
           isOpen={isConnectModalOpen}
-          onClose={() => setIsConnectModalOpen(false)}
-          onContinueSimulator={() => setIsConnectModalOpen(false)}
+          onClose={handleCloseConnectModal}
+          onContinueSimulator={handleCloseConnectModal}
           onImportData={handleImportMigratedData}
           existingShots={shots}
         />

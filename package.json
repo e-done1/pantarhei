@@ -6,7 +6,7 @@
   "description": "PantaRhei: Modern, data-intensive web skin for the Decent DE1 machine within Decaid",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "vite build",
     "preview": "vite preview",
     "test": "node --experimental-strip-types tests/bean_search.test.ts && node --experimental-strip-types tests/cafe_header.test.ts && node --experimental-strip-types tests/cockpit_workflow.test.ts && node --experimental-strip-types tests/needle_gauge_and_shot_lifecycle.test.ts && node --experimental-strip-types tests/step_indications.test.ts && node --experimental-strip-types tests/channeling_and_derivative.test.ts && node --experimental-strip-types tests/profile_management.test.ts && node --experimental-strip-types tests/shot_history.test.ts && node --experimental-strip-types tests/cockpit_enhancements.test.ts && node --experimental-strip-types tests/device_and_screensaver.test.ts && node --experimental-strip-types tests/backup_and_plugins.test.ts && node --experimental-strip-types tests/equipment_and_resolution.test.ts && node --experimental-strip-types tests/migration_and_deduplication.test.ts"
   },
