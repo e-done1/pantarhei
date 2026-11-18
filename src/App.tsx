@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { decaid } from "./services/decaidConnection.ts";
 import { simulator, type TelemetryPoint, type MachineSnapshot, type ScaleSnapshot } from "./services/telemetrySimulator.ts";
 import type { CockpitTabId, CoffeeTabConfig, SteamTabConfig, WaterTabConfig, MaintenanceTabConfig } from "./types/cockpitTabs.ts";
-import { resolveGoButtonState } from "./services/cockpitWorkflow.ts";
 import type { PantaBean } from "./types/bean.ts";
 import { loadBeansFromStorage, saveBeansToStorage, createNewBeanEntry } from "./types/bean.ts";
 import type { CafeHeaderConfig } from "./types/header.ts";
@@ -14,8 +13,6 @@ import { loadCustomProfilesFromStorage } from "./types/profile.ts";
 // Components
 import { FluidBackground } from "./components/FluidBackground.tsx";
 import { HomeCafeHeader } from "./components/HomeCafeHeader.tsx";
-import { DigitalClock } from "./components/DigitalClock.tsx";
-import { RaceGoButton } from "./components/RaceGoButton.tsx";
 import { LeftMenuPane } from "./components/LeftMenuPane.tsx";
 import { CenterStatusPane } from "./components/CenterStatusPane.tsx";
 import { LiveExtractionDashboard } from "./components/LiveExtractionDashboard.tsx";
@@ -27,7 +24,6 @@ import { SettingsModal } from "./components/SettingsModal.tsx";
 import { ConnectMachineModal } from "./components/ConnectMachineModal.tsx";
 import { ScreensaverOverlay } from "./components/ScreensaverOverlay.tsx";
 import { EquipmentSelectionModal } from "./components/EquipmentSelectionModal.tsx";
-import { Sparkles, ChevronRight, Wrench } from "lucide-react";
 import type { ScreensaverConfig } from "./types/screensaver.ts";
 import { loadScreensaverConfigFromStorage } from "./types/screensaver.ts";
 import type { ShotRecord } from "./types/shot.ts";
@@ -486,28 +482,6 @@ export function App() {
     wasExtractingRef.current = isExtracting;
   }, [isExtracting, coffeeConfig.dose]);
 
-  // Resolve Contextual Race Go Button state
-  const goButtonModel = useMemo(() => {
-    return resolveGoButtonState(
-      activeTab,
-      {
-        coffee: coffeeConfig,
-        steam: steamConfig,
-        water: waterConfig,
-        maintenance: maintenanceConfig,
-      },
-      {
-        isConnected: decaid.isConnected(),
-        machineState: machine.state,
-        groupTemperature: machine.groupTemperature,
-        targetGroupTemp: machine.targetGroupTemp,
-        steamTemperature: machine.steamTemperature,
-        targetSteamTemp: machine.targetSteamTemp,
-        waterLevelMl: machine.waterLevelMl,
-      }
-    );
-  }, [activeTab, coffeeConfig, steamConfig, waterConfig, maintenanceConfig, machine]);
-
   // Action Triggers
   const handleStartAction = async () => {
     setUlNotice(null);
@@ -762,13 +736,37 @@ export function App() {
       ) : (
         /* 3. Mode A: Ready / Idle Cockpit */
         <div className="w-full h-full flex flex-col justify-between relative z-10">
-          {/* Top Stripe: Centered Customizable Home Cafe Header */}
+          {/* Top Stripe: Customizable Home Cafe Header with Clock & Contextual Action Buttons */}
           <HomeCafeHeader
             config={headerConfig}
             onOpenSettings={() => setIsSettingsOpen(true)}
+            clockPaletteId={clockPaletteId}
+            hasUpdateAvailable={hasUpdateAvailable}
+            onOpenUpdates={() => handleOpenSettingsWithTab("pairing")}
+            maintenanceStatus={maintenanceStatus}
+            onNavigateToMaintenance={handleNavigateToMaintenanceContext}
+            isMachineConnected={isMachineActive}
+            isSimulatorMode={decaid.getMachineStatus() === "simulator"}
+            onOpenPairing={() => setIsConnectModalOpen(true)}
+            onStartAction={handleStartAction}
+            isExtracting={isExtracting}
           />
 
-          {/* Main 3-Pane Cockpit Body */}
+          {/* Floating UL Compliance or Safety Notice */}
+          {ulNotice && (
+            <div className="absolute top-14 left-1/2 -translate-x-1/2 z-30 px-3.5 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-medium shadow-xl backdrop-blur-md animate-fade-in flex items-center space-x-2">
+              <span>{ulNotice}</span>
+              <button
+                type="button"
+                onClick={() => setUlNotice(null)}
+                className="ml-2 text-amber-400 hover:text-white text-sm font-bold"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
+          {/* Main 2-Pane Cockpit Body: Recipe & Controls (Left), Expanded Live Telemetry & Graph (Right) */}
           <main className="flex-1 w-full flex items-stretch overflow-hidden">
             {/* Left Pane: 4 Dedicated Tabs (Coffee, Steam, Water, Maintenance) */}
             <LeftMenuPane
@@ -794,7 +792,7 @@ export function App() {
               onOpenSettingsEquipment={() => handleOpenSettingsWithTab("equipment")}
             />
 
-            {/* Center Pane: Ambient Machine Status, Previous Shot Bean Data & Graph */}
+            {/* Center Pane: Ambient Machine Status, Previous Shot Bean Data & Graph (Now taking all remaining width!) */}
             <CenterStatusPane
               machine={machine}
               lastShotSummary={lastShotSummary}
@@ -803,69 +801,6 @@ export function App() {
               lastShotHistory={completedShotHistory}
               onOpenSummaryModal={() => setShowSummaryModal(true)}
             />
-
-            {/* Right Pane: Digital Clock above the Round Race "Go!" Button */}
-            <aside className="w-[210px] sm:w-[230px] lg:w-[270px] xl:w-[320px] shrink-0 h-full flex flex-col justify-between items-center py-2 lg:py-5 px-1.5 lg:px-4 bg-decent-surface/30 border-l border-decent-border/40 backdrop-blur-sm z-10 overflow-hidden">
-              {/* Top: Sectional Digital Clock with Preset Palettes */}
-              <div className="w-full flex flex-col items-center">
-                <DigitalClock paletteId={clockPaletteId} />
-
-                {/* Update Available Button Indicator (Automatically opens Pairing tab in Settings) */}
-                {hasUpdateAvailable && (
-                  <button
-                    type="button"
-                    onClick={() => handleOpenSettingsWithTab("pairing")}
-                    className="mt-3 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-sky-500/20 to-amber-500/20 hover:from-amber-500/30 hover:to-sky-500/30 border border-amber-400/60 hover:border-amber-300 text-amber-300 hover:text-amber-100 text-xs font-bold flex items-center space-x-1.5 transition-all cursor-pointer shadow-lg active:scale-95 animate-pulse"
-                    title="Software or firmware updates are available. Click to open Pairing settings to update."
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                    <span>Update Available</span>
-                    <ChevronRight className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                  </button>
-                )}
-
-                {/* Maintenance Due Indicator Button (Group Head Cleaning / Descaling) */}
-                {maintenanceStatus.primaryActionType !== "none" && (
-                  <button
-                    type="button"
-                    onClick={() => handleNavigateToMaintenanceContext(maintenanceStatus.primaryActionType)}
-                    className="mt-2 px-3 py-1.5 rounded-xl bg-gradient-to-r from-rose-500/20 via-amber-500/20 to-rose-500/20 hover:from-rose-500/30 hover:to-amber-500/30 border border-rose-400/60 hover:border-rose-300 text-rose-300 hover:text-rose-100 text-xs font-bold flex items-center space-x-1.5 transition-all cursor-pointer shadow-lg active:scale-95 animate-pulse"
-                    title={maintenanceStatus.tooltipText}
-                  >
-                    <Wrench className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-                    <span>{maintenanceStatus.badgeLabel}</span>
-                    <ChevronRight className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-                  </button>
-                )}
-              </div>
-
-              {/* Bottom: Dedicated Round Race-Game "Go!" Button */}
-              <div className="my-auto flex flex-col items-center">
-                <RaceGoButton
-                  viewModel={goButtonModel}
-                  isExtracting={false}
-                  shotStartTime={0}
-                  onStart={handleStartAction}
-                  onStop={() => {}}
-                  onOpenPairing={() => setIsConnectModalOpen(true)}
-                />
-                {ulNotice && (
-                  <div className="mt-2.5 max-w-[210px] text-center px-2.5 py-1.5 rounded-lg bg-amber-500/15 border border-amber-500/35 text-amber-300 text-[11px] font-medium leading-tight shadow-md animate-fade-in">
-                    {ulNotice}
-                  </div>
-                )}
-              </div>
-
-              <div className="text-[10px] lg:text-[11px] font-mono text-decent-muted tracking-wider text-center truncate w-full">
-                {activeTab === "coffee"
-                  ? `Active: ${coffeeConfig.dose}g -> ${coffeeConfig.targetYield}g (${coffeeConfig.ratioText})`
-                  : activeTab === "steam"
-                  ? `Steam Target: ${steamConfig.temperature}°C`
-                  : activeTab === "water"
-                  ? `Dispense Target: ${waterConfig.volumeMl}ml @ ${waterConfig.temperature}°C`
-                  : "Maintenance Ready"}
-              </div>
-            </aside>
           </main>
         </div>
       )}

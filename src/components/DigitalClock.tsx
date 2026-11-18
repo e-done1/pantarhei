@@ -70,11 +70,13 @@ export const CLOCK_PALETTES: Record<string, ClockPalette> = {
 interface DigitalClockProps {
   paletteId?: string;
   customPalette?: Partial<ClockPalette>;
+  compact?: boolean;
 }
 
 export const DigitalClock: React.FC<DigitalClockProps> = ({
   paletteId = "cyberpunk",
   customPalette,
+  compact = false,
 }) => {
   const [now, setNow] = useState(new Date());
 
@@ -95,6 +97,38 @@ export const DigitalClock: React.FC<DigitalClockProps> = ({
     month: "short",
     day: "numeric",
   });
+
+  if (compact) {
+    return (
+      <div className="flex flex-col items-start justify-center px-2 sm:px-2.5 py-0.5 rounded-xl bg-decent-surface/70 border border-decent-border/50 backdrop-blur-md shadow-sm select-none">
+        <span
+          className="text-[9px] font-semibold tracking-wider uppercase leading-none"
+          style={{ color: palette.date }}
+        >
+          {dateStr}
+        </span>
+        <div className="font-mono text-sm sm:text-base font-bold tracking-wider flex items-baseline leading-tight mt-0.5">
+          <span style={{ color: palette.hours }}>{hours}</span>
+          <span
+            className="mx-0.5 animate-pulse"
+            style={{ color: palette.separators }}
+          >
+            :
+          </span>
+          <span style={{ color: palette.minutes }}>{minutes}</span>
+          <span
+            className="mx-0.5 animate-pulse"
+            style={{ color: palette.separators }}
+          >
+            :
+          </span>
+          <span className="text-[11px] sm:text-xs ml-0.5 font-semibold" style={{ color: palette.seconds }}>
+            {seconds}
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center justify-center p-2 lg:p-3 rounded-2xl bg-decent-surface/60 border border-decent-border/40 backdrop-blur-md shadow-lg select-none">
