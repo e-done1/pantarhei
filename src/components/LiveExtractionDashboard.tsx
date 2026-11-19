@@ -30,8 +30,20 @@ export const LiveExtractionDashboard: React.FC<LiveExtractionDashboardProps> = (
 }) => {
   const chartCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
+  // Defensive normalization of incoming telemetry
+  const safeTime = typeof currentPoint?.timeSeconds === "number" && !isNaN(currentPoint.timeSeconds) ? currentPoint.timeSeconds : 0;
+  const safePressure = typeof currentPoint?.pressure === "number" && !isNaN(currentPoint.pressure) ? currentPoint.pressure : 0;
+  const safeTargetPressure = typeof currentPoint?.targetPressure === "number" && !isNaN(currentPoint.targetPressure) ? currentPoint.targetPressure : 0;
+  const safeFlow = typeof currentPoint?.flow === "number" && !isNaN(currentPoint.flow) ? currentPoint.flow : 0;
+  const safeTargetFlow = typeof currentPoint?.targetFlow === "number" && !isNaN(currentPoint.targetFlow) ? currentPoint.targetFlow : 0;
+  const safeWeightFlow = typeof currentPoint?.weightFlow === "number" && !isNaN(currentPoint.weightFlow) ? currentPoint.weightFlow : (scale?.weightFlow ?? 0);
+  const safeWeight = typeof scale?.weight === "number" && !isNaN(scale.weight) ? scale.weight : (currentPoint?.weight ?? 0);
+  const safeResistance = typeof currentPoint?.puckResistance === "number" && !isNaN(currentPoint.puckResistance) ? currentPoint.puckResistance : 0;
+  const safeTargetYield = typeof targetYield === "number" && !isNaN(targetYield) && targetYield > 0 ? targetYield : 36.0;
+  const safePhase = currentPoint?.phase || "extraction";
+
   // Dynamic Glass fill percentage (0 to 100%)
-  const fillPercentage = Math.min(100, Math.max(0, (scale.weight / targetYield) * 100));
+  const fillPercentage = Math.min(100, Math.max(0, (safeWeight / safeTargetYield) * 100));
 
   // Stop button view model
   const stopButtonModel: GoButtonViewModel = {
@@ -50,9 +62,9 @@ export const LiveExtractionDashboard: React.FC<LiveExtractionDashboardProps> = (
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const width = canvas.clientWidth;
-    const height = canvas.clientHeight;
-    if (width === 0 || height === 0) return;
+    const width = canvas.clientWidth || canvas.parentElement?.clientWidth || 300;
+    const height = canvas.clientHeight || canvas.parentElement?.clientHeight || 200;
+    if (width <= 0 || height <= 0) return;
 
     canvas.width = width * window.devicePixelRatio;
     canvas.height = height * window.devicePixelRatio;
@@ -66,20 +78,37 @@ export const LiveExtractionDashboard: React.FC<LiveExtractionDashboardProps> = (
     const padTop = 18;
     const padBottom = 26; // Bottom X-axis (Time reference numbers)
 
-    const plotW = width - padLeft - padRight;
-    const plotH = height - padTop - padBottom;
+    const plotW = Math.max(10, width - padLeft - padRight);
+    const plotH = Math.max(10, height - padTop - padBottom);
 
     // Dark technical grid background
     ctx.fillStyle = "rgba(10, 13, 18, 0.90)";
     ctx.fillRect(padLeft, padTop, plotW, plotH);
 
-    const maxSeconds = Math.max(35, history.length > 0 ? Math.ceil((history[history.length - 1].timeSeconds + 2) / 5) * 5 : 35);
-    const maxWeight = Math.max(40, Math.ceil((targetYield * 1.2) / 10) * 10);
+    const lastHistTime =
+      history.length > 0 && typeof history[history.length - 1]?.timeSeconds === "number"
+        ? history[history.length - 1].timeSeconds
+        : safeTime;
+    const validHistTime = typeof lastHistTime === "number" && !isNaN(lastHistTime) ? lastHistTime : 0;
+    const maxSeconds = Math.max(35, Math.ceil((validHistTime + 2) / 5) * 5);
+    const maxWeight = Math.max(40, Math.ceil((safeTargetYield * 1.2) / 10) * 10);
 
-    const getX = (t: number) => padLeft + (t / maxSeconds) * plotW;
-    const getYPressure = (p: number) => padTop + plotH - (p / 9) * plotH; // 0-9 bar
-    const getYFlow = (f: number) => padTop + plotH - (f / 8) * plotH;     // 0-8 ml/s
-    const getYWeight = (w: number) => padTop + plotH - (w / maxWeight) * plotH;
+    const getX = (t: number) => {
+      const st = typeof t === "number" && !isNaN(t) ? t : 0;
+      return padLeft + (st / maxSeconds) * plotW;
+    };
+    const getYPressure = (p: number) => {
+      const sp = typeof p === "number" && !isNaN(p) ? p : 0;
+      return padTop + plotH - (sp / 9) * plotH;
+    };
+    const getYFlow = (f: number) => {
+      const sf = typeof f === "number" && !isNaN(f) ? f : 0;
+      return padTop + plotH - (sf / 8) * plotH;
+    };
+    const getYWeight = (w: number) => {
+      const sw = typeof w === "number" && !isNaN(w) ? w : 0;
+      return padTop + plotH - (sw / maxWeight) * plotH;
+    };
 
     // 1. Horizontal Grid Lines & Y-Axis Reference Numbers (0, 3, 6, 9 bar)
     ctx.lineWidth = 1;
@@ -202,7 +231,7 @@ export const LiveExtractionDashboard: React.FC<LiveExtractionDashboardProps> = (
     ctx.shadowBlur = 0;
 
     // 8. Moving live cursor line at current head
-    const currentX = getX(currentPoint.timeSeconds);
+    const currentX = getX(safeTime);
     if (currentX >= padLeft && currentX <= padLeft + plotW) {
       ctx.save();
       ctx.strokeStyle = "rgba(255, 255, 255, 0.75)";
@@ -214,7 +243,7 @@ export const LiveExtractionDashboard: React.FC<LiveExtractionDashboardProps> = (
       ctx.stroke();
       ctx.restore();
     }
-  }, [history, currentPoint, targetYield]);
+  }, [history, currentPoint, targetYield, safeTime, safePressure, safeFlow, safeWeightFlow, safeWeight, safeTargetYield]);
 
   return (
     <div className="w-full h-full flex flex-col justify-between p-6 select-none bg-decent-dark/95">
@@ -222,14 +251,14 @@ export const LiveExtractionDashboard: React.FC<LiveExtractionDashboardProps> = (
       <div className="grid grid-cols-4 gap-6 items-center">
         {/* Left: Automotive Needle Flow Gauge (0 to 8 ml/s) */}
         <NeedleGauge
-          value={currentPoint.flow}
+          value={safeFlow}
           max={8}
           step={2}
           unit="ml/s"
           title="FLOW RATE"
           color="#38bdf8"
-          targetValue={currentPoint.targetFlow}
-          subValue={`Weight: ${currentPoint.weightFlow.toFixed(1)} g/s`}
+          targetValue={safeTargetFlow}
+          subValue={`Weight: ${safeWeightFlow.toFixed(1)} g/s`}
         />
 
         {/* Center: Dynamic Filling Glass */}
@@ -251,20 +280,20 @@ export const LiveExtractionDashboard: React.FC<LiveExtractionDashboardProps> = (
             </div>
           </div>
           <div className="font-mono text-sm font-bold text-white mt-1">
-            <span className="text-amber-400">{scale.weight.toFixed(1)}</span> / {targetYield.toFixed(1)} g
+            <span className="text-amber-400">{safeWeight.toFixed(1)}</span> / {safeTargetYield.toFixed(1)} g
           </div>
         </div>
 
         {/* Right: Automotive Needle Pressure Gauge (0 to 9 bar) */}
         <NeedleGauge
-          value={currentPoint.pressure}
+          value={safePressure}
           max={9}
           step={1}
           unit="bar"
           title="PRESSURE"
           color="#10b981"
-          targetValue={currentPoint.targetPressure}
-          subValue={`Resistance: ${currentPoint.puckResistance.toFixed(2)}`}
+          targetValue={safeTargetPressure}
+          subValue={`Resistance: ${safeResistance.toFixed(2)}`}
         />
 
         {/* Far Right: Dedicated Stop Button (Armed after 2s delay) */}
@@ -305,36 +334,36 @@ export const LiveExtractionDashboard: React.FC<LiveExtractionDashboardProps> = (
           <div className="flex items-center space-x-3.5">
             <div className="flex items-center space-x-1.5">
               <div className="w-2.5 h-2.5 rounded-full bg-[#10b981] shadow-[0_0_6px_#10b981]" />
-              <span className="text-emerald-400 font-bold">{currentPoint.pressure.toFixed(1)} bar</span>
+              <span className="text-emerald-400 font-bold">{safePressure.toFixed(1)} bar</span>
             </div>
             <div className="flex items-center space-x-1.5">
               <div className="w-2.5 h-2.5 rounded-full bg-[#38bdf8] shadow-[0_0_6px_#38bdf8]" />
-              <span className="text-sky-400 font-bold">{currentPoint.flow.toFixed(1)} ml/s</span>
+              <span className="text-sky-400 font-bold">{safeFlow.toFixed(1)} ml/s</span>
             </div>
             <div className="flex items-center space-x-1.5">
               <div className="w-2.5 h-2.5 rounded-full bg-[#78350f] shadow-[0_0_6px_#78350f]" />
-              <span className="text-amber-500 font-bold">{currentPoint.weightFlow.toFixed(1)} g/s</span>
+              <span className="text-amber-500 font-bold">{safeWeightFlow.toFixed(1)} g/s</span>
             </div>
             <div className="flex items-center space-x-1.5">
               <div className="w-2.5 h-2.5 rounded-full bg-[#a855f7] shadow-[0_0_6px_#a855f7]" />
-              <span className="text-purple-400 font-bold">{scale.weight.toFixed(1)} g</span>
+              <span className="text-purple-400 font-bold">{safeWeight.toFixed(1)} g</span>
             </div>
             <div className="flex items-center space-x-1.5 text-slate-300">
               <span className="text-decent-muted">R:</span>
-              <span className="font-bold text-amber-300">{currentPoint.puckResistance.toFixed(2)}</span>
+              <span className="font-bold text-amber-300">{safeResistance.toFixed(2)}</span>
             </div>
           </div>
 
           {/* Phase & Channel Alert */}
           <div className="flex items-center space-x-3 shrink-0">
-            {currentPoint.channelDetected && (
+            {currentPoint?.channelDetected && (
               <span className="flex items-center space-x-1 text-red-400 bg-red-950/80 px-2 py-0.5 rounded border border-red-500 animate-pulse text-[11px] font-bold">
                 <AlertTriangle className="w-3 h-3" />
                 <span>Channel Alert</span>
               </span>
             )}
             <span className="px-2.5 py-0.5 rounded-full bg-decent-dark border border-decent-border text-amber-300 uppercase tracking-widest text-[10px] font-bold">
-              {currentPoint.phase} ({currentPoint.timeSeconds.toFixed(1)}s)
+              {safePhase} ({safeTime.toFixed(1)}s)
             </span>
           </div>
         </div>

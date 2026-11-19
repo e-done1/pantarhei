@@ -35,7 +35,8 @@ export const NeedleGauge: React.FC<NeedleGaugeProps> = ({
   const totalSweep = 270; // 270 degree clockwise arc over the top (12 o'clock at 270°)
   const endAngle = startAngle + totalSweep; // 405° (45°, bottom-right)
 
-  const clampedVal = Math.min(max, Math.max(0, value));
+  const safeVal = typeof value === "number" && !isNaN(value) ? value : 0;
+  const clampedVal = Math.min(max, Math.max(0, safeVal));
   const fraction = max > 0 ? clampedVal / max : 0;
   const needleAngle = startAngle + fraction * totalSweep;
 
@@ -237,7 +238,7 @@ export const NeedleGauge: React.FC<NeedleGaugeProps> = ({
         {/* Digital Numeric Readout in Open Bottom Gap */}
         <div className="absolute bottom-2 flex flex-col items-center">
           <div className="font-mono text-2xl font-black text-white leading-none tracking-tight">
-            {value.toFixed(1)}
+            {safeVal.toFixed(1)}
           </div>
           <span className="text-[10px] font-mono text-decent-muted leading-none mt-0.5">
             {unit}

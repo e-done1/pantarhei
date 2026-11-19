@@ -979,14 +979,24 @@ export const CenterStatusPane: React.FC<CenterStatusPaneProps> = ({
             <span className="text-[9px] sm:text-[10px] lg:text-[11px] font-bold font-mono text-white">
               {machine.groupTemperature.toFixed(1)}°C
             </span>
+            {machine.groupTemperature < (machine.targetGroupTemp - 1.5) && (
+              <span className="text-[8.5px] lg:text-[9.5px] font-mono text-amber-400 font-medium">
+                → {machine.targetGroupTemp.toFixed(1)}°C
+              </span>
+            )}
           </div>
 
           <div className="flex items-center space-x-1 lg:space-x-1.5 px-2 py-0.5 lg:py-1 rounded-full bg-slate-900 border border-slate-700/80 shadow-sm">
             <Gauge className="w-2.5 h-2.5 lg:w-3.5 lg:h-3.5 text-amber-400" />
             <span className="text-[9px] sm:text-[10px] lg:text-[11px] font-semibold text-slate-300">Steam:</span>
             <span className="text-[9px] sm:text-[10px] lg:text-[11px] font-bold font-mono text-white">
-              {machine.steamTemperature.toFixed(0)}°C
+              {machine.targetSteamTemp === 0 ? "Off" : `${machine.steamTemperature.toFixed(0)}°C`}
             </span>
+            {machine.targetSteamTemp > 0 && machine.steamTemperature < (machine.targetSteamTemp - 3.0) && (
+              <span className="text-[8.5px] lg:text-[9.5px] font-mono text-amber-400 font-medium">
+                → {machine.targetSteamTemp.toFixed(0)}°C
+              </span>
+            )}
           </div>
         </div>
 

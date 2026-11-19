@@ -44,6 +44,8 @@ export class DecaidClient {
   private isLiveMachineConnected = false;
   private wsMachine: WebSocket | null = null;
   private wsScale: WebSocket | null = null;
+  private wsShotSettings: WebSocket | null = null;
+  private lastShotSettingsSnapshot: any = null;
   private telemetryListeners: Set<TelemetryListener> = new Set();
   private deviceListeners: Set<DeviceEventListener> = new Set();
   private host: string;
@@ -243,6 +245,7 @@ export class DecaidClient {
         // 3. Connect real-time WebSocket channels
         this.setupMachineWebSocket();
         this.setupScaleWebSocket();
+        this.setupShotSettingsWebSocket();
         await this.syncScaleInfo();
         this.notifyDeviceListeners();
         return true;
@@ -274,6 +277,12 @@ export class DecaidClient {
         this.wsScale.close();
       } catch {}
       this.wsScale = null;
+    }
+    if (this.wsShotSettings) {
+      try {
+        this.wsShotSettings.close();
+      } catch {}
+      this.wsShotSettings = null;
     }
     this.isLiveMachineConnected = false;
     this.machineStatus = "disconnected";
@@ -390,6 +399,9 @@ export class DecaidClient {
           const stateValue = typeof snapshot.state === "object" && snapshot.state !== null
             ? snapshot.state.state
             : snapshot.state;
+          const substateValue = typeof snapshot.state === "object" && snapshot.state !== null
+            ? String(snapshot.state.substate || "")
+            : "";
           const rawState = String(stateValue || "idle").toLowerCase();
 
           if (rawState === "disconnected" || snapshot.connected === false) {
@@ -419,7 +431,7 @@ export class DecaidClient {
             normalizedState = "rinse";
           } else if (rawState === "sleep" || rawState === "sleeping") {
             normalizedState = "sleeping";
-          } else if (rawState === "heating" || rawState === "preheating") {
+          } else if (rawState === "heating" || rawState === "preheating" || substateValue === "preparingForShot") {
             normalizedState = "heating";
           }
 
@@ -510,21 +522,55 @@ export class DecaidClient {
 
           // Compute resistance & channeling metrics
           const resistance = flow > 0.05 ? pressure / (flow * flow) : 0;
-          const prevRes = simulator.getTelemetryHistory().slice(-1)[0]?.resistance ?? resistance;
+          const prevRes = simulator.getTelemetryHistory().slice(-1)[0]?.puckResistance ?? resistance;
           const dRdt = elapsed > 0 ? (resistance - prevRes) / 0.1 : 0;
 
+          let phase: "idle" | "preinfusion" | "soak" | "extraction" | "done" = "idle";
+          let stepName = "";
+          if (isExtracting) {
+            const subLow = substateValue.toLowerCase();
+            if (subLow.includes("preinfusion") || subLow.includes("pre-infusion")) {
+              phase = "preinfusion";
+              stepName = "Pre-infusion";
+            } else if (subLow.includes("soak") || subLow.includes("cleansoaking")) {
+              phase = "soak";
+              stepName = "Soak";
+            } else if (subLow.includes("done") || subLow.includes("pouringdone")) {
+              phase = "done";
+              stepName = "Done";
+            } else if (subLow.includes("pouring") || subLow.includes("extraction")) {
+              phase = "extraction";
+              stepName = "Extraction";
+            } else {
+              if (elapsed < 6 || (this.lastScaleSnapshot.weightFlow < 0.2 && elapsed < 12)) {
+                phase = "preinfusion";
+                stepName = "Pre-infusion";
+              } else {
+                phase = "extraction";
+                stepName = "Extraction";
+              }
+            }
+          } else if (normalizedState === "heating") {
+            phase = "idle";
+            stepName = "Warming Up";
+          }
+
           const point: TelemetryPoint = {
-            timestamp: elapsed,
+            timestamp: Date.now(),
+            timeSeconds: Math.round(elapsed * 10) / 10,
             pressure,
             targetPressure,
             flow,
             targetFlow,
-            weight: this.lastScaleSnapshot.weight,
             weightFlow: this.lastScaleSnapshot.weightFlow,
-            temperature: headTemp,
-            resistance,
-            dRdt,
-            channelingSeverity: dRdt < -1.5 ? "moderate" : "none",
+            weight: this.lastScaleSnapshot.weight,
+            groupTemperature: headTemp,
+            targetGroupTemp: targetHeadTemp,
+            steamTemperature: steamTemp,
+            puckResistance: Math.round(resistance * 100) / 100,
+            phase,
+            stepName: stepName || substateValue || (isExtracting ? "Extraction" : "Idle"),
+            channelDetected: dRdt < -1.5,
           };
 
           this.telemetryListeners.forEach((listener) => {
@@ -627,6 +673,42 @@ export class DecaidClient {
       };
     } catch {
       this.wsScale = null;
+    }
+  }
+
+  private setupShotSettingsWebSocket(): void {
+    if (typeof window === "undefined") return;
+    try {
+      if (this.wsShotSettings) {
+        this.wsShotSettings.close();
+      }
+      const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const wsUrl = `${wsProtocol}//${this.host}:${this.port}/ws/v1/machine/shotSettings`;
+      this.wsShotSettings = new WebSocket(wsUrl);
+
+      this.wsShotSettings.onmessage = (event) => {
+        try {
+          const snapshot = JSON.parse(event.data);
+          if (snapshot && typeof snapshot === "object") {
+            this.lastShotSettingsSnapshot = snapshot;
+            if (typeof snapshot.targetSteamTemp === "number") {
+              this.machineInfo.steamTemp = snapshot.targetSteamTemp;
+            }
+            if (typeof snapshot.groupTemp === "number") {
+              this.machineInfo.targetHeadTemp = snapshot.groupTemp;
+            }
+          }
+        } catch {}
+      };
+
+      this.wsShotSettings.onclose = () => {
+        this.wsShotSettings = null;
+      };
+      this.wsShotSettings.onerror = () => {
+        this.wsShotSettings = null;
+      };
+    } catch {
+      this.wsShotSettings = null;
     }
   }
 
@@ -851,30 +933,8 @@ export class DecaidClient {
       success = false;
     }
 
-    // 2. Post shotSettings directly to machine registers (groupTemp & targetSteamTemp)
-    try {
-      const shotSettingsPayload = {
-        steamSetting: 0,
-        targetSteamTemp,
-        targetSteamDuration: Math.round(options?.steamConfig?.durationSeconds ?? 45),
-        targetHotWaterTemp: 85,
-        targetHotWaterVolume: 150,
-        targetHotWaterDuration: 30,
-        targetShotVolume: 0,
-        groupTemp: Number(targetGroupTemp.toFixed(1)),
-      };
-      await fetch(`${this.baseUrl}/api/v1/machine/shotSettings`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(shotSettingsPayload),
-        signal: AbortSignal.timeout(3000),
-      });
-      console.log(`[DecaidClient] triggerHeating: shotSettings updated (Group: ${targetGroupTemp}°C, Steam: ${targetSteamTemp}°C)`);
-    } catch (e) {
-      console.warn("[DecaidClient] triggerHeating: POST /api/v1/machine/shotSettings failed:", e);
-    }
-
-    // 3. Update Decaid workflow steam settings and profile
+    // 2. Synchronize active workflow (profile & steam settings) via Decaid PUT /api/v1/workflow
+    // The gateway deep-merges this and uploads the profile to DE1 firmware if changed.
     try {
       const workflowPatch: Record<string, any> = {
         steamSettings: {
@@ -887,6 +947,7 @@ export class DecaidClient {
       if (options?.profile) {
         const v2Profile = serializeToDecaidV2(options.profile);
         workflowPatch.profile = sanitizeProfileForRea(v2Profile);
+        workflowPatch.name = options.profile.title;
       }
       await fetch(`${this.baseUrl}/api/v1/workflow`, {
         method: "PUT",
@@ -896,6 +957,27 @@ export class DecaidClient {
       });
     } catch (e) {
       console.warn("[DecaidClient] triggerHeating: PUT /api/v1/workflow failed:", e);
+    }
+
+    // 3. If live shotSettings have been received from the /ws/v1/machine/shotSettings stream,
+    // safely overlay targetSteamTemp and groupTemp without touching water volume or duration registers!
+    // Never send blind synthetic defaults that could trigger a pump flush cycle.
+    if (this.lastShotSettingsSnapshot) {
+      try {
+        const overlayed = {
+          ...this.lastShotSettingsSnapshot,
+          targetSteamTemp,
+          groupTemp: Number(targetGroupTemp.toFixed(1)),
+        };
+        await fetch(`${this.baseUrl}/api/v1/machine/shotSettings`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(overlayed),
+          signal: AbortSignal.timeout(3000),
+        });
+      } catch (e) {
+        // Non-critical overlay write
+      }
     }
 
     this.notifyDeviceListeners();
@@ -1010,33 +1092,13 @@ export class DecaidClient {
       console.warn("[DecaidClient] PUT /api/v1/workflow failed:", e);
     }
 
-    // 2. Direct machine register upload and trigger heating
-    if (this.isLiveMachineConnected) {
-      try {
-        await fetch(`${this.baseUrl}/api/v1/machine/profile`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(workflowPayload.profile),
-          signal: AbortSignal.timeout(3000),
-        });
-      } catch (e) {
-        // Machine profile write queue error or handled by workflow
-      }
-
-      await this.triggerHeating({
-        targetGroupTemp,
-        targetSteamTemp,
-        profile,
-        steamConfig: context?.steamConfig,
-      });
-    } else {
-      await this.triggerHeating({
-        targetGroupTemp,
-        targetSteamTemp,
-        profile,
-        steamConfig: context?.steamConfig,
-      });
-    }
+    // 2. Trigger heating to target temperatures
+    await this.triggerHeating({
+      targetGroupTemp,
+      targetSteamTemp,
+      profile,
+      steamConfig: context?.steamConfig,
+    });
 
     return success;
   }

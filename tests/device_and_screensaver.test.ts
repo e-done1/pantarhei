@@ -429,3 +429,17 @@ test("Profile Selection Heating: selectProfile automatically triggers heating to
   const info = decaid.getMachineInfo();
   assert.equal(info.targetHeadTemp, 94.0, "Selecting profile automatically set target head temp to 94°C");
 });
+
+test("Telemetry Subscription: Decaid telemetry point satisfies all numeric indications and properties", (t, done) => {
+  const unsub = decaid.subscribe((point, machine, scale) => {
+    assert.ok(typeof point.timeSeconds === "number" && !isNaN(point.timeSeconds), "timeSeconds is a valid number");
+    assert.ok(typeof point.puckResistance === "number" && !isNaN(point.puckResistance), "puckResistance is a valid number");
+    assert.ok(typeof point.groupTemperature === "number" && !isNaN(point.groupTemperature), "groupTemperature is a valid number");
+    assert.ok(typeof point.targetGroupTemp === "number" && !isNaN(point.targetGroupTemp), "targetGroupTemp is a valid number");
+    assert.ok(typeof point.steamTemperature === "number" && !isNaN(point.steamTemperature), "steamTemperature is a valid number");
+    assert.ok(typeof point.phase === "string" && point.phase.length > 0, "phase is a non-empty string");
+    assert.ok(typeof point.channelDetected === "boolean", "channelDetected is a boolean");
+    unsub();
+    done();
+  });
+});
