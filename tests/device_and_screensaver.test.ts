@@ -24,6 +24,7 @@ import {
   type ReleaseChannel,
 } from "../src/types/device.ts";
 import { decaid } from "../src/services/decaidConnection.ts";
+import { simulator } from "../src/services/telemetrySimulator.ts";
 import {
   DEFAULT_MAINTENANCE_CONFIG,
   getMaintenanceStatus,
@@ -430,20 +431,24 @@ test("Profile Selection Heating: selectProfile automatically triggers heating to
   assert.equal(info.targetHeadTemp, 94.0, "Selecting profile automatically set target head temp to 94°C");
 });
 
-test("Telemetry Subscription: Decaid telemetry point satisfies all numeric indications and properties", async () => {
-  await new Promise<void>((resolve) => {
-    const unsub = decaid.subscribe((point, machine, scale) => {
-      assert.ok(typeof point.timeSeconds === "number" && !isNaN(point.timeSeconds), "timeSeconds is a valid number");
-      assert.ok(typeof point.puckResistance === "number" && !isNaN(point.puckResistance), "puckResistance is a valid number");
-      assert.ok(typeof point.groupTemperature === "number" && !isNaN(point.groupTemperature), "groupTemperature is a valid number");
-      assert.ok(typeof point.targetGroupTemp === "number" && !isNaN(point.targetGroupTemp), "targetGroupTemp is a valid number");
-      assert.ok(typeof point.steamTemperature === "number" && !isNaN(point.steamTemperature), "steamTemperature is a valid number");
-      assert.ok(typeof point.phase === "string" && point.phase.length > 0, "phase is a non-empty string");
-      assert.ok(typeof point.channelDetected === "boolean", "channelDetected is a boolean");
-      unsub();
-      resolve();
-    });
+test("Telemetry Subscription: Decaid telemetry point satisfies all numeric indications and properties", () => {
+  let receivedPoint: any = null;
+  const unsub = decaid.subscribe((point, machine, scale) => {
+    receivedPoint = point;
   });
+
+  // Manually tick simulator to trigger immediate synchronous delivery
+  (simulator as any).tick();
+  unsub();
+
+  assert.ok(receivedPoint !== null, "Telemetry point received");
+  assert.ok(typeof receivedPoint.timeSeconds === "number" && !isNaN(receivedPoint.timeSeconds), "timeSeconds is a valid number");
+  assert.ok(typeof receivedPoint.puckResistance === "number" && !isNaN(receivedPoint.puckResistance), "puckResistance is a valid number");
+  assert.ok(typeof receivedPoint.groupTemperature === "number" && !isNaN(receivedPoint.groupTemperature), "groupTemperature is a valid number");
+  assert.ok(typeof receivedPoint.targetGroupTemp === "number" && !isNaN(receivedPoint.targetGroupTemp), "targetGroupTemp is a valid number");
+  assert.ok(typeof receivedPoint.steamTemperature === "number" && !isNaN(receivedPoint.steamTemperature), "steamTemperature is a valid number");
+  assert.ok(typeof receivedPoint.phase === "string" && receivedPoint.phase.length > 0, "phase is a non-empty string");
+  assert.ok(typeof receivedPoint.channelDetected === "boolean", "channelDetected is a boolean");
 });
 
 test("Heating Safety: startEspresso is blocked when machine group head is warming up", async () => {
