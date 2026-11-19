@@ -3,7 +3,7 @@ import type { CafeHeaderConfig } from "../types/header.ts";
 import type { MaintenanceStatus } from "../types/maintenance.ts";
 import { calculateHeaderFit } from "../services/headerFit.ts";
 import { DigitalClock } from "./DigitalClock.tsx";
-import { Paintbrush, Wrench, Play } from "lucide-react";
+import { Paintbrush, Wrench, Play, Thermometer, CheckCircle2 } from "lucide-react";
 
 interface HomeCafeHeaderProps {
   config: CafeHeaderConfig;
@@ -18,6 +18,9 @@ interface HomeCafeHeaderProps {
   onOpenPairing?: () => void;
   onStartAction?: () => void;
   isExtracting?: boolean;
+  groupTemperature?: number;
+  targetGroupTemp?: number;
+  isWarmingUp?: boolean;
 }
 
 export const HomeCafeHeader: React.FC<HomeCafeHeaderProps> = ({
@@ -33,6 +36,9 @@ export const HomeCafeHeader: React.FC<HomeCafeHeaderProps> = ({
   onOpenPairing,
   onStartAction,
   isExtracting = false,
+  groupTemperature = 93.0,
+  targetGroupTemp = 93.0,
+  isWarmingUp = false,
 }) => {
   const isCompactHeight = typeof window !== "undefined" && window.innerHeight < 650;
   const fit = calculateHeaderFit(config, {
@@ -136,18 +142,64 @@ export const HomeCafeHeader: React.FC<HomeCafeHeaderProps> = ({
           </button>
         )}
 
-        {/* Simulator Brew Trigger / Go Button */}
-        {onStartAction && !isExtracting && (
-          <button
-            type="button"
-            onClick={onStartAction}
-            className="px-2.5 sm:px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black text-xs flex items-center space-x-1 shadow-md active:scale-95 transition-all border border-emerald-300 cursor-pointer"
-            title={isSimulatorMode ? "Start simulated extraction (Simulator Mode)" : "Start Extraction (Brew)"}
-          >
-            <Play className="w-3.5 h-3.5 fill-current text-slate-950" />
-            <span className="hidden sm:inline">{isSimulatorMode ? "Simulate Shot" : "Go!"}</span>
-            <span className="sm:hidden">Go!</span>
-          </button>
+        {/* In Emulator/Simulator mode: keep the simulator action button */}
+        {isSimulatorMode && onStartAction && !isExtracting && (
+          isWarmingUp ? (
+            <button
+              type="button"
+              disabled
+              className="px-2.5 sm:px-3 py-1 rounded-xl bg-slate-900 border border-amber-500/60 text-amber-300 text-xs font-semibold flex items-center space-x-1 cursor-not-allowed opacity-80 shadow-md"
+              title={`Group head warming up (${groupTemperature.toFixed(1)}°C / ${targetGroupTemp.toFixed(1)}°C). Extraction unavailable until ready.`}
+            >
+              <Thermometer className="w-3.5 h-3.5 text-amber-400 shrink-0 animate-pulse" />
+              <span className="font-bold">Heating...</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onStartAction}
+              className="px-2.5 sm:px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black text-xs flex items-center space-x-1 shadow-md active:scale-95 transition-all border border-emerald-300 cursor-pointer"
+              title="Start simulated extraction (Simulator Mode)"
+            >
+              <Play className="w-3.5 h-3.5 fill-current text-slate-950" />
+              <span className="hidden sm:inline">Simulate Shot</span>
+              <span className="sm:hidden">Go!</span>
+            </button>
+          )
+        )}
+
+        {/* When NOT in emulator mode: replaces the irrelevant Go button with Heating / Ready status */}
+        {!isSimulatorMode && isMachineConnected && !isExtracting && (
+          isWarmingUp ? (
+            <button
+              type="button"
+              onClick={onOpenPairing}
+              className="px-2.5 sm:px-3 py-1 rounded-xl bg-amber-950/70 hover:bg-amber-900/80 border border-amber-500/60 text-amber-300 text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer shadow-md active:scale-95"
+              title={`Group head warming up (${groupTemperature.toFixed(1)}°C / ${targetGroupTemp.toFixed(1)}°C). Extraction is disabled until ready. Tap to view status.`}
+            >
+              <Thermometer className="w-3.5 h-3.5 text-amber-400 shrink-0 animate-pulse" />
+              <span className="font-extrabold tracking-wide uppercase">Heating</span>
+              <span className="hidden sm:inline font-mono text-[11px] text-amber-200/90 font-medium">
+                {groupTemperature.toFixed(1)}°C → {targetGroupTemp.toFixed(1)}°C
+              </span>
+              <span className="sm:hidden font-mono text-[10px] text-amber-200/90 font-medium">
+                {groupTemperature.toFixed(0)}°→{targetGroupTemp.toFixed(0)}°
+              </span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onOpenPairing}
+              className="px-2.5 sm:px-3 py-1 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/70 border border-emerald-500/60 text-emerald-300 text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer shadow-md active:scale-95"
+              title={`Group head ready at ${groupTemperature.toFixed(1)}°C. Ready for extraction. Tap to view status.`}
+            >
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <span className="font-extrabold tracking-wide uppercase">Ready</span>
+              <span className="hidden sm:inline font-mono text-[11px] text-emerald-200/90 font-medium">
+                {groupTemperature.toFixed(1)}°C
+              </span>
+            </button>
+          )
         )}
 
         {/* Machine Pairing / Connection Status Indicator (High Contrast: White on Slate-900) */}

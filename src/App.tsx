@@ -467,6 +467,17 @@ export function App() {
 
   // Monitor shot completion
   const isExtracting = machine.state === "espresso";
+  const isWarmingUp = useMemo(() => {
+    if (!machine) return false;
+    const isTargetSet = (machine.targetGroupTemp ?? 0) >= 50;
+    const isTempBelowTarget = isTargetSet && (machine.groupTemperature < (machine.targetGroupTemp - 1.0));
+    const isHeatingState =
+      machine.state === "heating" ||
+      machine.state === "preheating" ||
+      machine.state === "booting";
+    return isHeatingState || isTempBelowTarget;
+  }, [machine.groupTemperature, machine.targetGroupTemp, machine.state]);
+
   const isMachineActive =
     isExtracting ||
     machine.state === "steam" ||
@@ -587,6 +598,12 @@ export function App() {
   const handleStartAction = async () => {
     setUlNotice(null);
     if (activeTab === "coffee") {
+      if (isWarmingUp) {
+        setUlNotice(
+          `Group head is warming up (${machine.groupTemperature.toFixed(1)}°C / ${machine.targetGroupTemp.toFixed(1)}°C). Extraction is disabled until target temperature is reached.`
+        );
+        return;
+      }
       telemetryHistoryRef.current = [];
       setTelemetryHistory([]);
       setShotStartTime(Date.now());
@@ -899,6 +916,9 @@ export function App() {
             onOpenPairing={() => setIsConnectModalOpen(true)}
             onStartAction={handleStartAction}
             isExtracting={isExtracting}
+            groupTemperature={machine.groupTemperature}
+            targetGroupTemp={machine.targetGroupTemp}
+            isWarmingUp={isWarmingUp}
           />
 
           {/* Floating UL Compliance or Safety Notice */}

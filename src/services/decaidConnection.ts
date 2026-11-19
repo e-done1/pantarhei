@@ -1145,6 +1145,24 @@ export class DecaidClient {
     profile?: ProfileItem
   ): Promise<{ ok: boolean; ulRestricted?: boolean; error?: string }> {
     if (this.isLiveMachineConnected) {
+      // Pre-flight check: Prevent extraction if group head is warming up
+      if (this.lastMachineSnapshot) {
+        const snap = this.lastMachineSnapshot;
+        const isTargetSet = (snap.targetGroupTemp ?? 0) >= 50;
+        const isTempBelowTarget = isTargetSet && (snap.groupTemperature < (snap.targetGroupTemp - 1.0));
+        const isHeating =
+          snap.state === "heating" ||
+          snap.state === "preheating" ||
+          snap.state === "booting" ||
+          isTempBelowTarget;
+        if (isHeating) {
+          return {
+            ok: false,
+            error: `Group head is warming up (${snap.groupTemperature.toFixed(1)}°C / ${snap.targetGroupTemp.toFixed(1)}°C). Extraction is disabled until target temperature is reached.`,
+          };
+        }
+      }
+
       try {
         // Ensure Decaid's active stop-at-weight is synchronized before extraction starts
         await this.setTargetYield(targetYield);

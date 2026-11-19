@@ -443,3 +443,28 @@ test("Telemetry Subscription: Decaid telemetry point satisfies all numeric indic
     done();
   });
 });
+
+test("Heating Safety: startEspresso is blocked when machine group head is warming up", async () => {
+  // Simulate live connection where group is at 24°C but target is 93°C
+  (decaid as any).isLiveMachineConnected = true;
+  (decaid as any).lastMachineSnapshot = {
+    state: "idle",
+    groupTemperature: 24.0,
+    targetGroupTemp: 93.0,
+    steamTemperature: 120.0,
+    targetSteamTemp: 150.0,
+    waterLevelMl: 1000,
+  };
+
+  const res = await decaid.startEspresso(36.0);
+  assert.equal(res.ok, false, "Extraction cannot start while warming up");
+  assert.ok(res.error?.includes("warming up"), "Error message informs user group head is warming up");
+
+  // When group head reaches target temperature (within 1°C), pre-flight check passes
+  (decaid as any).lastMachineSnapshot.groupTemperature = 92.5;
+  const readyRes = await decaid.startEspresso(36.0);
+  assert.ok(!readyRes.error?.includes("warming up"), "Does not block for warming up once ready at target temp");
+
+  // Reset
+  (decaid as any).isLiveMachineConnected = false;
+});
