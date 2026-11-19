@@ -374,3 +374,58 @@ test("Machine Maintenance: formatTimeAgo formats relative time intervals cleanly
   assert.equal(formatTimeAgo(now - 5 * MS_PER_DAY, now), "5 days ago");
   assert.equal(formatTimeAgo(now - 65 * MS_PER_DAY, now), "2 months ago");
 });
+
+test("Screensaver & Machine State: setScreensaverIdle sets machine to idle state", async () => {
+  await decaid.setScreensaverIdle();
+  const info = decaid.getMachineInfo();
+  assert.equal(info.state, "idle", "Screensaver activation transitions machine to idle state");
+});
+
+test("Heating Control: triggerHeating commands extraction and steam temperatures", async () => {
+  // 1. Trigger heating with steam enabled
+  await decaid.triggerHeating({
+    targetGroupTemp: 94.5,
+    targetSteamTemp: 155,
+    steamConfig: { heaterEnabled: true, temperature: 155 },
+  });
+
+  let info = decaid.getMachineInfo();
+  assert.equal(info.targetHeadTemp, 94.5, "Target group head temperature updated to 94.5°C");
+
+  // 2. Trigger heating with steam heater disabled (power-saving override)
+  await decaid.triggerHeating({
+    targetGroupTemp: 92.0,
+    steamConfig: { heaterEnabled: false, temperature: 150 },
+  });
+
+  info = decaid.getMachineInfo();
+  assert.equal(info.targetHeadTemp, 92.0, "Target group head temperature updated to 92.0°C");
+});
+
+test("Profile Selection Heating: selectProfile automatically triggers heating to profile setpoint", async () => {
+  const testProfile = {
+    id: "test-heating-prof",
+    title: "Light Roast Blooming 94C",
+    target_temperature: 94.0,
+    target_weight: 38.0,
+    target_dose: 19.0,
+    steps: [
+      {
+        name: "Infusion",
+        type: "flow" as const,
+        seconds: 10,
+        flow: 2.0,
+        temperature: "94.0",
+      },
+    ],
+  };
+
+  await decaid.selectProfile(testProfile, {
+    dose: 19.0,
+    targetYield: 38.0,
+    steamConfig: { heaterEnabled: true, temperature: 150 },
+  });
+
+  const info = decaid.getMachineInfo();
+  assert.equal(info.targetHeadTemp, 94.0, "Selecting profile automatically set target head temp to 94°C");
+});

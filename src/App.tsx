@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { decaid } from "./services/decaidConnection.ts";
 import { simulator, type TelemetryPoint, type MachineSnapshot, type ScaleSnapshot } from "./services/telemetrySimulator.ts";
 import type { CockpitTabId, CoffeeTabConfig, SteamTabConfig, WaterTabConfig, MaintenanceTabConfig } from "./types/cockpitTabs.ts";
+import { loadSteamConfigFromStorage, saveSteamConfigToStorage } from "./types/cockpitTabs.ts";
 import type { PantaBean } from "./types/bean.ts";
 import { loadBeansFromStorage, saveBeansToStorage, createNewBeanEntry, extractBeansFromShots } from "./types/bean.ts";
 import type { CafeHeaderConfig } from "./types/header.ts";
@@ -227,13 +228,20 @@ export function App() {
     }
   };
 
-  const [steamConfig, setSteamConfig] = useState<SteamTabConfig>({
-    temperature: 150,
-    flowRate: 1.2,
-    durationSeconds: 45,
-    autoPurge: true,
-    autoPurgeSeconds: 3,
-  });
+  const [steamConfig, setSteamConfig] = useState<SteamTabConfig>(loadSteamConfigFromStorage);
+
+  const handleSteamConfigChange = (newConfig: SteamTabConfig) => {
+    setSteamConfig(newConfig);
+    saveSteamConfigToStorage(newConfig);
+    const targetGroupTemp = Number(activeProfile?.target_temperature || activeProfile?.steps?.[0]?.temperature || 93.0);
+    const targetSteamTemp = newConfig.heaterEnabled === false ? 0 : (newConfig.temperature >= 135 ? newConfig.temperature : 0);
+    decaid.triggerHeating({
+      targetGroupTemp,
+      targetSteamTemp,
+      profile: activeProfile,
+      steamConfig: newConfig,
+    });
+  };
   const [waterConfig, setWaterConfig] = useState<WaterTabConfig>({
     temperature: 85,
     flowRate: 4.0,
@@ -380,6 +388,43 @@ export function App() {
       unsubDevice();
       clearInterval(interval);
     };
+  }, []);
+
+  // Screensaver State Transitions: Idle on activation, Heat on wake
+  const handleScreensaverActivate = useCallback(() => {
+    decaid.setScreensaverIdle();
+  }, []);
+
+  const handleScreensaverWake = useCallback(() => {
+    const targetGroupTemp = Number(activeProfile?.target_temperature || activeProfile?.steps?.[0]?.temperature || 93.0);
+    const targetSteamTemp = steamConfig.heaterEnabled === false ? 0 : (steamConfig.temperature >= 135 ? steamConfig.temperature : 0);
+    decaid.triggerHeating({
+      targetGroupTemp,
+      targetSteamTemp,
+      profile: activeProfile,
+      steamConfig,
+    });
+  }, [activeProfile, steamConfig]);
+
+  // Initial Boot & Profile Auto-Heat Trigger
+  useEffect(() => {
+    const profs = loadCustomProfilesFromStorage();
+    const matched = profs.find(
+      (p: ProfileItem) => p.title.toLowerCase() === activeProfileTitle.toLowerCase() || p.id === activeProfileTitle
+    );
+    const profToUse = matched || activeProfile || profs[0] || null;
+    if (profToUse && !activeProfile) {
+      setActiveProfile(profToUse);
+    }
+    const targetGroupTemp = Number(profToUse?.target_temperature || profToUse?.steps?.[0]?.temperature || 93.0);
+    const targetSteamTemp = steamConfig.heaterEnabled === false ? 0 : (steamConfig.temperature >= 135 ? steamConfig.temperature : 0);
+
+    decaid.triggerHeating({
+      targetGroupTemp,
+      targetSteamTemp,
+      profile: profToUse,
+      steamConfig,
+    });
   }, []);
 
   const handleEquipmentSelectionChange = (newSelection: ActiveEquipmentSelection) => {
@@ -882,7 +927,7 @@ export function App() {
               coffeeConfig={coffeeConfig}
               onCoffeeConfigChange={handleCoffeeConfigChange}
               steamConfig={steamConfig}
-              onSteamConfigChange={setSteamConfig}
+              onSteamConfigChange={handleSteamConfigChange}
               waterConfig={waterConfig}
               onWaterConfigChange={setWaterConfig}
               maintenanceConfig={maintenanceConfig}
@@ -944,6 +989,7 @@ export function App() {
                           coffeeName: selected.name,
                           coffeeRoaster: selected.roaster,
                           grinderModel: activeEquipment?.grinder,
+                          steamConfig,
                         });
                         setCoffeeConfig((prev) => ({
                           ...prev,
@@ -960,6 +1006,7 @@ export function App() {
                         coffeeName: selected.name,
                         coffeeRoaster: selected.roaster,
                         grinderModel: activeEquipment?.grinder,
+                        steamConfig,
                       });
                     }
                     setMainPaneView("graph");
@@ -991,6 +1038,7 @@ export function App() {
                       coffeeName: activeBean?.name,
                       coffeeRoaster: activeBean?.roaster,
                       grinderModel: activeEquipment?.grinder,
+                      steamConfig,
                     });
                     setCoffeeConfig((prev) => ({
                       ...prev,
@@ -1081,6 +1129,7 @@ export function App() {
                         coffeeRoaster: selectedShot.roaster,
                         grinderModel: selectedShot.equipment?.grinder,
                         grinderSetting: selectedShot.grindSetting,
+                        steamConfig,
                       });
                     }
                     setMainPaneView("graph");
@@ -1172,6 +1221,8 @@ export function App() {
       <ScreensaverOverlay
         config={screensaverConfig}
         isMachineActive={isMachineActive}
+        onScreensaverActivate={handleScreensaverActivate}
+        onScreensaverWake={handleScreensaverWake}
       />
 
       {/* Disconnected DE1 Startup Modal */}

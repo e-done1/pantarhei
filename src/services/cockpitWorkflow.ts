@@ -144,6 +144,18 @@ export function resolveGoButtonState(
     }
 
     case "steam": {
+      if (tabConfig.steam?.heaterEnabled === false || telemetry.targetSteamTemp === 0) {
+        return {
+          label: defaultLabel,
+          subLabel: "Off",
+          actionType: defaultAction,
+          isReady: false,
+          haloColor: "disabled-gray",
+          blockerReason: "Steam Heater Disabled: Enable preheating in Steam tab",
+          targetEndpoint: defaultEndpoint,
+          autoTareBeforeStart: autoTare,
+        };
+      }
       const steamTempDelta = Math.abs(telemetry.steamTemperature - telemetry.targetSteamTemp);
       if (steamTempDelta > 3.0) {
         return {

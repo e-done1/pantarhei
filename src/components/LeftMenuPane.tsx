@@ -425,6 +425,45 @@ export const LeftMenuPane: React.FC<LeftMenuPaneProps> = ({
         {/* Tab 2: Steam Content */}
         {activeTab === "steam" && (
           <div className="space-y-3.5">
+            {/* Steam Element Heater Preheating Override Toggle */}
+            <div className="p-3 rounded-xl bg-decent-card border border-decent-border/60 flex items-center justify-between">
+              <div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-amber-400 uppercase font-semibold">Steam Heater Preheating</span>
+                  {steamConfig.heaterEnabled === false ? (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700 font-mono font-bold">
+                      COLD / OFF (0°C)
+                    </span>
+                  ) : (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-mono font-bold">
+                      ACTIVE ({steamConfig.temperature}°C)
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-decent-muted mt-0.5">
+                  {steamConfig.heaterEnabled === false
+                    ? "Steam boiler is kept cold to save power. Espresso heats normally."
+                    : "Preheats steam boiler alongside extraction group on wake & profile load."}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  onSteamConfigChange({
+                    ...steamConfig,
+                    heaterEnabled: steamConfig.heaterEnabled === false ? true : false,
+                  })
+                }
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all ${
+                  steamConfig.heaterEnabled === false
+                    ? "bg-slate-800 text-slate-400 border border-slate-700 hover:text-white"
+                    : "bg-amber-500 text-slate-950 hover:bg-amber-400 font-bold shadow-sm"
+                }`}
+              >
+                {steamConfig.heaterEnabled === false ? "Disabled" : "Active"}
+              </button>
+            </div>
+
             {/* Steam Temperature (Dynamic Presets that wrap to lines below and expand card bubble) */}
             <div className="p-3.5 rounded-xl bg-decent-card border border-decent-border/60 transition-all">
               <div className="flex items-center justify-between mb-1">

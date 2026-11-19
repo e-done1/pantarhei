@@ -20,6 +20,36 @@ export interface SteamTabConfig {
   durationSeconds: number;         // 10-120s cutoff
   autoPurge: boolean;              // Auto purge after steam
   autoPurgeSeconds?: number;       // Auto purge timeout duration in seconds (1 - 10s)
+  heaterEnabled?: boolean;         // Overriding toggle: if false, steam element is kept cold/unheated (target 0°C)
+}
+
+export const DEFAULT_STEAM_CONFIG: SteamTabConfig = {
+  temperature: 150,
+  flowRate: 1.2,
+  durationSeconds: 45,
+  autoPurge: true,
+  autoPurgeSeconds: 3,
+  heaterEnabled: true,
+};
+
+export const STEAM_CONFIG_STORAGE_KEY = "pantarhei_steam_config";
+
+export function loadSteamConfigFromStorage(): SteamTabConfig {
+  if (typeof window === "undefined") return { ...DEFAULT_STEAM_CONFIG };
+  try {
+    const raw = localStorage.getItem(STEAM_CONFIG_STORAGE_KEY);
+    if (raw) {
+      return { ...DEFAULT_STEAM_CONFIG, ...JSON.parse(raw) };
+    }
+  } catch {}
+  return { ...DEFAULT_STEAM_CONFIG };
+}
+
+export function saveSteamConfigToStorage(config: SteamTabConfig): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STEAM_CONFIG_STORAGE_KEY, JSON.stringify(config));
+  } catch {}
 }
 
 export interface WaterTabConfig {

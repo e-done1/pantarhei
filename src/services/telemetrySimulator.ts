@@ -87,6 +87,18 @@ class TelemetrySimulatorEngine {
 
   public setProfile(profile: ProfileItem | null): void {
     this.activeProfile = profile;
+    if (profile) {
+      const targetGroup = Number(profile.target_temperature || profile.steps?.[0]?.temperature || 93.0);
+      this.machine.targetGroupTemp = targetGroup;
+      this.machine.groupTemperature = targetGroup;
+    }
+  }
+
+  public setTargetTemperatures(groupTemp: number, steamTemp: number): void {
+    this.machine.targetGroupTemp = groupTemp;
+    this.machine.targetSteamTemp = steamTemp;
+    this.machine.groupTemperature = groupTemp;
+    this.machine.steamTemperature = steamTemp > 0 ? steamTemp : 24.0;
   }
 
   public getActiveProfile(): ProfileItem | null {
@@ -127,8 +139,14 @@ class TelemetrySimulatorEngine {
     } else if (this.machine.state === "rinse") {
       point = this.simulateRinseStep(now);
     } else {
-      // Idle jitter
-      this.machine.groupTemperature = 93.0 + (Math.sin(now / 5000) * 0.15);
+      // Idle jitter around target temperatures
+      const baseGroup = this.machine.targetGroupTemp || 93.0;
+      this.machine.groupTemperature = baseGroup + (Math.sin(now / 5000) * 0.15);
+      if (this.machine.targetSteamTemp > 0) {
+        this.machine.steamTemperature = this.machine.targetSteamTemp + (Math.cos(now / 5000) * 0.2);
+      } else {
+        this.machine.steamTemperature = 24.0;
+      }
       this.machine.pressure = 0;
       this.machine.flow = 0;
       this.scale.weightFlow = 0;

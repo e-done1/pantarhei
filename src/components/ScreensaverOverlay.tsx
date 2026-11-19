@@ -8,11 +8,15 @@ import {
 interface ScreensaverOverlayProps {
   config: ScreensaverConfig;
   isMachineActive: boolean; // True if espresso, steam, or rinse is running
+  onScreensaverActivate?: () => void;
+  onScreensaverWake?: () => void;
 }
 
 export const ScreensaverOverlay: React.FC<ScreensaverOverlayProps> = ({
   config,
   isMachineActive,
+  onScreensaverActivate,
+  onScreensaverWake,
 }) => {
   const [isActive, setIsActive] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -43,6 +47,7 @@ export const ScreensaverOverlay: React.FC<ScreensaverOverlayProps> = ({
       lastActivityRef.current = Date.now();
       if (isActive) {
         setIsActive(false);
+        onScreensaverWake?.();
       }
     };
 
@@ -79,6 +84,7 @@ export const ScreensaverOverlay: React.FC<ScreensaverOverlayProps> = ({
 
       if (idleMs >= timeoutMs && !isActive) {
         setIsActive(true);
+        onScreensaverActivate?.();
       }
     }, 2000);
 

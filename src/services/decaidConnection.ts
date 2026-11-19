@@ -17,12 +17,14 @@ import type { ProfileItem } from "../types/profile.ts";
 import {
   serializeToDecaidV2,
   serializeToDecaidTcl,
+  sanitizeProfileForRea,
 } from "../types/profile.ts";
 import type { ShotRecord } from "../types/shot.ts";
 import {
   serializeShotToTcl,
   serializeShotToDecaidJson,
 } from "../types/shot.ts";
+import type { SteamTabConfig } from "../types/cockpitTabs.ts";
 import {
   inferReleaseChannel,
   type MachineConnectionStatus,
@@ -763,23 +765,162 @@ export class DecaidClient {
     this.notifyDeviceListeners();
   }
 
-  // Machine Power & State Actions
-  // In Decaid MachineState enum: wake is transitioning from sleeping to idle; sleep is sleeping
-  public async wakeMachine(): Promise<void> {
+  /**
+   * Sets the machine state to idle when the screensaver activates.
+   * Ensures no active extraction continues and transitions the machine into idle.
+   */
+  public async setScreensaverIdle(): Promise<void> {
     if (this.isLiveMachineConnected) {
       try {
-        await fetch(`${this.baseUrl}/api/v1/machine/state/idle`, { method: "PUT" });
-      } catch {}
+        await fetch(`${this.baseUrl}/api/v1/machine/state/idle`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          signal: AbortSignal.timeout(3000),
+        });
+        console.log("[DecaidClient] Screensaver activated: Machine set to idle state.");
+      } catch (err) {
+        console.warn("[DecaidClient] Failed to set machine to idle on screensaver activation:", err);
+      }
     }
     this.machineInfo.state = "idle";
-    simulator.startRinse();
     this.notifyDeviceListeners();
+  }
+
+  /**
+   * Commands the machine to heat up to the required extraction and steam temperatures.
+   * Triggered on:
+   * 1. Profile selection / load
+   * 2. Screensaver wake-up
+   * 3. Machine wake from sleep
+   */
+  public async triggerHeating(options?: {
+    targetGroupTemp?: number;
+    targetSteamTemp?: number;
+    profile?: ProfileItem | null;
+    steamConfig?: Partial<SteamTabConfig>;
+  }): Promise<boolean> {
+    const targetGroupTemp =
+      options?.targetGroupTemp != null && !isNaN(options.targetGroupTemp)
+        ? Number(options.targetGroupTemp)
+        : options?.profile?.target_temperature != null
+        ? Number(options.profile.target_temperature)
+        : Number(options?.profile?.steps?.[0]?.temperature || 93.0);
+
+    const isSteamHeaterDisabled =
+      options?.steamConfig?.heaterEnabled === false ||
+      options?.targetSteamTemp === 0 ||
+      (options?.steamConfig?.temperature != null && options.steamConfig.temperature < 135);
+
+    const targetSteamTemp = isSteamHeaterDisabled
+      ? 0
+      : Math.round(
+          options?.targetSteamTemp != null
+            ? options.targetSteamTemp
+            : options?.steamConfig?.temperature != null
+            ? options.steamConfig.temperature
+            : 150
+        );
+
+    // Update internal tracking and snapshot
+    this.machineInfo.targetHeadTemp = targetGroupTemp;
+    this.lastMachineSnapshot.targetGroupTemp = targetGroupTemp;
+    this.lastMachineSnapshot.targetSteamTemp = targetSteamTemp;
+
+    if (this.machineStatus === "simulator" || !this.isLiveMachineConnected) {
+      this.machineInfo.state = "idle";
+      simulator.setTargetTemperatures(targetGroupTemp, targetSteamTemp);
+      this.notifyDeviceListeners();
+    }
+
+    if (!this.isLiveMachineConnected) {
+      return true;
+    }
+
+    let success = true;
+
+    // 1. Ensure machine is in idle state (wakes if sleeping)
+    try {
+      await fetch(`${this.baseUrl}/api/v1/machine/state/idle`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        signal: AbortSignal.timeout(3000),
+      });
+      this.machineInfo.state = "idle";
+    } catch (e) {
+      console.warn("[DecaidClient] triggerHeating: State change to idle failed:", e);
+      success = false;
+    }
+
+    // 2. Post shotSettings directly to machine registers (groupTemp & targetSteamTemp)
+    try {
+      const shotSettingsPayload = {
+        steamSetting: 0,
+        targetSteamTemp,
+        targetSteamDuration: Math.round(options?.steamConfig?.durationSeconds ?? 45),
+        targetHotWaterTemp: 85,
+        targetHotWaterVolume: 150,
+        targetHotWaterDuration: 30,
+        targetShotVolume: 0,
+        groupTemp: Number(targetGroupTemp.toFixed(1)),
+      };
+      await fetch(`${this.baseUrl}/api/v1/machine/shotSettings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(shotSettingsPayload),
+        signal: AbortSignal.timeout(3000),
+      });
+      console.log(`[DecaidClient] triggerHeating: shotSettings updated (Group: ${targetGroupTemp}°C, Steam: ${targetSteamTemp}°C)`);
+    } catch (e) {
+      console.warn("[DecaidClient] triggerHeating: POST /api/v1/machine/shotSettings failed:", e);
+    }
+
+    // 3. Update Decaid workflow steam settings and profile
+    try {
+      const workflowPatch: Record<string, any> = {
+        steamSettings: {
+          targetTemperature: targetSteamTemp,
+          duration: Math.round(options?.steamConfig?.durationSeconds ?? 45),
+          flow: options?.steamConfig?.flowRate ?? 0.8,
+          stopAtTemperature: 0.0,
+        },
+      };
+      if (options?.profile) {
+        const v2Profile = serializeToDecaidV2(options.profile);
+        workflowPatch.profile = sanitizeProfileForRea(v2Profile);
+      }
+      await fetch(`${this.baseUrl}/api/v1/workflow`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(workflowPatch),
+        signal: AbortSignal.timeout(3000),
+      });
+    } catch (e) {
+      console.warn("[DecaidClient] triggerHeating: PUT /api/v1/workflow failed:", e);
+    }
+
+    this.notifyDeviceListeners();
+    return success;
+  }
+
+  // Machine Power & State Actions
+  // In Decaid MachineState enum: wake is transitioning from sleeping to idle; sleep is sleeping
+  public async wakeMachine(options?: {
+    targetGroupTemp?: number;
+    targetSteamTemp?: number;
+    profile?: ProfileItem | null;
+    steamConfig?: Partial<SteamTabConfig>;
+  }): Promise<void> {
+    await this.triggerHeating(options);
   }
 
   public async sleepMachine(): Promise<void> {
     if (this.isLiveMachineConnected) {
       try {
-        await fetch(`${this.baseUrl}/api/v1/machine/state/sleeping`, { method: "PUT" });
+        await fetch(`${this.baseUrl}/api/v1/machine/state/sleeping`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          signal: AbortSignal.timeout(3000),
+        });
       } catch {}
     }
     this.machineInfo.state = "sleeping";
@@ -797,12 +938,23 @@ export class DecaidClient {
       coffeeRoaster?: string;
       grinderModel?: string;
       grinderSetting?: string;
+      steamConfig?: Partial<SteamTabConfig>;
     }
   ): Promise<boolean> {
     simulator.setProfile(profile);
 
+    const targetGroupTemp = Number(profile.target_temperature || profile.steps?.[0]?.temperature || 93.0);
+    const isSteamHeaterDisabled =
+      context?.steamConfig?.heaterEnabled === false ||
+      (context?.steamConfig?.temperature != null && context.steamConfig.temperature < 135);
+
+    const targetSteamTemp = isSteamHeaterDisabled
+      ? 0
+      : Math.round(context?.steamConfig?.temperature ?? 150);
+
     // Format profile for Decaid OpenAPI schema
     const v2Profile = serializeToDecaidV2(profile);
+    const sanitizedProfile = sanitizeProfileForRea(v2Profile);
 
     const targetYield =
       context?.targetYield != null
@@ -821,8 +973,14 @@ export class DecaidClient {
     const workflowPayload: Record<string, any> = {
       name: profile.title,
       profile: {
-        ...v2Profile,
+        ...sanitizedProfile,
         target_weight: isNaN(targetYield) ? 36.0 : targetYield,
+      },
+      steamSettings: {
+        targetTemperature: targetSteamTemp,
+        duration: Math.round(context?.steamConfig?.durationSeconds ?? 45),
+        flow: context?.steamConfig?.flowRate ?? 0.8,
+        stopAtTemperature: 0.0,
       },
       context: {
         targetYield: isNaN(targetYield) ? 36.0 : targetYield,
@@ -842,6 +1000,7 @@ export class DecaidClient {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(workflowPayload),
+        signal: AbortSignal.timeout(4000),
       });
       if (res.ok) {
         success = true;
@@ -851,17 +1010,32 @@ export class DecaidClient {
       console.warn("[DecaidClient] PUT /api/v1/workflow failed:", e);
     }
 
-    // 2. If connected to physical machine, also attempt direct machine register upload
+    // 2. Direct machine register upload and trigger heating
     if (this.isLiveMachineConnected) {
       try {
         await fetch(`${this.baseUrl}/api/v1/machine/profile`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(workflowPayload.profile),
+          signal: AbortSignal.timeout(3000),
         });
       } catch (e) {
         // Machine profile write queue error or handled by workflow
       }
+
+      await this.triggerHeating({
+        targetGroupTemp,
+        targetSteamTemp,
+        profile,
+        steamConfig: context?.steamConfig,
+      });
+    } else {
+      await this.triggerHeating({
+        targetGroupTemp,
+        targetSteamTemp,
+        profile,
+        steamConfig: context?.steamConfig,
+      });
     }
 
     return success;
